@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">HDYHYP</string>
+    <string name="hello">Hello!</string>
+    <string name="tellUrName">Please tell me your study name:</string>
+    <string name="waiting">Waiting for input...</string>
+    <string name="ready">App is ready.</string>
 </resources>

@@ -11,7 +11,51 @@
     tools:context="com.example.anita.hdyhyp.MainActivity">
 
     <TextView
+        android:text="@string/hello"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="66dp"
+        android:id="@+id/helloTextView" />
+
+    <TextView
+        android:text="@string/tellUrName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/helloTextView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="36dp"
+        android:id="@+id/tellMeYourNameTextView" />
+
+    <Button
+        android:text="submit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/inputName"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="31dp"
+        android:textColor="@color/textColorPrimary"
+        android:background="@color/colorPrimary"
+        android:id="@+id/submitButton" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:ems="10"
+        android:id="@+id/inputName"
+        android:background="@color/textFields"
+        android:layout_below="@+id/tellMeYourNameTextView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="55dp" />
+
+    <TextView
+        android:text="@string/waiting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/statusTextView"
+        android:layout_marginBottom="81dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>
