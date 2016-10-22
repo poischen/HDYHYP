@@ -4,8 +4,14 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 //TODO Steuerung, wann das Bild geschossen wird & wie oft
-public class ShootingControllerService extends Service {
-    public ShootingControllerService() {
+
+/*
+Controlls when and how often photos are captures
+Knows the storage folder of the files
+ */
+public class CaptureControllerService extends Service {
+    public CaptureControllerService() {
+
     }
 
     @Override

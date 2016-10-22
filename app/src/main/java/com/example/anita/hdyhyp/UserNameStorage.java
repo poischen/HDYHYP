@@ -10,15 +10,13 @@ import android.content.SharedPreferences;
 class UserNameStorage {
 
     private enum pseudonym {DUKE, MONKEY, BOMEAST, TANQUERAY, HENDRICKS, FEEL, MARE, BRANDSTIFER, GRANIT, BEEFEATER};
-    private Context context;
     private SharedPreferences userNameStorage;
     private SharedPreferences.Editor userNameEditor;
+    private StorageController storageController;
 
     public UserNameStorage (Context context){
-        this.context = context;
         userNameStorage = context.getSharedPreferences("User Name Storage", 0);
         userNameEditor = userNameStorage.edit();
-
     }
 
     protected void setUserName(String input){

@@ -4,10 +4,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
-public class ShootPicService extends Service {
-    public ShootPicService() {
+public class CapturePicService extends Service {
+    public CapturePicService() {
     }
 
     @Override
@@ -19,26 +18,25 @@ public class ShootPicService extends Service {
 
     @Override
     public void onCreate() {
-        Log.v("ShootPicService", "ShootPicService created.");
+        Log.v("CapturePicService", "CapturePicService created.");
     }
 
     @Override
     public void onDestroy(){
-        Log.v("ShootPicService", "ShootPicService destroyed.");
+        Log.v("CapturePicService", "CapturePicService destroyed.");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v("ShootPicService", "ShootPicService started.");
-        shootPic();
+        Log.v("CapturePicService", "CapturePicService started.");
+        capturePhoto();
         stopSelf();
         return START_STICKY;
     }
 
-    public void shootPic(){
+    public void capturePhoto(){
         //ToDo: Bild schießen, Beautyfilter drüber legen + Timestamp, Zwischenspeichern, Push Notification
         //TODO: eigener Thread
-
 
     }
 }

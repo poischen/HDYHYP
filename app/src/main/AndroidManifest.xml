@@ -22,11 +22,11 @@
         </activity>
 
         <service
-            android:name=".ShootPicService"
+            android:name=".CapturePicService"
             android:enabled="true"
             android:exported="true" />
         <service
-            android:name=".ShootingControllerService"
+            android:name=".CaptureControllerService"
             android:enabled="true"
             android:exported="true"></service>
     </application>

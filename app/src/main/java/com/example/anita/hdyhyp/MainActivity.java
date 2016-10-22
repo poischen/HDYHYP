@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText inputField;
     private TextView tellMeYourNameView;
     private TextView helloTextView;
-    private UserNameStorage storage;
+    private StorageController storage;
 
     private Button deleteButton;
 
@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        storage = new UserNameStorage(getApplicationContext());
+        storage = new StorageController(getApplicationContext());
 
         readyTextView = (TextView) findViewById(R.id.statusTextView);
         submitButton = (Button) findViewById(R.id.submitButton);
@@ -77,10 +77,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         /**Temporary starting the Shooting afer inizialising the user name.
-         * TODO: Controlling the use of the ShootingService
+         * TODO: Controlling the use of the Capture Service
          */
-        Intent shootPicService = new Intent(this, ShootPicService.class);
-        startService(shootPicService);
+        Intent capturePicService = new Intent(this, CapturePicService.class);
+        startService(capturePicService);
 
     }
 
