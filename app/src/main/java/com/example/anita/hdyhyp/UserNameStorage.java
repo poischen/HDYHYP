@@ -4,18 +4,17 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 /**
- * Service?? that stores study data
+ * This class stores the peusdonym of the user during the study
  */
 
-class Storage {
+class UserNameStorage {
 
-    
-
+    private enum pseudonym {DUKE, MONKEY, BOMEAST, TANQUERAY, HENDRICKS, FEEL, MARE, BRANDSTIFER, GRANIT, BEEFEATER};
     private Context context;
     private SharedPreferences userNameStorage;
     private SharedPreferences.Editor userNameEditor;
 
-    public Storage (Context context){
+    public UserNameStorage (Context context){
         this.context = context;
         userNameStorage = context.getSharedPreferences("User Name Storage", 0);
         userNameEditor = userNameStorage.edit();
@@ -23,13 +22,18 @@ class Storage {
     }
 
     protected void setUserName(String input){
-        // todo: Test ob Eingabe passt
+        // todo: Test if the username is allowed
         userNameEditor.putString("User Name", input);
         userNameEditor.commit();
     }
 
     protected String getUserName(){
         return userNameStorage.getString("User Name", null);
+    }
+
+    protected void deleteUserName(){
+        userNameEditor.putString("User Name", null);
+        userNameEditor.commit();
     }
 
 }

@@ -58,4 +58,17 @@
         android:layout_marginBottom="81dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
+
+
+    <Button
+        android:text=" delte name "
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textColorPrimary"
+        android:background="@color/colorPrimary"
+        android:id="@+id/deleteButton"
+        android:layout_below="@+id/submitButton"
+        android:layout_alignLeft="@+id/submitButton"
+        android:layout_alignStart="@+id/submitButton"
+        android:layout_marginTop="16dp" />
 </RelativeLayout>
