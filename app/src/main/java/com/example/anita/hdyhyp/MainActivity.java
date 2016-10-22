@@ -79,8 +79,9 @@ public class MainActivity extends AppCompatActivity {
         /**Temporary starting the Shooting afer inizialising the user name.
          * TODO: Controlling the use of the Capture Service
          */
-        Intent capturePicService = new Intent(this, CapturePicService.class);
-        startService(capturePicService);
+        Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
+        capturePicServiceIntent.putExtra("path", storage.getStoragePath());
+        startService(capturePicServiceIntent);
 
     }
 

@@ -2,6 +2,7 @@ package com.example.anita.hdyhyp;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -16,6 +17,8 @@ public class StorageController {
     public StorageController(Context context){
         userNameStorage = new UserNameStorage(context);
         storagePath = context.getFilesDir().toString();
+        Log.v("CapturePicService", "Storage Path " +  storagePath);
+        //Environment.getExternalStorageDirectory();
     }
 
     public String getUserName(){
