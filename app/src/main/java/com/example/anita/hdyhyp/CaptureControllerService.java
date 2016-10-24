@@ -10,8 +10,11 @@ Controlls when and how often photos are captures
 Knows the storage folder of the files
  */
 public class CaptureControllerService extends Service {
-    public CaptureControllerService() {
 
+    private static final String TAG = "CaptureControllerService";
+
+    public CaptureControllerService() {
+        //return START_STICKY;
     }
 
     @Override

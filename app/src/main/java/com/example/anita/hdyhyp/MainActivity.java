@@ -9,6 +9,8 @@ import android.widget.*;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
+
     private TextView readyTextView;
     private Button submitButton;
     private EditText inputField;
@@ -36,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         if (storage.getUserName() == null){
             submitButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    Log.v("MainActivity", "Submit Button clicked");
+                    Log.v(TAG, "Submit Button clicked");
                     storeUserName(inputField.getText().toString());
                 }
             });
@@ -57,6 +59,12 @@ public class MainActivity extends AppCompatActivity {
                 inputField.setEnabled(true);
                 inputField.setText("");
                 tellMeYourNameView.setEnabled(true);
+                submitButton.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        Log.v(TAG, "Submit Button clicked");
+                        storeUserName(inputField.getText().toString());
+                    }
+                });
             }
         });
 
@@ -67,20 +75,21 @@ public class MainActivity extends AppCompatActivity {
     private void storeUserName(String input){
         try {
             storage.setUserName(input);
-            Log.v("MainActivity", "Study user name read: " + input);
+            Log.v(TAG, "Study user name read: " + input);
             Toast.makeText(this, "Thanks!", Toast.LENGTH_SHORT).show();
             userNameAlreadySet();
-            Log.v("MainActivity", "Study user name successfully stored:" + input);
+            Log.v(TAG, "Study user name successfully stored:" + input);
         } catch (NullPointerException e) {
             Toast.makeText(this, "No input. Please try again.", Toast.LENGTH_SHORT).show();
-            Log.v("MainActivity", "Study user name not stored.");
+            Log.d(TAG, "Study user name not stored.");
         }
 
-        /**Temporary starting the Shooting afer inizialising the user name.
-         * TODO: Controlling the use of the Capture Service
+        /**Starting the Shooting after inizialising the user name in order to test if everything works
+         * TODO: Controlling the further use of the Capture Service
          */
         Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
         capturePicServiceIntent.putExtra("path", storage.getStoragePath());
+        capturePicServiceIntent.putExtra("userName", storage.getUserName());
         startService(capturePicServiceIntent);
 
     }
@@ -88,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     /** Loads the users pseudonym from the storage*/
     private String loadUserName() {
         String userName = storage.getUserName();
-        Log.v("MainActivity", "Stored user Name: " + userName);
+        Log.v(TAG, "Stored user Name: " + userName);
         return userName;
     }
 

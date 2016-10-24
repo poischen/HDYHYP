@@ -9,6 +9,8 @@ import android.content.SharedPreferences;
 
 class UserNameStorage {
 
+    private static final String TAG = "UserNameStorage";
+
     private enum pseudonym {DUKE, MONKEY, BOMEAST, TANQUERAY, HENDRICKS, FEEL, MARE, BRANDSTIFER, GRANIT, BEEFEATER};
     private SharedPreferences userNameStorage;
     private SharedPreferences.Editor userNameEditor;

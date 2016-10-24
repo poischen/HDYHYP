@@ -11,12 +11,13 @@ import android.widget.Toast;
 
 public class StorageController {
 
+    private static final String TAG = "StorageController";
     private String storagePath;
     private UserNameStorage userNameStorage;
 
     public StorageController(Context context){
         userNameStorage = new UserNameStorage(context);
-        storagePath = context.getFilesDir().toString();
+        storagePath = (context.getFilesDir().toString());
         Log.v("CapturePicService", "Storage Path " +  storagePath);
         //Environment.getExternalStorageDirectory();
     }
