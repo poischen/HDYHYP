@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
  * This class stores the peusdonym of the user during the study
  */
 
-class UserNameStorage {
+public class UserNameStorage {
 
     private static final String TAG = "UserNameStorage";
 
