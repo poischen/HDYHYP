@@ -62,7 +62,6 @@ public class CapturePicService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "CapturePicService started.");
-        //Check if camera can be found
 
         camera = getCameraInstance();
         storagePath = (String) intent.getExtras().get("path");
@@ -74,7 +73,8 @@ public class CapturePicService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        camera.startPreview();
+
+        //camera.startPreview();
         capturePhoto();
         stopSelf();
         return START_NOT_STICKY;
@@ -112,6 +112,7 @@ public class CapturePicService extends Service {
                     c = null;
                 }
                 c = Camera.open(cameraId);
+                Log.v(TAG, "Camera opened: " + c);
             }
         }
         return c;
@@ -122,30 +123,37 @@ public class CapturePicService extends Service {
         // ToDO: Timestamp auf Foto drucken, evtl Filter
         // Todo: Push Notification
 
-        Camera.PictureCallback pictureCallBack = new Camera.PictureCallback() {
+        //Camera.PictureCallback pictureCallBack = new CameraPictureCallback();
+        //Log.v(TAG, "pictureCallBack object: " + pictureCallBack);
+        Log.v(TAG, "Camera object: " + camera);
+        //camera.takePicture(null, null, pictureCallBack);
 
-            public void onPictureTaken(byte[] data, Camera camera) {
+
+
+        /*camera.takePicture(null, null, new Camera.PictureCallback() {
+            @Override
+            public void onPictureTaken(final byte[] originalData, Camera camera) {
+
                 Log.v(TAG, "pictureCallBack created. " + "onPictureTaken() is called.");
-            File capturedPhotoFile = getOutputMediaFile();
-                camera.startPreview();
-            if (capturedPhotoFile == null) {
-                Log.e(TAG, "Could not create file");
-                return;
-            }
+                File capturedPhotoFile = getOutputMediaFile();
+                if (capturedPhotoFile == null) {
+                    Log.e(TAG, "Could not create file");
+                    return;
+                }
 
-            try {
-                FileOutputStream fos = new FileOutputStream(capturedPhotoFile);
-                fos.write(data);
-                fos.flush();
-                fos.close();
-            } catch (FileNotFoundException e) {
-                Log.e(TAG, "File not found: " + e.getMessage());
-                e.getStackTrace();
-            } catch (IOException e) {
-                Log.e(TAG, "I/O error writing file: " + e.getMessage());
-                e.getStackTrace();
+                try {
+                    FileOutputStream fos = new FileOutputStream(capturedPhotoFile);
+                    fos.write(originalData);
+                    fos.flush();
+                    fos.close();
+                } catch (FileNotFoundException e) {
+                    Log.e(TAG, "File not found: " + e.getMessage());
+                    e.getStackTrace();
+                } catch (IOException e) {
+                    Log.e(TAG, "I/O error writing file: " + e.getMessage());
+                    e.getStackTrace();
+                }
             }
-        }
 
             //Hilfsmethode für Timestamp, Beaityfilter etc.
             private File getOutputMediaFile() {
@@ -158,15 +166,66 @@ public class CapturePicService extends Service {
                 Toast.makeText(getApplicationContext(), filePath.getPath() + File.separator + userName + "_"
                         + timeString + ".jpg", Toast.LENGTH_SHORT).show();
                 return new File(filePath.getPath() + File.separator + userName + "_"
-                            + timeString + ".jpg");
+                        + timeString + ".jpg");
             }
+            });
 
-        };
 
-        camera.takePicture(null, null, pictureCallBack);
-        Log.v(TAG, "takePicture is called.");
+        camera.startPreview();
+        Log.v(TAG, "takePicture was called.");
+        camera.stopPreview();
         camera.release();
-        camera = null;
+        camera = null;v */
+
+
+        Camera.PictureCallback pictureCallBack = new CameraPictureCallback();
+        camera.startPreview();
+        camera.takePicture(null, null, pictureCallBack);
+
+
     }
-    
+
+    class CameraPictureCallback implements Camera.PictureCallback{
+
+        public void onPictureTaken(byte[] data, Camera camera) {
+
+        Log.v(TAG, "pictureCallBack created. " + "onPictureTaken() is called.");
+        File capturedPhotoFile = getOutputMediaFile();
+        if (capturedPhotoFile == null) {
+            Log.e(TAG, "Could not create file");
+            return;
+        }
+
+        try {
+            FileOutputStream fos = new FileOutputStream(capturedPhotoFile);
+            fos.write(data);
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found: " + e.getMessage());
+            e.getStackTrace();
+        } catch (IOException e) {
+            Log.e(TAG, "I/O error writing file: " + e.getMessage());
+            e.getStackTrace();
+        }
+
+            camera.release();
+            camera = null;
+
+    }
+
+        //Hilfsmethode für Timestamp, Beaityfilter etc.
+    private File getOutputMediaFile() {
+        Log.v(TAG, "getOutputMediaFile() called.");
+        File filePath = new File(storagePath);
+        Log.v(TAG, "File created.");
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
+        String timeString = dateFormat.format(new Date());
+        Log.v(TAG, "Current time: " + timeString);
+        Toast.makeText(getApplicationContext(), filePath.getPath() + File.separator + userName + "_"
+                + timeString + ".jpg", Toast.LENGTH_SHORT).show();
+        return new File(filePath.getPath() + File.separator + userName + "_"
+                + timeString + ".jpg");
+    }
+}
 }
