@@ -18,6 +18,7 @@ public class StorageController {
     public StorageController(Context context){
         userNameStorage = new UserNameStorage(context);
         //storagePath = (context.getFilesDir().toString());
+        //Todo: Path genau definieren
         storagePath = "storage/emulated/0";
         Log.v("CapturePicService", "Storage Path " +  storagePath);
         //Environment.getExternalStorageDirectory();
