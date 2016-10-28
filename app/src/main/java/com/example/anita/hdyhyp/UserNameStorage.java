@@ -14,7 +14,6 @@ public class UserNameStorage {
     private enum pseudonym {DUKE, MONKEY, BOMEAST, TANQUERAY, HENDRICKS, FEEL, MARE, BRANDSTIFER, GRANIT, BEEFEATER};
     private SharedPreferences userNameStorage;
     private SharedPreferences.Editor userNameEditor;
-    private StorageController storageController;
 
     public UserNameStorage (Context context){
         userNameStorage = context.getSharedPreferences("User Name Storage", 0);

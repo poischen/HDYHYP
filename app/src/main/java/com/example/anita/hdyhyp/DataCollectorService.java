@@ -11,6 +11,9 @@ import android.view.Surface;
  */
 
 public class DataCollectorService extends Service {
+
+    private static final String TAG = "DataCollectorService";
+
     public DataCollectorService() {
     }
 

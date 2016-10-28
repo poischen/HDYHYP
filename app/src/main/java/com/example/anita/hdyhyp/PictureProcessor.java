@@ -5,4 +5,7 @@ package com.example.anita.hdyhyp;
  */
 
 public class PictureProcessor {
+
+    private static final String TAG = "PictureProcessor";
+
 }

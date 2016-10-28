@@ -12,6 +12,7 @@ import android.widget.Toast;
 public class StorageController {
 
     private static final String TAG = "StorageController";
+
     private String storagePath;
     private UserNameStorage userNameStorage;
 

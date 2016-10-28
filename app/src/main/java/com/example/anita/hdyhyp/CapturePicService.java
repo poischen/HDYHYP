@@ -63,8 +63,8 @@ public class CapturePicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "CapturePicService started.");
 
-        camera = getCameraInstance();
-        storagePath = (String) intent.getExtras().get("path");
+        try {camera = getCameraInstance();
+        storagePath = (String) intent.getExtras().get("storagePath");
         userName = (String) intent.getExtras().get("userName");
 
         SurfaceTexture surfaceTexture = new SurfaceTexture(0);
@@ -75,6 +75,10 @@ public class CapturePicService extends Service {
         }
 
         capturePhoto();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, " could not be started.");
+        }
         stopSelf();
         return START_NOT_STICKY;
     }

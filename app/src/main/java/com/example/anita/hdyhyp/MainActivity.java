@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /** Stores a pseudonym of the user for identifying him and naming the photos later */
+    /** Stores a pseudonym of the user for identifying him and naming the photos after him */
     private void storeUserName(String input){
         try {
             storage.setUserName(input);
@@ -84,19 +84,16 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Study user name not stored.");
         }
 
-        /**Starting the Shooting after inizialising the user name in order to test if everything works
-         * TODO: in Controller auslagern, testen ob es passt, sonst Controller Service wieder schließen
-         */
-        Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
-        capturePicServiceIntent.putExtra("path", storage.getStoragePath());
-        capturePicServiceIntent.putExtra("userName", storage.getUserName());
-        startService(capturePicServiceIntent);
 
-        /*Starts the longlasting Service which Controlls the Data Collection and the Photo Shooting
+        /*Starts a longlasting Service which controlls the Data Collection and the Photo Shooting
          */
 
         Intent controllerIntent = new Intent(this, ControllerService.class);
+        controllerIntent.putExtra("storagePath", storage.getStoragePath());
+        controllerIntent.putExtra("userName", storage.getUserName());
         getApplicationContext().startService(controllerIntent);
+
+
     }
 
     /** Loads the users pseudonym from the storage*/
