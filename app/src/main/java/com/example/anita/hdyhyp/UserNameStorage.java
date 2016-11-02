@@ -2,6 +2,11 @@ package com.example.anita.hdyhyp;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.Camera;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * This class stores the peusdonym of the user during the study
@@ -11,7 +16,7 @@ public class UserNameStorage {
 
     private static final String TAG = "UserNameStorage";
 
-    private enum pseudonym {DUKE, MONKEY, BOMEAST, TANQUERAY, HENDRICKS, FEEL, MARE, BRANDSTIFER, GRANIT, BEEFEATER};
+    private List<String> pseudonyms = Arrays.asList("Duke", "Monkey", "Bombayeast", "Tanqueray", "Hendricks", "Feel", "Mare", "Brandstifter", "Granit", "Beefeater");
     private SharedPreferences userNameStorage;
     private SharedPreferences.Editor userNameEditor;
 
@@ -21,9 +26,11 @@ public class UserNameStorage {
     }
 
     protected void setUserName(String input){
-        // todo: Test if the username is allowed
-        userNameEditor.putString("User Name", input);
-        userNameEditor.commit();
+        //if (pseudonyms.contains(input)) {
+            userNameEditor.putString("User Name", input);
+            userNameEditor.commit();
+      //  }
+
     }
 
     protected String getUserName(){

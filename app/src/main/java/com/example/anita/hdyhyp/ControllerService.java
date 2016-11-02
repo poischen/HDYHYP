@@ -54,7 +54,6 @@ public class ControllerService extends Service {
 
         try {
             /**Starting the Shooting after inizialising the user name in order to test if everything works
-             * TODO: in Controller auslagern, testen ob es passt, sonst Controller Service wieder schließen
              */
             Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
             Bundle extras = intent.getExtras();
@@ -71,10 +70,10 @@ public class ControllerService extends Service {
         }
 
         if (firstTrySuccessfullyFlag){
-            // start new thread and you your work there
+            //start the controlling function of the class in a new thread
             new Thread(runnable).start();
 
-            // Notification to start service foreground after design guidelines
+            // Notification to start service foreground according to the design guidelines
             Notification notification = new Notification.Builder(getApplicationContext())
                     .setContentTitle("HDYHYP")
                     .setContentText("Thank you for participating :)")

@@ -7,6 +7,9 @@ import android.widget.Toast;
 
 /**
  * Knows all storage information
+ * Shared Preferences for the username
+ * Internal Storage for the pictures
+ * SQL Database for the collected data
  */
 
 public class StorageController {
@@ -19,10 +22,8 @@ public class StorageController {
     public StorageController(Context context){
         userNameStorage = new UserNameStorage(context);
         //storagePath = (context.getFilesDir().toString());
-        //Todo: Path genau definieren
         storagePath = "storage/emulated/0";
         Log.v("CapturePicService", "Storage Path " +  storagePath);
-        //Environment.getExternalStorageDirectory();
     }
 
     public String getUserName(){
