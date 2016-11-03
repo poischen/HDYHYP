@@ -25,23 +25,19 @@ public class DataCollectorService extends Service {
 
 
 
-    /*int rotation = getWindowManager().getDefaultDisplay().getRotation();
-    int degrees = 0;
-    switch (rotation) {
-        case Surface.ROTATION_0:
-            degrees = 0;
-            break; // Natural orientation
-        case Surface.ROTATION_90:
-            degrees = 90;
-            break; // Landscape left
-        case Surface.ROTATION_180:
-            degrees = 180;
-            break;// Upside down
-        case Surface.ROTATION_270:
-            degrees = 270;
-            break;// Landscape right
-    }
-    int displayRotation;*/
+    /*TYPE_ACCELEROMETER 	Hardware 	Measures the acceleration force in m/s2 that is applied to a device on all three physical axes (x, y, and z), including the force of gravity. 	Motion detection (shake, tilt, etc.).
+TYPE_AMBIENT_TEMPERATURE 	Hardware 	Measures the ambient room temperature in degrees Celsius (°C). See note below. 	Monitoring air temperatures.
+TYPE_GRAVITY 	Software or Hardware 	Measures the force of gravity in m/s2 that is applied to a device on all three physical axes (x, y, z). 	Motion detection (shake, tilt, etc.).
+TYPE_GYROSCOPE 	Hardware 	Measures a device's rate of rotation in rad/s around each of the three physical axes (x, y, and z). 	Rotation detection (spin, turn, etc.).
+TYPE_LIGHT 	Hardware 	Measures the ambient light level (illumination) in lx. 	Controlling screen brightness.
+TYPE_LINEAR_ACCELERATION 	Software or Hardware 	Measures the acceleration force in m/s2 that is applied to a device on all three physical axes (x, y, and z), excluding the force of gravity. 	Monitoring acceleration along a single axis.
+TYPE_MAGNETIC_FIELD 	Hardware 	Measures the ambient geomagnetic field for all three physical axes (x, y, z) in μT. 	Creating a compass.
+TYPE_ORIENTATION 	Software 	Measures degrees of rotation that a device makes around all three physical axes (x, y, z). As of API level 3 you can obtain the inclination matrix and rotation matrix for a device by using the gravity sensor and the geomagnetic field sensor in conjunction with the getRotationMatrix() method. 	Determining device position.
+TYPE_PRESSURE 	Hardware 	Measures the ambient air pressure in hPa or mbar. 	Monitoring air pressure changes.
+TYPE_PROXIMITY 	Hardware 	Measures the proximity of an object in cm relative to the view screen of a device. This sensor is typically used to determine whether a handset is being held up to a person's ear. 	Phone position during a call.
+TYPE_RELATIVE_HUMIDITY 	Hardware 	Measures the relative ambient humidity in percent (%). 	Monitoring dewpoint, absolute, and relative humidity.
+TYPE_ROTATION_VECTOR 	Software or Hardware 	Measures the orientation of a device by providing the three elements of the device's rotation vector. 	Motion detection and rotation detection.
+TYPE_TEMPERATURE 	Hardware 	Measures the temperature of the device in degrees Celsius (°C). This sensor implementation varies across devices and this sensor was replaced with the TYPE_AMBIENT_TEMPERATURE sensor in API Level 14 	Monitoring temperatures.*/
 
 
 }

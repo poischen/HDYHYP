@@ -36,6 +36,12 @@
             android:name=".DataCollectorService"
             android:enabled="true"
             android:exported="true" />
+        <service
+            android:name=".MyService"
+            android:enabled="true"
+            android:exported="true"></service>
+
+        <receiver android:name=".ControllerService$ScreenOnOffReceiver" />
     </application>
 
 </manifest>
