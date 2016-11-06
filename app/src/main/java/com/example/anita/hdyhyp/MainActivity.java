@@ -13,10 +13,14 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView readyTextView;
     private Button submitButton;
-    private EditText inputField;
     private TextView tellMeYourNameView;
     private TextView helloTextView;
     private StorageController storage;
+    private Spinner namesSpinner;
+    private Spinner fromSpinner;
+    private static final int[] fromSpinnerTimes = {4,5,6,7,8,9,10,11,12};
+    private Spinner toSpinner;
+    private static final int[] toSpinnerTimes = {8,9,10,11,12};
 
     private Button deleteButton;
 
@@ -29,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
         readyTextView = (TextView) findViewById(R.id.statusTextView);
         submitButton = (Button) findViewById(R.id.submitButton);
-        inputField = (EditText) findViewById(R.id.inputName);
+        namesSpinner = (Spinner) findViewById(R.id.spinnerNames);
         tellMeYourNameView = (TextView) findViewById(R.id.tellMeYourNameTextView);
         helloTextView = (TextView) findViewById(R.id.helloTextView);
 
@@ -39,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
             submitButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Log.v(TAG, "Submit Button clicked");
-                    storeUserName(inputField.getText().toString());
+                    storeUserName(namesSpinner.getSelectedItem().toString());
                 }
             });
         } else {
@@ -56,13 +60,12 @@ public class MainActivity extends AppCompatActivity {
                 submitButton.setEnabled(true);
                 helloTextView.setText(R.string.hello);
                 readyTextView.setText(R.string.waiting);
-                inputField.setEnabled(true);
-                inputField.setText("");
+                namesSpinner.setEnabled(true);
                 tellMeYourNameView.setEnabled(true);
                 submitButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         Log.v(TAG, "Submit Button clicked");
-                        storeUserName(inputField.getText().toString());
+                        storeUserName(namesSpinner.getSelectedItem().toString());
                     }
                 });
             }
@@ -109,9 +112,7 @@ public class MainActivity extends AppCompatActivity {
         submitButton.setEnabled(false);
         helloTextView.setText("Hello " + username + "!");
         readyTextView.setText(R.string.ready);
-        inputField.setEnabled(false);
-        inputField.setText(username);
+        namesSpinner.setEnabled(false);
         tellMeYourNameView.setEnabled(false);
-    }
-
+        }
 }

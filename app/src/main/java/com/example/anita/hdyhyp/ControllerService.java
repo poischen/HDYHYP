@@ -6,8 +6,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 import java.util.Observable;
@@ -34,8 +34,11 @@ class ControllerService extends Service implements Observer {
     private String userName;
     private BroadcastReceiver screenOnOffReceiver;
     private int lastPicCapturedOn;
-    private Timer timer = null;
+    private Timer onOffTimer = null;
+    private Thread picturesAreCurrentlyTakenThread;
 
+    public enum CapturingEvent {SCREENON, ORIENTATION, KEYBOARD, APPLICATION};
+    public CapturingEvent capturingEvent;
 
 
     public ControllerService() {
@@ -71,7 +74,7 @@ class ControllerService extends Service implements Observer {
             ObservableObject.getInstance().addObserver(this);
 
             //start the controlling function of the class in a new thread
-            new Thread(runnableIntervallTest).start();
+            //new Thread(runnableIntervallTest).start();
 
             // Notification to start service foreground according to the design guidelines
             Notification notification = new Notification.Builder(getApplicationContext())
@@ -96,52 +99,70 @@ class ControllerService extends Service implements Observer {
         }
     }
 
-    @Override
+        @Override
     public void update(Observable observable, Object data) {
         Log.v(TAG, "Screen is on: " + ObservableObject.getInstance().getIsScreenOn());
-        if (timer != null && !ObservableObject.getInstance().getIsScreenOn()){
-            timer.cancel();
-            timer = null;
-            Log.v(TAG, "Countdown canceld.");
+        if (picturesAreCurrentlyTakenThread != null && !ObservableObject.getInstance().getIsScreenOn()){
+            picturesAreCurrentlyTakenThread.interrupt();
+            picturesAreCurrentlyTakenThread = null;
+            Log.v(TAG, "Screen is turned off, picture taking thread is canceled.");
         } else if (ObservableObject.getInstance().getIsScreenOn()) {
-            new Thread(runnableShootPicture).start();
+            capturingEvent = CapturingEvent.SCREENON;
+            picturesAreCurrentlyTakenThread = new Thread(runnableShootPicture);
+            picturesAreCurrentlyTakenThread.start();
         }
     }
+
+    /*Shoots pictures while the user turns on the screen, 2 seconds after and 8 seconds after*/
+    private Runnable runnableShootPicture = new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+            switch (capturingEvent) {
+                case SCREENON:
+                    startCapturePictureService();
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "Thread cannot sleep :(");
+                        e.printStackTrace();
+                    }
+                    startCapturePictureService();
+                    try {
+                        Thread.sleep(8000);
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "Thread cannot sleep yet another time :(");
+                        e.printStackTrace();
+                    }
+                    startCapturePictureService();
+                    picturesAreCurrentlyTakenThread.interrupt();
+                    picturesAreCurrentlyTakenThread = null;
+                    break;
+
+                case ORIENTATION:
+                    break;
+                case KEYBOARD:
+                    break;
+                case APPLICATION:
+                    break;
+
+                default:
+                    Log.d(TAG, "No event was detected while runnableShootPicture was called.");
+                    break;
+            }
+        }}
+
+    };
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
 
-  /*decides if it is time to shoot a new picture
-    * 1. if screen is on, see, if it is time to shoot a picture (flag), else do nothing
-    * 2. wait 5 minutes
-    * 3. shoot picture, if screen is still on, and set flag
-    *
-    * Pictures will be captured from 8 am to 10 pm within intervalls of 2 hours.
-    * If an intervall is over and no picture has been shoot (flag 1) or the user did not like the picture (flag 2), a picture will be captured as soon as the screen is turned on again
-    * Between captured pictures there shall be at least half an hour
-    */
 
-    private Runnable runnableShootPicture = new Runnable() {
-        @Override
-        public void run() {
-            while(true) {
 
-                timer = new Timer();
 
-            }
-        }
-    };
 
-    private Runnable runnableIntervallTest = new Runnable() {
-        @Override
-        public void run() {
-            while(true) {
-
-            }
-        }
-    };
 
     private void startCapturePictureService() {
         Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
@@ -149,15 +170,6 @@ class ControllerService extends Service implements Observer {
         capturePicServiceIntent.putExtra("userName", userName);
         getApplicationContext().startService(capturePicServiceIntent);
     }
-
-    public void setPicFlag(boolean picFlag) {
-        this.picFlag = picFlag;
-    }
-
-    public void setDataFlag(boolean dataFlag){
-        this.dataFlag = dataFlag;
-    }
-
 
 
 
@@ -184,4 +196,35 @@ class ControllerService extends Service implements Observer {
         }
 
     }
+
+
+    /*private class RunnableShootPicture extends AsyncTask<CapturingEvent, Void, Void> {
+
+        @Override
+        protected Void doInBackground(CapturingEvent... params) {
+            switch (params[0]) {
+                case SCREENON:
+                startCapturePictureService();
+                onOffTimer.schedule(new startCapturePictureServiceTask(), 2000 );
+                onOffTimer.schedule(new startCapturePictureServiceTask(), 8000 );
+                onOffTimer.cancel();
+                onOffTimer = null;
+                    break;
+
+                case ORIENTATION:
+                    break;
+                case KEYBOARD:
+                    break;
+                case APPLICATION:
+                    break;
+
+                default:
+                    Log.d(TAG, "No event was detected while runnableShootPicture was called.");
+                    break;
+            }
+
+            return null;
+        }
+    }*/
+
 }

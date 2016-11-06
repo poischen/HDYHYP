@@ -4,4 +4,20 @@
     <string name="tellUrName">Please tell me your study name:</string>
     <string name="waiting">Waiting for input...</string>
     <string name="ready">App is ready.</string>
+
+    <string name="spinnerNamesChoose">Choose your study name:</string>
+    <string-array name="spinnerNamesEntries">
+        <item>Duke</item>
+        <item>Monkey</item>
+        <item>Bombay East</item>
+        <item>Tanqueray</item>
+        <item>Hendricks</item>
+        <item>Feel</item>
+        <item>Mare</item>
+        <item>Brandstifter</item>
+        <item>Granit</item>
+        <item>Beefeater</item>
+    </string-array>
+
+
 </resources>

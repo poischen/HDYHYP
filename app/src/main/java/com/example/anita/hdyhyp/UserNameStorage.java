@@ -16,7 +16,6 @@ public class UserNameStorage {
 
     private static final String TAG = "UserNameStorage";
 
-    private List<String> pseudonyms = Arrays.asList("Duke", "Monkey", "Bombayeast", "Tanqueray", "Hendricks", "Feel", "Mare", "Brandstifter", "Granit", "Beefeater");
     private SharedPreferences userNameStorage;
     private SharedPreferences.Editor userNameEditor;
 
