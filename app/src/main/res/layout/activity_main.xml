@@ -29,29 +29,6 @@
         android:layout_centerHorizontal="true" />
 
 
-    <Button
-        android:text=" delte name "
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColorPrimary"
-        android:background="@color/colorPrimary"
-        android:id="@+id/deleteButton"
-        android:layout_alignBaseline="@+id/submitButton"
-        android:layout_alignBottom="@+id/submitButton"
-        android:layout_toRightOf="@+id/statusTextView"
-        android:layout_toEndOf="@+id/statusTextView" />
-
-    <Button
-        android:text="submit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColorPrimary"
-        android:background="@color/colorPrimary"
-        android:id="@+id/submitButton"
-        android:layout_above="@+id/statusTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="59dp" />
-
     <TextView
         android:text="@string/hello"
         android:layout_width="wrap_content"
@@ -60,46 +37,6 @@
         android:id="@+id/helloTextView"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
-
-    <TextView
-        android:text="To:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_alignLeft="@+id/FromTextView"
-        android:layout_alignStart="@+id/FromTextView"
-        android:id="@+id/ToTextView" />
-
-    <TextView
-        android:text="From:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/FromTextView"
-        android:layout_above="@+id/ToTextView"
-        android:layout_marginBottom="14dp" />
-
-    <Spinner
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/spinner3"
-        android:layout_alignTop="@+id/FromTextView"
-        android:layout_alignLeft="@+id/helloTextView"
-        android:layout_alignStart="@+id/helloTextView"
-        android:layout_marginLeft="19dp"
-        android:layout_marginStart="19dp"
-        android:layout_alignBottom="@+id/FromTextView"
- />
-
-    <Spinner
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/ToSpinner"
-        android:layout_alignTop="@+id/ToTextView"
-        android:layout_alignLeft="@+id/spinner3"
-        android:layout_alignStart="@+id/spinner3"
-        android:layout_alignBottom="@+id/ToTextView"
-        android:layout_alignRight="@+id/spinner3"
-        android:layout_alignEnd="@+id/spinner3" />
 
     <Spinner
         android:layout_width="match_parent"
@@ -112,12 +49,26 @@
         android:entries="@array/spinnerNamesEntries"
         android:prompt="@string/spinnerNamesChoose"/>
 
-    <TextView
-        android:text="Please tell me, when you are awake:"
+    <Button
+        android:text=" delte name "
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textViewTimes"
-        android:layout_above="@+id/spinner3"
+        android:textColor="@color/textColorPrimary"
+        android:background="@color/colorPrimary"
+        android:id="@+id/deleteButton"
+        android:layout_alignTop="@+id/submitButton"
+        android:layout_alignLeft="@+id/submitButton"
+        android:layout_alignStart="@+id/submitButton"
+        android:layout_marginTop="64dp" />
+
+    <Button
+        android:text="submit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textColorPrimary"
+        android:background="@color/colorPrimary"
+        android:id="@+id/submitButton"
+        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

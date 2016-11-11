@@ -17,10 +17,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView helloTextView;
     private StorageController storage;
     private Spinner namesSpinner;
-    private Spinner fromSpinner;
-    private static final int[] fromSpinnerTimes = {4,5,6,7,8,9,10,11,12};
-    private Spinner toSpinner;
-    private static final int[] toSpinnerTimes = {8,9,10,11,12};
 
     private Button deleteButton;
 

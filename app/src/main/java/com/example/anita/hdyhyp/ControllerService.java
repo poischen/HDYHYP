@@ -6,14 +6,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.OrientationEventListener;
+import android.widget.Toast;
+
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Timer;
-import java.util.TimerTask;
 
 /*
 Controlls when and how often photos are captures
@@ -23,7 +25,7 @@ it is realized as a foreground service so it won't be killed by Android and the 
 */
 
 
-class ControllerService extends Service implements Observer {
+public class ControllerService extends Service implements Observer {
 
     private static final String TAG = "ControllerService";
 
@@ -32,11 +34,10 @@ class ControllerService extends Service implements Observer {
     private boolean firstTrySuccessfullyFlag;
     private String storagePath;
     private String userName;
-    private BroadcastReceiver screenOnOffReceiver;
-    private int lastPicCapturedOn;
-    private Timer onOffTimer = null;
+    private BroadcastReceiver broadcastReceiver;
     private Thread picturesAreCurrentlyTakenThread;
 
+    private boolean wasOrientationPortraitLatest;
     public enum CapturingEvent {SCREENON, ORIENTATION, KEYBOARD, APPLICATION};
     public CapturingEvent capturingEvent;
 
@@ -65,16 +66,15 @@ class ControllerService extends Service implements Observer {
         }
 
         if (firstTrySuccessfullyFlag){
-            //Register Broadcast Receiver for listening if the screen is on/off
-            final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-            filter.addAction(Intent.ACTION_SCREEN_OFF);
-            screenOnOffReceiver = new ScreenOnOffReceiver();
-            registerReceiver(screenOnOffReceiver, filter);
-
+            //Register Broadcast Receiver for listening if the screen is on/off & if orientation has changed
+            broadcastReceiver = new MyBroadcastReceiver();
+            final IntentFilter onOffFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+            onOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
+            final IntentFilter configurationFilter = new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED);
+            configurationFilter.addAction(KEYGUARD_SERVICE);
+            registerReceiver(broadcastReceiver, onOffFilter);
+            registerReceiver(broadcastReceiver, configurationFilter);
             ObservableObject.getInstance().addObserver(this);
-
-            //start the controlling function of the class in a new thread
-            //new Thread(runnableIntervallTest).start();
 
             // Notification to start service foreground according to the design guidelines
             Notification notification = new Notification.Builder(getApplicationContext())
@@ -93,25 +93,28 @@ class ControllerService extends Service implements Observer {
 
     @Override
     public void onDestroy(){
-        if (screenOnOffReceiver != null) {
-            unregisterReceiver(screenOnOffReceiver);
-            screenOnOffReceiver = null;
+        if (broadcastReceiver != null) {
+            unregisterReceiver(broadcastReceiver);
+            broadcastReceiver = null;
         }
     }
 
         @Override
     public void update(Observable observable, Object data) {
-        Log.v(TAG, "Screen is on: " + ObservableObject.getInstance().getIsScreenOn());
+            //TODO: Abgleich machen, welche Werte sich zu vorher geändert haben
+        //Log.v(TAG, "Screen is on: " + ObservableObject.getInstance().getIsScreenOn());
         if (picturesAreCurrentlyTakenThread != null && !ObservableObject.getInstance().getIsScreenOn()){
             picturesAreCurrentlyTakenThread.interrupt();
             picturesAreCurrentlyTakenThread = null;
             Log.v(TAG, "Screen is turned off, picture taking thread is canceled.");
-        } else if (ObservableObject.getInstance().getIsScreenOn()) {
+        } /*else if (ObservableObject.getInstance().getIsScreenOn()) {
             capturingEvent = CapturingEvent.SCREENON;
             picturesAreCurrentlyTakenThread = new Thread(runnableShootPicture);
             picturesAreCurrentlyTakenThread.start();
-        }
+        }*/
     }
+
+
 
     /*Shoots pictures while the user turns on the screen, 2 seconds after and 8 seconds after*/
     private Runnable runnableShootPicture = new Runnable() {
@@ -122,7 +125,7 @@ class ControllerService extends Service implements Observer {
                 case SCREENON:
                     startCapturePictureService();
                     try {
-                        Thread.sleep(2000);
+                        Thread.sleep(8000);
                     } catch (InterruptedException e) {
                         Log.d(TAG, "Thread cannot sleep :(");
                         e.printStackTrace();
@@ -160,10 +163,6 @@ class ControllerService extends Service implements Observer {
     }
 
 
-
-
-
-
     private void startCapturePictureService() {
         Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
         capturePicServiceIntent.putExtra("storagePath", storagePath);
@@ -172,59 +171,19 @@ class ControllerService extends Service implements Observer {
     }
 
 
+//TESTTEST
+    @Override
+    public void onConfigurationChanged(Configuration newConfig){
+        super.onConfigurationChanged(newConfig);
 
-    /*
-    Knows when the user switches the screen on or off and lets the Controller Service know
-     */
-    public class ScreenOnOffReceiver extends BroadcastReceiver {
 
-        private static final String TAG = "ScreenOnOffReceiver";
-        private boolean isScreenOn;
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-             if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                Log.v(TAG, "Screen is on now.");
-                isScreenOn = true;
-            } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                Log.v(TAG, "Screen is off now.");
-                isScreenOn = false;
-            }
-
-            ObservableObject.getInstance().setIsScreenOn(isScreenOn);
-            ObservableObject.getInstance().updateValue(intent);
+        // Checks whether a hardware keyboard is available
+        if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
+            Toast.makeText(this, "keyboard visible", Toast.LENGTH_SHORT).show();
+        } else if (newConfig.hardKeyboardHidden ==
+                Configuration.HARDKEYBOARDHIDDEN_YES) {
+            Toast.makeText(this, "keyboard hidden", Toast.LENGTH_SHORT).show();
         }
-
     }
-
-
-    /*private class RunnableShootPicture extends AsyncTask<CapturingEvent, Void, Void> {
-
-        @Override
-        protected Void doInBackground(CapturingEvent... params) {
-            switch (params[0]) {
-                case SCREENON:
-                startCapturePictureService();
-                onOffTimer.schedule(new startCapturePictureServiceTask(), 2000 );
-                onOffTimer.schedule(new startCapturePictureServiceTask(), 8000 );
-                onOffTimer.cancel();
-                onOffTimer = null;
-                    break;
-
-                case ORIENTATION:
-                    break;
-                case KEYBOARD:
-                    break;
-                case APPLICATION:
-                    break;
-
-                default:
-                    Log.d(TAG, "No event was detected while runnableShootPicture was called.");
-                    break;
-            }
-
-            return null;
-        }
-    }*/
 
 }
