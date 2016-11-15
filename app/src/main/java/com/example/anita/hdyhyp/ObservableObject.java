@@ -1,5 +1,7 @@
 package com.example.anita.hdyhyp;
 
+import android.util.Log;
+
 import java.util.Observable;
 
 

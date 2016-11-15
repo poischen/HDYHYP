@@ -1,6 +1,8 @@
 package com.example.anita.hdyhyp;
 
 import android.content.Intent;
+import android.net.Uri;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +19,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView helloTextView;
     private StorageController storage;
     private Spinner namesSpinner;
+    private Button settingsButton1;
+    private Button settingsButton2;
 
     private Button deleteButton;
 
@@ -32,10 +36,31 @@ public class MainActivity extends AppCompatActivity {
         namesSpinner = (Spinner) findViewById(R.id.spinnerNames);
         tellMeYourNameView = (TextView) findViewById(R.id.tellMeYourNameTextView);
         helloTextView = (TextView) findViewById(R.id.helloTextView);
+        settingsButton1 = (Button) findViewById(R.id.buttonSettings1);
+        settingsButton2 = (Button) findViewById(R.id.buttonSettings2);
+
+        settingsButton1.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                //get permission reading information about current running apps
+                Intent settingsIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                startActivity(settingsIntent);
+            }
+        });
+
+        settingsButton2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                //get camera and storage permission
+                Intent permissionIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                permissionIntent.setData(uri);
+                startActivity(permissionIntent);
+            }
+        });
 
         /**Asks for and inizilizes the users pseudonym to identify him during the study if it is not already set
           visual feedback / input not possible if the name is already set */
         if (storage.getUserName() == null){
+            //update UI
             submitButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Log.v(TAG, "Submit Button clicked");

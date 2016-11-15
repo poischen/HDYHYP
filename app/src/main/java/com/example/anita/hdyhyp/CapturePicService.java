@@ -47,6 +47,7 @@ public class CapturePicService extends Service {
     private int cameraId;
     private String storagePath;
     private String userName;
+    private SurfaceTexture surfaceTexture;
 
     public CapturePicService() {
     }
@@ -68,6 +69,8 @@ public class CapturePicService extends Service {
         Log.v(TAG, "CapturePicService destroyed.");
     }
 
+
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "CapturePicService started.");
@@ -77,14 +80,20 @@ public class CapturePicService extends Service {
             storagePath = (String) intent.getExtras().get("storagePath");
             userName = (String) intent.getExtras().get("userName");
 
-            SurfaceTexture surfaceTexture = new SurfaceTexture(0);
+            surfaceTexture = new SurfaceTexture(0);
             try {
                 camera.setPreviewTexture(surfaceTexture);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            capturePhoto();
+            Thread capturePhotoThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    capturePhoto();
+                }
+            });
+            capturePhotoThread.start();
         } catch (Exception e) {
             e.printStackTrace();
             Log.d(TAG, " could not be started.");
@@ -133,9 +142,7 @@ public class CapturePicService extends Service {
 
     private void capturePhoto() {
         Log.v(TAG, "capturePhoto() is called.");
-        // ToDO: Timestamp auf Foto drucken, evtl Filter
         // Todo: Foto Orientierung da 13 +
-        // Todo: Push Notification
         Log.v(TAG, "Camera object: " + camera);
         Camera.PictureCallback pictureCallBack = new CameraPictureCallback();
         camera.startPreview();
