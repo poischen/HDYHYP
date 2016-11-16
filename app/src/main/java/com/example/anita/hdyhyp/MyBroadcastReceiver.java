@@ -21,11 +21,11 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         switch ( intent.getAction()){
             case Intent.ACTION_SCREEN_ON:
                 Log.v(TAG, "Screen is on now.");
-                ObservableObject.getInstance().setIsScreenOn(true);
+                //ObservableObject.getInstance().setIsScreenOn(true);
                 break;
             case Intent.ACTION_SCREEN_OFF:
                 Log.v(TAG, "Screen is off now.");
-                ObservableObject.getInstance().setIsScreenOn(false);
+                //ObservableObject.getInstance().setIsScreenOn(false);
                 break;
             case Intent.ACTION_CONFIGURATION_CHANGED:
                 Configuration configuration = context.getResources().getConfiguration();
@@ -43,6 +43,9 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
                     Log.v(TAG, "Keyboard is not opened.");
                     ObservableObject.getInstance().setKeyboardVisible(false);
                 }
+            case Intent.ACTION_CAMERA_BUTTON:
+                Log.v(TAG, "Camera Button was pressed.");
+                break;
             default:
         }
         ObservableObject.getInstance().updateValue(intent);

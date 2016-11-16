@@ -15,6 +15,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -33,25 +34,25 @@ public class ControllerService extends Service implements Observer {
 
     private static final String TAG = "ControllerService";
 
-    private boolean picFlag;
-    private boolean dataFlag;
     private boolean firstTrySuccessfullyFlag;
     private String storagePath;
     private String userName;
     private BroadcastReceiver broadcastReceiver;
     private Thread picturesAreCurrentlyTakenThread;
+   // private CapturePicService currentCapturePicService;
 
-    private boolean wasOrientationPortraitLatest;
-    public enum CapturingEvent {SCREENON, ORIENTATION, KEYBOARD, APPLICATION};
+    public enum CapturingEvent {SCREENON, ORIENTATION, KEYBOARD, APPLICATION, PUSHNOTIFICATION, CAM};
     public CapturingEvent capturingEvent;
     private String lastdetectedApp = "com.example.anita.hdyhyp";
+    private boolean lastDetectedOrientaionPortrait = true;
     private Thread appDetectionThread;
+    private boolean dataFlag;
+
+    List<Intent> intentList = new ArrayList<>(); //TODO: Wann werden die Intents aus der Liste gelöscht?
 
 
     public ControllerService() {
 
-        picFlag = false;
-        dataFlag = false;
     }
 
     @Override
@@ -77,12 +78,11 @@ public class ControllerService extends Service implements Observer {
             broadcastReceiver = new MyBroadcastReceiver();
             final IntentFilter onOffFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
             onOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
-            onOffFilter.addAction(Intent.ACTION_USER_PRESENT);
             final IntentFilter configurationFilter = new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED);
-            configurationFilter.addAction(KEYGUARD_SERVICE);
-            configurationFilter.addAction(Intent.ACTION_INPUT_METHOD_CHANGED);
+            final IntentFilter camButtonFilter = new IntentFilter(Intent.ACTION_CAMERA_BUTTON);
             registerReceiver(broadcastReceiver, onOffFilter);
             registerReceiver(broadcastReceiver, configurationFilter);
+            registerReceiver(broadcastReceiver, camButtonFilter);
             ObservableObject.getInstance().addObserver(this);
 
             // Notification about starting the controller service foreground according to the design guidelines
@@ -97,7 +97,7 @@ public class ControllerService extends Service implements Observer {
             appDetectionThread = new Thread(runnableAppDetector);
             appDetectionThread.start();
         } else {
-            onDestroy();
+            stopSelf();
 
         }
         return START_STICKY;
@@ -117,74 +117,29 @@ public class ControllerService extends Service implements Observer {
 
         @Override
     public void update(Observable observable, Object data) {
-            if (data.toString().contains((Intent.ACTION_SCREEN_OFF).toString())){
-                if (picturesAreCurrentlyTakenThread != null && !ObservableObject.getInstance().getIsScreenOn()){
-                    picturesAreCurrentlyTakenThread.interrupt();
-                    picturesAreCurrentlyTakenThread = null;
-                    Log.v(TAG, "Screen is turned off, picture taking thread is canceled.");
-            }
-        } /*else if (ObservableObject.getInstance().getIsScreenOn()) {
-            capturingEvent = CapturingEvent.SCREENON;
-            picturesAreCurrentlyTakenThread = new Thread(runnableShootPicture);
-            picturesAreCurrentlyTakenThread.start();
-        }*/
-    }
-
-
-    private Runnable runnableAppDetector = new Runnable() {
-        @Override
-        public void run() {
-            while (true) {
-                detectApps();
-            }}
-
-    };
-
-
-    /*Shoots pictures while the user turns on the screen, 2 seconds after and 8 seconds after*/
-    private Runnable runnableShootPicture = new Runnable() {
-        @Override
-        public void run() {
-            while (true) {
-            switch (capturingEvent) {
-                case SCREENON:
-                    startCapturePictureService();
-                    try {
-                        Thread.sleep(8000);
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "Thread cannot sleep :(");
-                        e.printStackTrace();
+            String action =  data.toString();
+            if (action.contains("android.intent.action.SCREEN_OFF")){
+                stopIfPicturesAreCurrentlyTaken();
+            } else{
+                if (action.contains("android.intent.action.SCREEN_ON")){
+                    stopIfPicturesAreCurrentlyTaken();
+                    capturingEvent = CapturingEvent.SCREENON;
+                }
+                else if (action.contains("android.intent.action.CONFIGURATION_CHANGED")){
+                    if (ObservableObject.getInstance().isOrientationPortrait() != lastDetectedOrientaionPortrait){
+                        lastDetectedOrientaionPortrait = ObservableObject.getInstance().isOrientationPortrait();
+                        stopIfPicturesAreCurrentlyTaken();
+                        capturingEvent = CapturingEvent.ORIENTATION;
                     }
-                    startCapturePictureService();
-                    try {
-                        Thread.sleep(8000);
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "Thread cannot sleep yet another time :(");
-                        e.printStackTrace();
-                    }
-                    startCapturePictureService();
-                    picturesAreCurrentlyTakenThread.interrupt();
-                    picturesAreCurrentlyTakenThread = null;
-                    break;
+                }
+                else if (action.contains("android.intent.action.ACTION_CAMERA_BUTTON")){
 
-                case ORIENTATION:
-                    break;
-                case KEYBOARD:
-                    break;
-                case APPLICATION:
-                    break;
-
-                default:
-                    Log.d(TAG, "No event was detected while runnableShootPicture was called.");
-                    break;
+                    stopIfPicturesAreCurrentlyTaken();
+                    capturingEvent = CapturingEvent.CAM;
+                }
+                picturesAreCurrentlyTakenThread = new Thread(runnableShootPicture);
+                picturesAreCurrentlyTakenThread.start();
             }
-        }}
-
-    };
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 
 
@@ -192,9 +147,110 @@ public class ControllerService extends Service implements Observer {
         Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
         capturePicServiceIntent.putExtra("storagePath", storagePath);
         capturePicServiceIntent.putExtra("userName", userName);
+        intentList.add(capturePicServiceIntent);
         getApplicationContext().startService(capturePicServiceIntent);
     }
 
+    private void stopIfPicturesAreCurrentlyTaken(){
+        if (picturesAreCurrentlyTakenThread != null && picturesAreCurrentlyTakenThread.isAlive()){
+            picturesAreCurrentlyTakenThread.interrupt();
+            picturesAreCurrentlyTakenThread = null;
+            if (!intentList.isEmpty()){
+                for (Intent i : intentList) {
+                    stopService(i);
+                    intentList.remove(i);
+                }
+            }
+            Log.v(TAG, "Picture taking interrupted.");
+        }
+    }
+
+    private Runnable runnableShootPicture = new Runnable() {
+        @Override
+        public void run() {
+            switch (capturingEvent) {
+                case SCREENON:
+                    Log.v(TAG, "SCREENON Event - Take 1. photo.");
+                    startCapturePictureService();
+                    try {
+                        //TODO: Reserach time, people need to unlock their phones
+                        Thread.sleep(3000);
+                        Log.v(TAG, "SCREENON Event - Take 2. photo.");
+                        startCapturePictureService();
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "SCREENON Event - Thread cannot sleep :(");
+                        e.printStackTrace();
+                    }
+                    try {
+                        //TODO: Research time, people need to get to their target on the device
+                        Thread.sleep(8000);
+                        Log.v(TAG, "SCREENON Event - Take 3. photo.");
+                        startCapturePictureService();
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "SCREENON Event - Sad thread cannot sleep yet another time :(");
+                        e.printStackTrace();
+                    }
+                    break;
+
+                case ORIENTATION:
+                    Log.v(TAG, "ORIENTATION Event - Take 1. photo.");
+                    startCapturePictureService();
+                    try {
+                        Thread.sleep(3000);
+                        Log.v(TAG, "ORIENTATION Event - Take 2. photo.");
+                        startCapturePictureService();
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "ORIENTATION Event - Thread cannot sleep :(");
+                        e.printStackTrace();
+                    }
+                    break;
+                case KEYBOARD:
+                    break;
+                case APPLICATION:
+                    Log.v(TAG, "APPLICATION Event - Take 1. photo.");
+                    startCapturePictureService();
+                    try {
+                        Thread.sleep(3000);
+                        Log.v(TAG, "APPLICATION Event - Take 2. photo.");
+                        startCapturePictureService();
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "APPLICATION Event - Thread cannot sleep :(");
+                        e.printStackTrace();
+                    }
+                    try {
+                        Thread.sleep(25000);
+                        Log.v(TAG, "APPLICATION Event - Take 3. photo.");
+                        startCapturePictureService();
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "APPLICATION Event - Sad thread cannot sleep yet another time :(");
+                        e.printStackTrace();
+                    }
+                    break;
+                case PUSHNOTIFICATION:
+                    Log.v(TAG, "NOTIFICATION Event - Take 1. photo.");
+                    startCapturePictureService();
+                    break;
+                case CAM:
+                    Log.v(TAG, "REARCAM Event - Take 1. photo.");
+                    startCapturePictureService();
+                    break;
+                default:
+                    Log.d(TAG, "No event was detected while runnableShootPicture was called.");
+                    break;
+            }
+
+            picturesAreCurrentlyTakenThread.interrupt();
+            picturesAreCurrentlyTakenThread = null;
+            if (!intentList.isEmpty()){
+                intentList.clear();
+            }
+        }
+    };
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
 /*//TESTTEST
     @Override
@@ -209,6 +265,16 @@ public class ControllerService extends Service implements Observer {
             Toast.makeText(this, "keyboard hidden", Toast.LENGTH_SHORT).show();
         }
     }*/
+
+
+    private Runnable runnableAppDetector = new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                detectApps();
+            }}
+
+    };
 
     //know the current running apps and detects, if the foreground apps changed
     private void detectApps() {
@@ -230,13 +296,15 @@ public class ControllerService extends Service implements Observer {
         else {
             ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
             currentApp=(manager.getRunningTasks(1).get(0)).topActivity.getPackageName();
+            //(manager.getRunningTasks(1).get(0)).describeContents();
         }
         if (lastdetectedApp !=null && !lastdetectedApp.equals(currentApp) && !currentApp.contains("com.android.") && !currentApp.equals("com.example.anita.hdyhyp")){
             Log.v(TAG, "Current SDK: " + Build.VERSION.SDK_INT + ", new app detected on foreground: " + currentApp);
             lastdetectedApp = currentApp;
             //TODO: Inform controller
+            //TODO:
             //com.google.android.googlequicksearchbox
-            //TODO: incoming push ignorieren
+            //TODO: erfassen, ob es sich um eine push notification handelt
         }
 
     }

@@ -1,6 +1,7 @@
 package com.example.anita.hdyhyp;
 
 import android.app.Activity;
+import android.app.IntentService;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -40,7 +41,7 @@ import java.util.Locale;
 import static android.R.attr.width;
 
 
-public class CapturePicService extends Service {
+public class CapturePicService extends IntentService {
 
     private static final String TAG = "CapturePicService";
     private Camera camera;
@@ -50,6 +51,7 @@ public class CapturePicService extends Service {
     private SurfaceTexture surfaceTexture;
 
     public CapturePicService() {
+        super("CapturePicService");
     }
 
     @Override
@@ -60,21 +62,7 @@ public class CapturePicService extends Service {
     }
 
     @Override
-    public void onCreate() {
-        Log.v(TAG, "CapturePicService created.");
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.v(TAG, "CapturePicService destroyed.");
-    }
-
-
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v(TAG, "CapturePicService started.");
-
+    protected void onHandleIntent(Intent intent) {
         try {
             camera = getCameraInstance();
             storagePath = (String) intent.getExtras().get("storagePath");
@@ -86,20 +74,22 @@ public class CapturePicService extends Service {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            Thread capturePhotoThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    capturePhoto();
-                }
-            });
-            capturePhotoThread.start();
+            capturePhoto();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, " could not be started.");
+            Log.d(TAG, " could not be handled.");
         }
-        stopSelf();
-        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.v(TAG, "CapturePicService created.");
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.v(TAG, "CapturePicService destroyed.");
     }
 
     /*Search for the front facing camera*/
@@ -160,6 +150,15 @@ public class CapturePicService extends Service {
         }
 
         //taking the picture
+        /* <p>This method is only valid when preview is active (after
+        * {@link #startPreview()}).  Preview will be stopped after the image is
+        * taken; callers must call {@link #startPreview()} again if they want to
+        * re-start preview or take more pictures.
+        *
+        * <p>After calling this method, you must not call {@link #startPreview()}
+        * or take another picture until the JPEG callback has returned.
+        */
+        //TODO: Statt Thread in ControllerService der schläft, hier her übergeben, wie oft das Foto gemacht werden soll und preview neu starten und Fotos machen? zu klären: Wie finde ich heraus, wann callback has returned?
         camera.takePicture(null, null, pictureCallBack);
     }
 
