@@ -9,11 +9,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.inputmethod.InputMethodManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,17 +22,17 @@ import java.util.Observer;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.NOTHING;
+
 /*
-Controlls when and how often photos are captures
-Knows the storage folder of the files
-when picture processor set flag that the picture is taken and processed and the data collector sets a flag, that he collected all data, the service triggers a Notification for the user that he can review his picture and fil the surveys
+Controlls when and how often photos are captures and holds all necessary inforamtion
 it is realized as a foreground service so it won't be killed by Android and the participant has feedback, that the Service is still running
 */
 
 
 public class ControllerService extends Service implements Observer {
 
-    private static final String TAG = "ControllerService";
+    private static final String TAG = ControllerService.class.getSimpleName();
 
     private boolean firstTrySuccessfullyFlag;
     private String storagePath;
@@ -41,9 +41,12 @@ public class ControllerService extends Service implements Observer {
     private Thread picturesAreCurrentlyTakenThread;
    // private CapturePicService currentCapturePicService;
 
-    public enum CapturingEvent {SCREENON, ORIENTATION, KEYBOARD, APPLICATION, PUSHNOTIFICATION, CAM};
+    public static Storage storage;
+
+    public enum CapturingEvent {NOTHING, SCREENON, ORIENTATION, KEYBOARD, APPLICATION, PUSHNOTIFICATION, CAM};
     public CapturingEvent capturingEvent;
-    private String lastdetectedApp = "com.example.anita.hdyhyp";
+    private String LastAsNewDetectedApp = "com.example.anita.hdyhyp";
+    private String currentForegroundApp;
     private boolean lastDetectedOrientaionPortrait = true;
     private Thread appDetectionThread;
     private boolean dataFlag;
@@ -62,8 +65,12 @@ public class ControllerService extends Service implements Observer {
             /**Starting the Shooting after inizialising the user name in order to test if everything works
              */
             Bundle extras = intent.getExtras();
-            storagePath = (String) extras.get("storagePath");
-            userName = (String) extras.get("userName");
+            //storagePath = (String) extras.get("storagePath");
+            //userName = (String) extras.get("userName");
+            storage = new Storage(getApplicationContext());
+            storagePath = storage.getStoragePath();
+            userName = storage.getUserName();
+            capturingEvent = NOTHING;
             startCapturePictureService();
             firstTrySuccessfullyFlag = true;
 
@@ -147,20 +154,25 @@ public class ControllerService extends Service implements Observer {
         Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
         capturePicServiceIntent.putExtra("storagePath", storagePath);
         capturePicServiceIntent.putExtra("userName", userName);
+        capturePicServiceIntent.putExtra("foregroundApp", currentForegroundApp);
+        capturePicServiceIntent.putExtra("capturingEvent", capturingEvent);
         intentList.add(capturePicServiceIntent);
         getApplicationContext().startService(capturePicServiceIntent);
     }
 
     private void stopIfPicturesAreCurrentlyTaken(){
-        if (picturesAreCurrentlyTakenThread != null && picturesAreCurrentlyTakenThread.isAlive()){
-            picturesAreCurrentlyTakenThread.interrupt();
+        if (picturesAreCurrentlyTakenThread != null){
+            if (picturesAreCurrentlyTakenThread.isAlive()){
+                picturesAreCurrentlyTakenThread.interrupt();
+            }
             picturesAreCurrentlyTakenThread = null;
-            if (!intentList.isEmpty()){
+            //TODO: This can cause errors - try not to stop the services with the intensts and let them do their pictures but give the cps the captureevent for storring
+            /*if (!intentList.isEmpty()){
                 for (Intent i : intentList) {
                     stopService(i);
                     intentList.remove(i);
                 }
-            }
+            }*/
             Log.v(TAG, "Picture taking interrupted.");
         }
     }
@@ -239,8 +251,11 @@ public class ControllerService extends Service implements Observer {
                     break;
             }
 
-            picturesAreCurrentlyTakenThread.interrupt();
-            picturesAreCurrentlyTakenThread = null;
+            capturingEvent = NOTHING;
+            if (picturesAreCurrentlyTakenThread != null && picturesAreCurrentlyTakenThread.isAlive()){
+                picturesAreCurrentlyTakenThread.interrupt();
+                picturesAreCurrentlyTakenThread = null;
+            }
             if (!intentList.isEmpty()){
                 intentList.clear();
             }
@@ -298,13 +313,18 @@ public class ControllerService extends Service implements Observer {
             currentApp=(manager.getRunningTasks(1).get(0)).topActivity.getPackageName();
             //(manager.getRunningTasks(1).get(0)).describeContents();
         }
-        if (lastdetectedApp !=null && !lastdetectedApp.equals(currentApp) && !currentApp.contains("com.android.") && !currentApp.equals("com.example.anita.hdyhyp")){
-            Log.v(TAG, "Current SDK: " + Build.VERSION.SDK_INT + ", new app detected on foreground: " + currentApp);
-            lastdetectedApp = currentApp;
-            //TODO: Inform controller
-            //TODO:
-            //com.google.android.googlequicksearchbox
-            //TODO: erfassen, ob es sich um eine push notification handelt
+        if (LastAsNewDetectedApp !=null && !LastAsNewDetectedApp.equals(currentApp)){
+            currentForegroundApp = currentApp;
+            if (!currentApp.contains("com.android.") && !currentApp.equals("com.example.anita.hdyhyp")){
+                Log.v(TAG, "Current SDK: " + Build.VERSION.SDK_INT + ", new app detected on foreground: " + currentApp);
+                LastAsNewDetectedApp = currentApp;
+                stopIfPicturesAreCurrentlyTaken();
+                capturingEvent = CapturingEvent.APPLICATION;
+                picturesAreCurrentlyTakenThread = new Thread(runnableShootPicture);
+                picturesAreCurrentlyTakenThread.start();
+                //com.google.android.googlequicksearchbox
+                //TODO: erfassen, ob es sich um eine push notification handelt
+            }
         }
 
     }

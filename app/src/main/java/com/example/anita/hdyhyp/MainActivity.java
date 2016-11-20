@@ -2,6 +2,7 @@ package com.example.anita.hdyhyp;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,19 +10,21 @@ import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
+import java.io.Serializable;
+
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     private TextView readyTextView;
     private Button submitButton;
     private TextView tellMeYourNameView;
     private TextView helloTextView;
-    private StorageController storage;
+    private Storage storage;
     private Spinner namesSpinner;
     private Button settingsButton1;
     private Button settingsButton2;
-
+    private Button reviewButton;
     private Button deleteButton;
 
     @Override
@@ -29,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        storage = new StorageController(getApplicationContext());
+        storage = new Storage(getApplicationContext());
 
         readyTextView = (TextView) findViewById(R.id.statusTextView);
         submitButton = (Button) findViewById(R.id.submitButton);
@@ -38,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         helloTextView = (TextView) findViewById(R.id.helloTextView);
         settingsButton1 = (Button) findViewById(R.id.buttonSettings1);
         settingsButton2 = (Button) findViewById(R.id.buttonSettings2);
+        reviewButton = (Button) findViewById(R.id.reviewButton);
 
         settingsButton1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -54,6 +58,13 @@ public class MainActivity extends AppCompatActivity {
                 Uri uri = Uri.fromParts("package", getPackageName(), null);
                 permissionIntent.setData(uri);
                 startActivity(permissionIntent);
+            }
+        });
+
+        reviewButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), PictureReviewActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -98,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     /** Stores a pseudonym of the user for identifying him and naming the photos after him */
     private void storeUserName(String input){
         try {
-            storage.setUserName(input);
+            storage.setUserName(getApplicationContext(), input);
             Log.v(TAG, "Study user name read: " + input);
             Toast.makeText(this, "Thanks!", Toast.LENGTH_SHORT).show();
             userNameAlreadySet();

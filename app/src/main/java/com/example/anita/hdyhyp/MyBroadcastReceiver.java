@@ -12,7 +12,7 @@ import android.util.Log;
 
 public class MyBroadcastReceiver extends BroadcastReceiver {
 
-    private static final String TAG = "MyBroadcastReceiver";
+    private static final String TAG = MyBroadcastReceiver.class.getSimpleName();
    // private boolean isScreenOn;
 
  //TODO: Case statt if?

@@ -1,26 +1,86 @@
 package com.example.anita.hdyhyp;
 
+import android.app.IntentService;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.ContentObservable;
+import android.database.sqlite.SQLiteDatabase;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Surface;
+
+import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.NOTHING;
 
 /*
 *@class collects Data while the Picture is processed
-* sets flag in Controller Service, when ecerything is collected
  */
 
-public class DataCollectorService extends Service {
+public class DataCollectorService extends IntentService {
 
-    private static final String TAG = "DataCollectorService";
+    private static final String TAG = DataCollectorService.class.getSimpleName();
+
+    private SQLiteDatabase database;
+    private Storage storage = ControllerService.storage;
 
     public DataCollectorService() {
+        super("DataCollectorService");
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        String capturingEvent = (String) intent.getExtras().get("capturingEvent");
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        ContentValues cv = new ContentValues();
+        if (capturingEvent != null && capturingEvent.equals("NOTHING")){
+                //Read and store general sensor info first
+                String accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER).toString();
+                cv.put(Storage.COLUMN_ACCELEROMETER, accelerometer);
+                Log.v(TAG, "accelerometer" + "TEST");
+
+                String gyroscope = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE).toString();
+                cv.put(Storage.COLUMN_GYROSCOPE, gyroscope);
+                Log.v(TAG, "gyroscope" + "TEST");
+
+                String lin_accelerometer = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION ).toString();
+                cv.put(Storage.COLUMN_LINEAR_ACCELERATION, lin_accelerometer);
+                Log.v(TAG, "lin_accelerometer" + "TEST");
+
+                String light = sm.getDefaultSensor(Sensor.TYPE_LIGHT).toString();
+                cv.put(Storage.COLUMN_LIGHT, "TEST");
+                Log.v(TAG, "light" + light);
+
+                String orientation = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION).toString();
+                cv.put(Storage.COLUMN_ORIENTATION, "TEST");
+                Log.v(TAG, "orientation" + orientation);
+
+                String proximity = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY).toString();
+                cv.put(Storage.COLUMN_PROXIMITY, "TEST");
+                Log.v(TAG, "proximity" + proximity);
+
+                String rotation_vector = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR).toString();
+                cv.put(Storage.COLUMN_ROTATION_VECTOR, rotation_vector);
+                Log.v(TAG, "rotation_vector" + "TEST");
+
+            Log.v(TAG, "VALUES " + cv.toString());
+
+
+        } else {
+            //Read and store sensor values
+            String foregroundApp = (String) intent.getExtras().get("foregroundApp");
+        }
+        database = storage.getWritableDatabase();
+        database.insert(Storage.DB_TABLE, null, cv);
+        database.close();
+
     }
 
 
