@@ -29,7 +29,7 @@ import java.util.List;
 public class CapturePicService extends IntentService {
 
     private static final String TAG = CapturePicService.class.getSimpleName();
-    private Camera camera;
+    private Camera camera = null;
     private int cameraId;
     private String storagePath;
     private String userName;
@@ -98,6 +98,7 @@ public class CapturePicService extends IntentService {
         return camId;
     }
 
+    //TODO: Test ob Camera anderweitig belegt
     public Camera getCameraInstance() {
         Camera c = null;
         if (!getPackageManager()
@@ -155,7 +156,7 @@ public class CapturePicService extends IntentService {
 
             //taking the picture
         /* <p>This method is only valid when preview is active (after
-        * {@link #startPreview()}).  Preview will be stopped after the image is
+        * {@link #startPreview()}).  Preview will be stopped after the picture is
         * taken; callers must call {@link #startPreview()} again if they want to
         * re-start preview or take more pictures.
         *

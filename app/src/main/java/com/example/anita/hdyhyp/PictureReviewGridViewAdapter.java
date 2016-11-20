@@ -1,14 +1,12 @@
 package com.example.anita.hdyhyp;
 
-import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -19,9 +17,9 @@ import java.util.ArrayList;
 public class PictureReviewGridViewAdapter extends ArrayAdapter {
     private Context context;
     private int layoutResourceId;
-    private ArrayList data = new ArrayList();
+    private ArrayList<PictureItem> data = new ArrayList<>();
 
-    public PictureReviewGridViewAdapter(Context context, int layoutResourceId, ArrayList<Bitmap> data) {
+    public PictureReviewGridViewAdapter(Context context, int layoutResourceId, ArrayList<PictureItem> data) {
         super(context, layoutResourceId, data);
         this.layoutResourceId = layoutResourceId;
         this.context = context;
@@ -30,29 +28,30 @@ public class PictureReviewGridViewAdapter extends ArrayAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View row = convertView;
-        ViewHolder holder = null;
 
-        if (row == null) {
-            LayoutInflater inflater = LayoutInflater.from(context);
-            //LayoutInflater inflater = ((Activity) context.getApplicationContext()).getLayoutInflater();
-            row = inflater.inflate(layoutResourceId, parent, false);
-            holder = new ViewHolder();
-            holder.image = (ImageView) row.findViewById(R.id.picture);
-            row.setTag(holder);
-        } else {
-            holder = (ViewHolder) row.getTag();
-        }
+        View row;
+        ViewHolder holder;
 
-        Bitmap item;
-        item = (Bitmap) data.get(position);
-        holder.image.setImageBitmap(item);
+        LayoutInflater inflater = LayoutInflater.from(context);
+        row = inflater.inflate(layoutResourceId, parent, false);
+        holder = new ViewHolder();
+        holder.picture = (ImageView) row.findViewById(R.id.picture);
+        holder.deleteCheckbox = (CheckBox) row.findViewById(R.id.deleteCheckbox);
+        row.setTag(holder);
+
+        PictureItem item = data.get(position);
+        holder.picture.setImageBitmap(item.getPicture());
+        item.setImageView(holder.picture);
+        item.setCheckbox(holder.deleteCheckbox);
         return row;
     }
 
-    static class ViewHolder {
-        ImageView image;
+    public int getDataSize(){
+        return data.size();
     }
 
-
+    static class ViewHolder {
+        ImageView picture;
+        CheckBox deleteCheckbox;
+    }
 }
