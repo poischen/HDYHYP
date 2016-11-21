@@ -63,6 +63,25 @@ public class PictureReviewActivity extends AppCompatActivity {
             }
         });*/
 
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                PictureItem item = (PictureItem) parent.getItemAtPosition(position);
+                Log.v(TAG, "Item clicked, position: " + position);
+                Log.v(TAG, "Item clicked, item: " + item);
+                Log.v(TAG, "Item clicked, path: " + item.getPath());
+                if (!item.isTaggedToDelete()){
+                    item.setTaggedToDelete(true);
+                    taggedToDeleteItems.add(item);
+                } else {
+                    item.setTaggedToDelete(false);
+                    taggedToDeleteItems.remove(item);
+                }
+            }
+        });
+
+
+
         deleteButton = (Button) findViewById(R.id.picturesDeleteButton);
 
         deleteButton.setOnClickListener(new View.OnClickListener() {
@@ -76,6 +95,7 @@ public class PictureReviewActivity extends AppCompatActivity {
                     file.delete();
                     Log.v(TAG, "File deleted: " + file);
                 }*/
+
 
                 ArrayList<PictureItem> pictureItems;
                 int s = gridAdapter.getDataSize();

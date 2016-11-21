@@ -171,7 +171,7 @@ public class CapturePicService extends IntentService {
 
             //recording sensor data and give everything else to the Storage
         //TODO: first Try abfangen da nullpointer
-/*            Intent dataCollectionIntent = new Intent(this, DataCollectorService.class);
+            Intent dataCollectionIntent = new Intent(this, DataCollectorService.class);
             dataCollectionIntent.putExtra("foregroundApp", foregroundApp);
             dataCollectionIntent.putExtra("capturingEvent", capturingEvent);
             //Bildname von PictureCallback
@@ -181,7 +181,7 @@ public class CapturePicService extends IntentService {
             //  dataCollectionIntent.putExtra("firstTryOrNot", "yes");
             //}
 
-            getApplicationContext().startService(dataCollectionIntent);*/
+            getApplicationContext().startService(dataCollectionIntent);
         }
 
 

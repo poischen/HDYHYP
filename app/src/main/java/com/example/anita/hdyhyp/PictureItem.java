@@ -14,13 +14,13 @@ public class PictureItem {
     private String path;
     private ImageView imageView;
     private CheckBox checkbox;
-    private boolean taggedToDelete;
+    private boolean taggedToDelete = false;
 
     public PictureItem(Bitmap image, String path) {
         super();
         this.picture = image;
         this.path = path;
-        this.taggedToDelete = false;
+        //this.taggedToDelete = false;
 
     }
 

@@ -76,6 +76,9 @@ public class DataCollectorService extends IntentService {
         } else {
             //Read and store sensor values
             String foregroundApp = (String) intent.getExtras().get("foregroundApp");
+
+
+            //String orientation = sm.getOrientation();
         }
         database = storage.getWritableDatabase();
         database.insert(Storage.DB_TABLE, null, cv);
