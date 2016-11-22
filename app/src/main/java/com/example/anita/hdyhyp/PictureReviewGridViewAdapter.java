@@ -64,12 +64,11 @@ public class PictureReviewGridViewAdapter extends ArrayAdapter {
             deleteCheckbox.setChecked(false);
         }
 
+
        row.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View v) {
-               Log.v(TAG, "Checkbox/Picture clicked.");
-               //CheckBox deleteCheckbox = (CheckBox)v.findViewWithTag(position);
-               //PictureItem currentPictureItem = data.get(position);
+               Log.v(TAG, "Picture tagged.");
                if (deleteCheckbox.isChecked())
                {
                    deleteCheckbox.setChecked(false);

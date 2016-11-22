@@ -315,7 +315,7 @@ public class ControllerService extends Service implements Observer {
         }
         if (LastAsNewDetectedApp !=null && !LastAsNewDetectedApp.equals(currentApp)){
             currentForegroundApp = currentApp;
-            if (!currentApp.contains("com.android.") && !currentApp.equals("com.example.anita.hdyhyp")){
+            if (currentApp !=null && !currentApp.contains("com.android.") && !currentApp.equals("com.example.anita.hdyhyp")){
                 Log.v(TAG, "Current SDK: " + Build.VERSION.SDK_INT + ", new app detected on foreground: " + currentApp);
                 LastAsNewDetectedApp = currentApp;
                 stopIfPicturesAreCurrentlyTaken();

@@ -1,16 +1,32 @@
 package com.example.anita.hdyhyp;
 
 import android.app.IntentService;
-import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.database.ContentObservable;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+
+import android.location.Address;
+import android.location.Geocoder;
+//import com.google.android.gms.location.*;
+
+
+import android.location.LocationListener;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.view.Surface;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+
+import java.io.IOException;
+import java.util.List;
 
 import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.NOTHING;
 
@@ -18,12 +34,19 @@ import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.NOTHING;
 *@class collects Data while the Picture is processed
  */
 
-public class DataCollectorService extends IntentService {
+public class DataCollectorService extends IntentService implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = DataCollectorService.class.getSimpleName();
 
     private SQLiteDatabase database;
     private Storage storage = ControllerService.storage;
+    private SensorManager sensorManager;
+
+    private GoogleApiClient googleApiClient;
+    private LocationManager locationManager;
+    private LocationListener locationListener = null;
+    private Location latestLocation;
+    private Boolean googleApiClientConnectionFailed;
 
     public DataCollectorService() {
         super("DataCollectorService");
@@ -37,53 +60,206 @@ public class DataCollectorService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.v(TAG, "data collection started.");
         String capturingEvent = (String) intent.getExtras().get("capturingEvent");
-        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         ContentValues cv = new ContentValues();
-        if (capturingEvent != null && capturingEvent.equals("NOTHING")){
-                //Read and store general sensor info first
-                String accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER).toString();
-                cv.put(Storage.COLUMN_ACCELEROMETER, accelerometer);
-                Log.v(TAG, "accelerometer" + "TEST");
 
-                String gyroscope = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE).toString();
-                cv.put(Storage.COLUMN_GYROSCOPE, gyroscope);
-                Log.v(TAG, "gyroscope" + "TEST");
-
-                String lin_accelerometer = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION ).toString();
-                cv.put(Storage.COLUMN_LINEAR_ACCELERATION, lin_accelerometer);
-                Log.v(TAG, "lin_accelerometer" + "TEST");
-
-                String light = sm.getDefaultSensor(Sensor.TYPE_LIGHT).toString();
-                cv.put(Storage.COLUMN_LIGHT, "TEST");
-                Log.v(TAG, "light" + light);
-
-                String orientation = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION).toString();
-                cv.put(Storage.COLUMN_ORIENTATION, "TEST");
-                Log.v(TAG, "orientation" + orientation);
-
-                String proximity = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY).toString();
-                cv.put(Storage.COLUMN_PROXIMITY, "TEST");
-                Log.v(TAG, "proximity" + proximity);
-
-                String rotation_vector = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR).toString();
-                cv.put(Storage.COLUMN_ROTATION_VECTOR, rotation_vector);
-                Log.v(TAG, "rotation_vector" + "TEST");
-
-            Log.v(TAG, "VALUES " + cv.toString());
+        //register necessary listener
 
 
-        } else {
-            //Read and store sensor values
+        Log.v(TAG, "listener registered.");
+
+        //collect data
+        //if (capturingEvent != null && capturingEvent.equals("NOTHING")) {
+            /*
+            //Read and store general sensor info first
+            String photoName = (String) intent.getExtras().get("photoName");
+            cv.put(Storage.COLUMN_PHOTO, photoName);
+            Log.v(TAG, "photoName" + photoName);
+
             String foregroundApp = (String) intent.getExtras().get("foregroundApp");
+            cv.put(Storage.COLUMN_FOREGROUNDAPP, foregroundApp);
+            Log.v(TAG, "foregroundApp: " + foregroundApp);
+
+            String accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER).toString();
+            cv.put(Storage.COLUMN_ACCELEROMETER, accelerometer);
+            Log.v(TAG, "accelerometer Sensor:" + accelerometer);
+
+            String gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE).toString();
+            cv.put(Storage.COLUMN_GYROSCOPE, gyroscope);
+            Log.v(TAG, "gyroscope Sensor:" + gyroscope);
+
+            String lin_accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION ).toString();
+            cv.put(Storage.COLUMN_LINEAR_ACCELERATION, lin_accelerometer);
+            Log.v(TAG, "lin_accelerometer Sensor:" + lin_accelerometer);
+
+            String light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT).toString();
+            cv.put(Storage.COLUMN_LIGHT, light);
+            Log.v(TAG, "light Sensor:" + light);
+
+            String orientation = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION).toString();
+            cv.put(Storage.COLUMN_ORIENTATION, orientation);
+            Log.v(TAG, "orientation Sensor:" + orientation);
+
+            String proximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY).toString();
+            cv.put(Storage.COLUMN_PROXIMITY, proximity);
+            Log.v(TAG, "proximity Sensor:" + proximity);
+
+            String rotation_vector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR).toString();
+            cv.put(Storage.COLUMN_ROTATION_VECTOR, rotation_vector);
+            Log.v(TAG, "rotation_vector Sensor:" + rotation_vector);
+
+            Log.v(TAG, "VALUES " + cv.toString());*/
 
 
-            //String orientation = sm.getOrientation();
+        //} else {
+        //Read and store sensor values
+        //event---------------------------------------------------------------------------------
+
+        //foreground App------------------------------------------------------------------------
+        String foregroundApp = (String) intent.getExtras().get("foregroundApp");
+
+        //proximity
+        sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        String proximity;
+
+        //location------------------------------------------------------------------------------
+        String location;
+
+        buildGoogleApiClient();
+        googleApiClient.connect();
+
+
+        while (googleApiClientConnectionFailed == null) {
+            Log.v(TAG, "wait for google api");
         }
-        database = storage.getWritableDatabase();
-        database.insert(Storage.DB_TABLE, null, cv);
-        database.close();
+        if (googleApiClientConnectionFailed) {
+            Log.v(TAG, "failed to connect google play services location api.");
+            locationListener = new LocationListener() {
+                public void onLocationChanged(Location location) {
+                    latestLocation = location;
+                    Log.v(TAG, "latest location from listener: " + location);
+                }
 
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+                }
+
+                @Override
+                public void onProviderEnabled(String provider) {
+                }
+
+                @Override
+                public void onProviderDisabled(String provider) {
+                }
+            };
+
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+                latestLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                Log.v(TAG, "gps enabled.");
+
+            } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+                latestLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                Log.v(TAG, "network enabled.");
+            } else {
+                Log.v(TAG, "neither gps or network enabled.");
+            }
+            locationManager.removeUpdates(locationListener);
+        }
+
+        if (latestLocation == null) {
+            location = "location n.a";
+        } else {
+            Log.v(TAG, "latest location: " + latestLocation);
+            Geocoder geocoder = new Geocoder(this);
+            Double latitude = latestLocation.getLatitude();
+            Double longitude = latestLocation.getLongitude();
+            List<Address> addressList = null;
+            try {
+                addressList = geocoder.getFromLocation(latitude, longitude, 1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Address address = addressList.get(0);
+            location = "latitude: " + latitude + ", longitude: " + longitude + ", road: " + address.getThoroughfare() + ", postalcode: " + address.getPostalCode();
+        }
+        Log.v(TAG, "location: " + location);
+
+
+        //keyboard------------------------------------------------------------------------------
+        String isKeyboardOpen;
+
+        //battery Status------------------------------------------------------------------------
+        String batteryStatus;
+
+        //accelerometer-------------------------------------------------------------------------
+        String accelerometer;
+
+        //rotation------------------------------------------------------------------------------
+        String rotationGyroscopeRotationvector;
+
+        //orientation---------------------------------------------------------------------------
+        String orientation;
+        //String orientation = sensorManager.getOrientation();
+
+        //light and screen Brightness-----------------------------------------------------------
+        String ambientLight;
+        String screenBrightness;
+
+        //face detection------------------------------------------------------------------------
+        String faceDetectionLeftEye;
+        String faceDetectionRightEye;
+        String faceDetectionMouth;
+
+
+        // }
+
+        //unregister listener and write data to database
+        unregisterListener();
+        // database = storage.getWritableDatabase();
+        //  long insertId = database.insert(Storage.DB_TABLE, null, cv);
+        // database.close();
+
+    }
+    //import com.google.android.gms.location.LocationListener;
+
+
+    protected synchronized void buildGoogleApiClient() {
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        googleApiClientConnectionFailed = true;
+        Log.v(TAG, "connection result: " + connectionResult);
+    }
+
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        latestLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        googleApiClientConnectionFailed = false;
+    }
+
+
+    private void unregisterListener() {
     }
 
 

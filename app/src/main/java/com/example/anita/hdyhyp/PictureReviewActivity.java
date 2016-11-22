@@ -81,7 +81,6 @@ public class PictureReviewActivity extends AppCompatActivity {
         });
 
 
-
         deleteButton = (Button) findViewById(R.id.picturesDeleteButton);
 
         deleteButton.setOnClickListener(new View.OnClickListener() {

@@ -120,7 +120,7 @@ public class CapturePicService extends IntentService {
         return c;
     }
 
-    private void capturePhoto(String foregroundApp, String capturingEvent) throws InterruptedException {
+    private synchronized void capturePhoto(String foregroundApp, String capturingEvent) throws InterruptedException {
         Log.v(TAG, "capturePhoto() is called.");
         // Todo: Foto Orientierung da 13 +
         Log.v(TAG, "Camera object: " + camera);
@@ -164,24 +164,30 @@ public class CapturePicService extends IntentService {
         * or take another picture until the JPEG callback has returned.
         */
             camera.takePicture(null, null, pictureCallBack);
-
+        //TODO: Auf Picture Callback warten um Namen im Intent zu übergeben für die Tabelle -> evtl. dann Buffer Problem gelöst
+            //while (pictureNameFromCallback == null){
+                //Log.v(TAG, "wait for PictureCallback");
+            //}
+            //this.wait(200);
             Log.v(TAG, "pictureNameFromCallback: " + pictureNameFromCallback);
             pictureNameFromCallback = null;
             camera = null;
 
             //recording sensor data and give everything else to the Storage
-        //TODO: first Try abfangen da nullpointer
+            //TODO: first Try abfangen
             Intent dataCollectionIntent = new Intent(this, DataCollectorService.class);
             dataCollectionIntent.putExtra("foregroundApp", foregroundApp);
             dataCollectionIntent.putExtra("capturingEvent", capturingEvent);
+            dataCollectionIntent.putExtra("photoName", "Dummyname");
             //Bildname von PictureCallback
             //Face Data
-            //TODO: Auf Picture Callback warten um Namen im Intent zu übergeben für die Tabelle -> evtl. dann Buffer Problem gelöst
+
             //if (capturingEvent.equals("test")){
             //  dataCollectionIntent.putExtra("firstTryOrNot", "yes");
             //}
 
             getApplicationContext().startService(dataCollectionIntent);
+        Log.v(TAG, "data collection gets started.");
         }
 
 
@@ -195,6 +201,7 @@ public class CapturePicService extends IntentService {
 // Todo: Foto Orientierung da 13 +
 
             File capturedPhotoFile = getOutputMediaFile();
+            Log.v(TAG, "picture name: " + pictureName);
             if (capturedPhotoFile == null) {
                 Log.e(TAG, "Could not create file");
                 return;

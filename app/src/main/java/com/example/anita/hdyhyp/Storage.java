@@ -26,27 +26,43 @@ public class Storage extends SQLiteOpenHelper {
     public static final String DB_NAME = "HDYHYPDataBase.db";
     public static final String DB_TABLE = "HDHYHPDataCollection";
     public static final String COLUMN_CAPTURE_ID = "_id";
-    public static final String COLUMN_PHOTO = "photoname";
+    public static final String COLUMN_PHOTO = "photoName";
+    public static final String COLUMN_CAPTUREEVENT = "captureEvent";
+    public static final String COLUMN_FOREGROUNDAPP = "foregroundApp";
     public static final String COLUMN_GYROSCOPE = "accelerometer";
     public static final String COLUMN_ACCELEROMETER = "accelerometer";
     public static final String COLUMN_LINEAR_ACCELERATION = "lin_accelerometer";
+    public static final String COLUMN_ROTATION_VECTOR = "rotation_vector";
     public static final String COLUMN_LIGHT = "light";
+    public static final String COLUMN_BRIGHTNESS = "screenLightness";
     public static final String COLUMN_ORIENTATION = "orientation";
     public static final String COLUMN_PROXIMITY = "proximity";
-    public static final String COLUMN_ROTATION_VECTOR = "rotation_vector";
+    public static final String COLUMN_BATTERY = "batteryStatus";
+    public static final String COLUMN_RIGHT = "rightEye";
+    public static final String COLUMN_LEFT = "leftEye";
+    public static final String COLUMN_MOUTH = "Mouth";
+
+
 
 
     public static final String SQL_CREATE =
             "CREATE TABLE " + DB_TABLE +
                     "(" + COLUMN_CAPTURE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     COLUMN_PHOTO + " TEXT, " +
+                    COLUMN_CAPTUREEVENT + " TEXT, " +
+                    COLUMN_FOREGROUNDAPP + " TEXT, " +
                     COLUMN_ACCELEROMETER + " TEXT, " +
                     COLUMN_GYROSCOPE + " TEXT, " +
                     COLUMN_LINEAR_ACCELERATION  + " TEXT, " +
+                    COLUMN_ROTATION_VECTOR + " TEXT " +
                     COLUMN_LIGHT + " TEXT, " +
+                    COLUMN_BRIGHTNESS + " TEXT, " +
                     COLUMN_ORIENTATION + " TEXT, " +
                     COLUMN_PROXIMITY + " TEXT, " +
-                    COLUMN_ROTATION_VECTOR + " TEXT);";
+                    COLUMN_BATTERY + " TEXT, " +
+                    COLUMN_LEFT + " TEXT, " +
+                    COLUMN_RIGHT + " TEXT, " +
+                    COLUMN_MOUTH + " TEXT);";
 
     private static String storagePath = "storage/emulated/0/HDYHYP";
     //private UserNameStorage userNameStorage;
