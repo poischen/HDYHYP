@@ -1,12 +1,17 @@
 package com.example.anita.hdyhyp;
 
 import android.app.IntentService;
+import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
 
 import android.location.Address;
 import android.location.Geocoder;
@@ -16,13 +21,19 @@ import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.io.IOException;
@@ -34,7 +45,8 @@ import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.NOTHING;
 *@class collects Data while the Picture is processed
  */
 
-public class DataCollectorService extends IntentService implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class DataCollectorService extends IntentService implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private static final String TAG = DataCollectorService.class.getSimpleName();
 
@@ -42,11 +54,30 @@ public class DataCollectorService extends IntentService implements GoogleApiClie
     private Storage storage = ControllerService.storage;
     private SensorManager sensorManager;
 
-    private GoogleApiClient googleApiClient;
     private LocationManager locationManager;
     private LocationListener locationListener = null;
     private Location latestLocation;
     private Boolean googleApiClientConnectionFailed;
+
+    String photoName = "n./a.";
+    String foregroundApp = "n./a.";
+    String proximity = "n./a.";
+    String location = "n./.a";
+    String isKeyboardOpen = "n./.a";
+    String accelerometer = "n./.a";
+    String rotationGyroscopeRotationvector = "n./.a";
+    String orientation = "n./.a";
+    String ambientLight = "n./.a";
+    int screenBrightness = -1;
+    String batteryStatus = "n./a.";
+    int batteryLevel = -1;
+    String faceDetectionLeftEye = "n./.a";
+    String faceDetectionRightEye = "n./.a";
+    String faceDetectionMouth = "n./.a";
+    String capturingEvent = "NOTHING";
+
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
 
     public DataCollectorService() {
         super("DataCollectorService");
@@ -58,15 +89,50 @@ public class DataCollectorService extends IntentService implements GoogleApiClie
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    //TODO: in mehr zeilen aufteilen
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.v(TAG, "data collection started.");
-        String capturingEvent = (String) intent.getExtras().get("capturingEvent");
+        capturingEvent = (String) intent.getExtras().get("capturingEvent");
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         ContentValues cv = new ContentValues();
 
         //register necessary listener
+        SensorEventListener sensorEventListener = new SensorEventListener() {
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            }
+            //TODO: weglassen, da man nicht gleichzeitig die Sensoren auslesen kann
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                int detectedSensorEvent = event.sensor.getType();
+                switch (detectedSensorEvent){
+
+                }
+                if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+                    proximity = String.valueOf(event.values[0]);
+                }
+                if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+                    ambientLight = String.valueOf(event.values[0]);
+                }
+            }
+        };
+
+        Sensor proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        if (proximitySensor != null) {
+            sensorManager.registerListener(sensorEventListener, proximitySensor, SensorManager.SENSOR_DELAY_FASTEST);
+        }
+
+        //-------------
+        mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        mLocationRequest.setInterval(1);
+        mLocationRequest.setFastestInterval(1);
+
+        buildGoogleApiClient();
+
+
 
 
         Log.v(TAG, "listener registered.");
@@ -116,25 +182,32 @@ public class DataCollectorService extends IntentService implements GoogleApiClie
 
         //} else {
         //Read and store sensor values
-        //event---------------------------------------------------------------------------------
+        //picture name--------------------------------------------------------------------------
+        photoName = (String) intent.getExtras().get("foregroundApp");
+        Log.v(TAG, "foreground App: " + photoName);
 
         //foreground App------------------------------------------------------------------------
-        String foregroundApp = (String) intent.getExtras().get("foregroundApp");
+        foregroundApp = (String) intent.getExtras().get("foregroundApp");
+        Log.v(TAG, "foreground App: " + foregroundApp);
 
-        //proximity
-        sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        String proximity;
+        //capture Event-------------------------------------------------------------------------
+        Log.v(TAG, "capture event: " + capturingEvent);
+
+        //proximity-----------------------------------------------------------------------------
+        Log.v(TAG, "proximity: " + proximity);
 
         //location------------------------------------------------------------------------------
-        String location;
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD){
         buildGoogleApiClient();
-        googleApiClient.connect();
-
-
-        while (googleApiClientConnectionFailed == null) {
-            Log.v(TAG, "wait for google api");
+            mGoogleApiClient.connect();
+            latestLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            Intent pendingIntent = new Intent(getApplicationContext(), DataCollectorService.class);
+            //latestLocation = LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, (com.google.android.gms.location.LocationListener) pendingIntent);
+            Log.v(TAG, "google location api, latest location: "+ latestLocation);
         }
+
+
         if (googleApiClientConnectionFailed) {
             Log.v(TAG, "failed to connect google play services location api.");
             locationListener = new LocationListener() {
@@ -154,29 +227,46 @@ public class DataCollectorService extends IntentService implements GoogleApiClie
                 @Override
                 public void onProviderDisabled(String provider) {
                 }
-            };
+            };}
 
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
+        locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                latestLocation = location;
+                Log.v(TAG, "latest location from listener: " + location);
             }
-            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-                latestLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                Log.v(TAG, "gps enabled.");
 
-            } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-                latestLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                Log.v(TAG, "network enabled.");
-            } else {
-                Log.v(TAG, "neither gps or network enabled.");
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
             }
-            locationManager.removeUpdates(locationListener);
+
+            @Override
+            public void onProviderEnabled(String provider) {
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+        };
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
         }
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+            latestLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Log.v(TAG, "gps enabled.");
 
-        if (latestLocation == null) {
-            location = "location n.a";
+        } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+            latestLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            Log.v(TAG, "network enabled.");
         } else {
+            Log.v(TAG, "neither gps or network enabled.");
+        }
+        //locationManager.removeUpdates(locationListener);
+        //}
+
+        if (latestLocation != null) {
             Log.v(TAG, "latest location: " + latestLocation);
             Geocoder geocoder = new Geocoder(this);
             Double latitude = latestLocation.getLatitude();
@@ -194,72 +284,148 @@ public class DataCollectorService extends IntentService implements GoogleApiClie
 
 
         //keyboard------------------------------------------------------------------------------
-        String isKeyboardOpen;
 
-        //battery Status------------------------------------------------------------------------
-        String batteryStatus;
+
+        //battery level & status------------------------------------------------------------------------
+        if (Build.VERSION.SDK_INT >= 23) {
+            BatteryManager batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
+            batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            if (batteryManager.isCharging()) {
+                batteryStatus = "charging";
+            } else {
+                batteryStatus = "nothing";
+            }
+        } else {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryIntent = registerReceiver(null, filter);
+
+            int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            int status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+
+            float batteryPct = level / (float) scale;
+            batteryLevel = (int) (batteryPct * 100);
+
+            if (status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL) {
+                batteryStatus = "charging";
+            } else {
+                batteryStatus = "nothing";
+            }
+            //unregister?
+        }
+        Log.v(TAG, "battery status: " + batteryStatus + ", battery level: " + batteryLevel);
 
         //accelerometer-------------------------------------------------------------------------
-        String accelerometer;
+
 
         //rotation------------------------------------------------------------------------------
-        String rotationGyroscopeRotationvector;
+
 
         //orientation---------------------------------------------------------------------------
-        String orientation;
+
         //String orientation = sensorManager.getOrientation();
 
         //light and screen Brightness-----------------------------------------------------------
-        String ambientLight;
-        String screenBrightness;
+        try {
+            screenBrightness = android.provider.Settings.System.getInt(
+                    getContentResolver(),
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+        Log.v(TAG, "screen birghtness: " + screenBrightness);
 
         //face detection------------------------------------------------------------------------
-        String faceDetectionLeftEye;
-        String faceDetectionRightEye;
-        String faceDetectionMouth;
+
 
 
         // }
 
         //unregister listener and write data to database
-        unregisterListener();
+        sensorManager.unregisterListener(sensorEventListener);
         // database = storage.getWritableDatabase();
         //  long insertId = database.insert(Storage.DB_TABLE, null, cv);
         // database.close();
 
     }
-    //import com.google.android.gms.location.LocationListener;
 
 
     protected synchronized void buildGoogleApiClient() {
-        googleApiClient = new GoogleApiClient.Builder(this)
+        this.mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
+        googleApiClientConnectionFailed = false;
+    }
+
+    private void unregisterListener() {
+    }
+
+    public void setProximity(String proximity){
+        this.proximity = proximity;
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        latestLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        googleApiClientConnectionFailed = false;
     }
 
     @Override
     public void onConnectionSuspended(int i) {
+        mGoogleApiClient = null;
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        googleApiClientConnectionFailed = true;
-        Log.v(TAG, "connection result: " + connectionResult);
-    }
-
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        //TODO: in activity auslagern
+        if (connectionResult.hasResolution()) {
+            //connectionResult.startResolutionForResult(this, 1000);
+        }else {
+            googleApiClientConnectionFailed = true;
         }
-        latestLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        googleApiClientConnectionFailed = false;
+
     }
 
+    @Override
+    public void onLocationChanged(Location location) {
+        latestLocation = location;
+        Log.v(TAG, "latest location from listener: " + location);
 
-    private void unregisterListener() {
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+
+    @Override
+    public void onDestroy() {
+        if (this.mGoogleApiClient != null) {
+            this.mGoogleApiClient.unregisterConnectionCallbacks(this);
+            this.mGoogleApiClient.unregisterConnectionFailedListener(this);
+            this.mGoogleApiClient.disconnect();
+            this.mGoogleApiClient = null;
+        }
+        super.onDestroy();
+    }
+
     }
 
 
@@ -279,4 +445,3 @@ TYPE_ROTATION_VECTOR 	Software or Hardware 	Measures the orientation of a device
 TYPE_TEMPERATURE 	Hardware 	Measures the temperature of the device in degrees Celsius (°C). This sensor implementation varies across devices and this sensor was replaced with the TYPE_AMBIENT_TEMPERATURE sensor in API Level 14 	Monitoring temperatures.*/
 
 
-}

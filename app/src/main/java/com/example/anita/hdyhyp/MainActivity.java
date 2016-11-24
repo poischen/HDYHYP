@@ -2,13 +2,23 @@ package com.example.anita.hdyhyp;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcelable;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
+
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 
 import java.io.Serializable;
 
@@ -27,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private Button reviewButton;
     private Button deleteButton;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         settingsButton1 = (Button) findViewById(R.id.buttonSettings1);
         settingsButton2 = (Button) findViewById(R.id.buttonSettings2);
         reviewButton = (Button) findViewById(R.id.reviewButton);
+
 
         settingsButton1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -69,8 +81,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         /**Asks for and inizilizes the users pseudonym to identify him during the study if it is not already set
-          visual feedback / input not possible if the name is already set */
-        if (storage.getUserName() == null){
+         visual feedback / input not possible if the name is already set */
+        if (storage.getUserName() == null) {
             //update UI
             submitButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -103,11 +115,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
     }
 
-    /** Stores a pseudonym of the user for identifying him and naming the photos after him */
-    private void storeUserName(String input){
+    /**
+     * Stores a pseudonym of the user for identifying him and naming the photos after him
+     */
+    private void storeUserName(String input) {
         try {
             storage.setUserName(getApplicationContext(), input);
             Log.v(TAG, "Study user name read: " + input);
@@ -131,20 +144,26 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /** Loads the users pseudonym from the storage*/
+    /**
+     * Loads the users pseudonym from the storage
+     */
     private String loadUserName() {
         String userName = storage.getUserName();
         Log.v(TAG, "Stored user Name: " + userName);
         return userName;
     }
 
-    /**Helper method to give the user feedback, if the name is already set*/
-    private void userNameAlreadySet(){
+    /**
+     * Helper method to give the user feedback, if the name is already set
+     */
+    private void userNameAlreadySet() {
         String username = storage.getUserName();
         submitButton.setEnabled(false);
         helloTextView.setText("Hello " + username + "!");
         readyTextView.setText(R.string.ready);
         namesSpinner.setEnabled(false);
         tellMeYourNameView.setEnabled(false);
-        }
+    }
+
+
 }

@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
+
 import java.io.File;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -37,7 +38,8 @@ public class Storage extends SQLiteOpenHelper {
     public static final String COLUMN_BRIGHTNESS = "screenLightness";
     public static final String COLUMN_ORIENTATION = "orientation";
     public static final String COLUMN_PROXIMITY = "proximity";
-    public static final String COLUMN_BATTERY = "batteryStatus";
+    public static final String COLUMN_BATTERYSTATUS = "batteryStatus";
+    public static final String COLUMN_BATTERYLEVEL = "batteryLevel";
     public static final String COLUMN_RIGHT = "rightEye";
     public static final String COLUMN_LEFT = "leftEye";
     public static final String COLUMN_MOUTH = "Mouth";
@@ -55,11 +57,12 @@ public class Storage extends SQLiteOpenHelper {
                     COLUMN_GYROSCOPE + " TEXT, " +
                     COLUMN_LINEAR_ACCELERATION  + " TEXT, " +
                     COLUMN_ROTATION_VECTOR + " TEXT " +
-                    COLUMN_LIGHT + " TEXT, " +
+                    COLUMN_LIGHT + " INTEGER, " +
                     COLUMN_BRIGHTNESS + " TEXT, " +
                     COLUMN_ORIENTATION + " TEXT, " +
                     COLUMN_PROXIMITY + " TEXT, " +
-                    COLUMN_BATTERY + " TEXT, " +
+                    COLUMN_BATTERYSTATUS + " TEXT, " +
+                    COLUMN_BATTERYLEVEL + " INTEGER, " +
                     COLUMN_LEFT + " TEXT, " +
                     COLUMN_RIGHT + " TEXT, " +
                     COLUMN_MOUTH + " TEXT);";
@@ -70,6 +73,7 @@ public class Storage extends SQLiteOpenHelper {
 
     private SharedPreferences userNameStorage;
     private SharedPreferences.Editor userNameEditor;
+
 
     public Storage(Context context) {
         super(context, DB_NAME, null, 2);

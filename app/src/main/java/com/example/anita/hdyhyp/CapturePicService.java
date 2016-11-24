@@ -13,6 +13,7 @@ import android.hardware.Camera;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.Surface;
 import android.widget.Toast;
 
 import java.io.File;
@@ -25,7 +26,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
+//SurfaceTexture queueBuffer: BufferQueue has been abandoned
+//SCHEINT NUR BEIM WECHSEL VON ACTIVITYS AUFZUTRETEN
 public class CapturePicService extends IntentService {
 
     private static final String TAG = CapturePicService.class.getSimpleName();
@@ -34,8 +36,6 @@ public class CapturePicService extends IntentService {
     private String storagePath;
     private String userName;
     private SurfaceTexture surfaceTexture;
-    private boolean onPictureTakenAlreadyFinished;
-    private String pictureNameFromCallback;
 
     public CapturePicService() {
         super("CapturePicService");
@@ -100,6 +100,7 @@ public class CapturePicService extends IntentService {
 
     //TODO: Test ob Camera anderweitig belegt
     public Camera getCameraInstance() {
+        System.gc();
         Camera c = null;
         if (!getPackageManager()
                 .hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
@@ -122,15 +123,20 @@ public class CapturePicService extends IntentService {
 
     private synchronized void capturePhoto(String foregroundApp, String capturingEvent) throws InterruptedException {
         Log.v(TAG, "capturePhoto() is called.");
-        // Todo: Foto Orientierung da 13 +
-        Log.v(TAG, "Camera object: " + camera);
-        Camera.PictureCallback pictureCallBack = new CameraPictureCallback();
+        CameraPictureCallback pictureCallBack = this.new CameraPictureCallback(surfaceTexture, foregroundApp, capturingEvent);
+        System.gc();
+//        pictureCallBack.setSurfaceTexture(surfaceTexture);
+//        pictureCallBack.setForegroundApp(foregroundApp);
+//        pictureCallBack.setCapturingEvent(capturingEvent);
+
+        Log.v(TAG, "1 camera: " + camera);
         camera.startPreview();
+        Log.v(TAG, "2 camera: " + camera);
 
         //recording additional information provided by the camera
-        //TODO: store data
         //TODO: auf Displaygroesse mappen
         Camera.Parameters params = camera.getParameters();
+        Log.v(TAG, "3 camera: " + camera);
 
         /*if (Build.VERSION.SDK_INT >= 17) {
             FaceDetector detector = new FaceDetector.Builder(getApplicationContext())
@@ -155,74 +161,76 @@ public class CapturePicService extends IntentService {
 
 
             //taking the picture
-        /* <p>This method is only valid when preview is active (after
-        * {@link #startPreview()}).  Preview will be stopped after the picture is
-        * taken; callers must call {@link #startPreview()} again if they want to
-        * re-start preview or take more pictures.
-        *
-        * <p>After calling this method, you must not call {@link #startPreview()}
-        * or take another picture until the JPEG callback has returned.
-        */
-            camera.takePicture(null, null, pictureCallBack);
-        //TODO: Auf Picture Callback warten um Namen im Intent zu übergeben für die Tabelle -> evtl. dann Buffer Problem gelöst
-            //while (pictureNameFromCallback == null){
-                //Log.v(TAG, "wait for PictureCallback");
-            //}
-            //this.wait(200);
-            Log.v(TAG, "pictureNameFromCallback: " + pictureNameFromCallback);
-            pictureNameFromCallback = null;
-            camera = null;
+        System.gc();
+        camera.takePicture(null, null, pictureCallBack);
+        Log.v(TAG, "4 camera: " + camera);
+        camera = null;
+        Log.v(TAG, "5 camera: " + camera);
 
-            //recording sensor data and give everything else to the Storage
             //TODO: first Try abfangen
-            Intent dataCollectionIntent = new Intent(this, DataCollectorService.class);
-            dataCollectionIntent.putExtra("foregroundApp", foregroundApp);
-            dataCollectionIntent.putExtra("capturingEvent", capturingEvent);
-            dataCollectionIntent.putExtra("photoName", "Dummyname");
-            //Bildname von PictureCallback
+
             //Face Data
 
             //if (capturingEvent.equals("test")){
             //  dataCollectionIntent.putExtra("firstTryOrNot", "yes");
             //}
 
-            getApplicationContext().startService(dataCollectionIntent);
-        Log.v(TAG, "data collection gets started.");
+
         }
 
 
 
-    class CameraPictureCallback implements Camera.PictureCallback {
+    public class CameraPictureCallback implements Camera.PictureCallback {
+
+        boolean pictureTaken = false;
         String pictureName;
+        private SurfaceTexture surfaceTexture;
+        private String foregroundApp;
+        private String capturingEvent;
+
+        public CameraPictureCallback (SurfaceTexture surfaceTexture, String foregroundApp, String capturingEvent){
+            this.surfaceTexture = surfaceTexture;
+            this.foregroundApp = foregroundApp;
+            this.capturingEvent = capturingEvent;
+        }
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-
-            Log.v(TAG, "pictureCallBack created. " + "onPictureTaken() is called.");
-// Todo: Foto Orientierung da 13 +
-
+            System.gc();
+            Log.v(TAG, "1 surface Texture: " + surfaceTexture);
+            Log.v(TAG, "6 camera: " + camera);
             File capturedPhotoFile = getOutputMediaFile();
-            Log.v(TAG, "picture name: " + pictureName);
             if (capturedPhotoFile == null) {
                 Log.e(TAG, "Could not create file");
                 return;
             }
 
+            Log.v(TAG, "4 surface Texture: " + surfaceTexture);
+            Log.v(TAG, "7 camera: " + camera);
             Bitmap capturedImage = BitmapFactory.decodeByteArray(data, 0, data.length);
+            Log.v(TAG, "5 surface Texture: " + surfaceTexture);
+            Log.v(TAG, "8 camera: " + camera);
             android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
             android.hardware.Camera.getCameraInfo(cameraId, info);
-            //Bitmap bitmap = rotate(realImage, info.orientation);
             int w = capturedImage.getWidth();
             int h = capturedImage.getHeight();
             Matrix mtx = new Matrix();
             mtx.postRotate(info.orientation);
             Bitmap rotatedImage = Bitmap.createBitmap(capturedImage, 0, 0, w, h, mtx, true);
+            Log.v(TAG, "6 surface Texture: " + surfaceTexture);
+            Log.v(TAG, "9 camera: " + camera);
 
             try {
                 FileOutputStream fos = new FileOutputStream(capturedPhotoFile);
                 rotatedImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
                 fos.write(data);
+                Log.v(TAG, "7 surface Texture: " + surfaceTexture);
+                Log.v(TAG, "10 camera: " + camera);
                 fos.flush();
+                Log.v(TAG, "8 surface Texture: " + surfaceTexture);
+                Log.v(TAG, "11 camera: " + camera);
                 fos.close();
+                Log.v(TAG, "9 surface Texture: " + surfaceTexture);
+                Log.v(TAG, "12 camera: " + camera);
             } catch (FileNotFoundException e) {
                 Log.e(TAG, "File not found: " + e.getMessage());
                 e.getStackTrace();
@@ -231,34 +239,47 @@ public class CapturePicService extends IntentService {
                 e.getStackTrace();
             }
 
-/*
-            try {
-                FileOutputStream fos = new FileOutputStream(capturedPhotoFile);
-                fos.write(data);
-                fos.flush();
-                fos.close();
-            } catch (FileNotFoundException e) {
-                Log.e(TAG, "File not found: " + e.getMessage());
-                e.getStackTrace();
-            } catch (IOException e) {
-                Log.e(TAG, "I/O error writing file: " + e.getMessage());
-                e.getStackTrace();
-            }*/
-
+            Log.v(TAG, "10 surface Texture: " + surfaceTexture);
+            Log.v(TAG, "13 camera: " + camera);
+            Intent dataCollectionIntent = new Intent(getApplicationContext(), DataCollectorService.class);
+            dataCollectionIntent.putExtra("foregroundApp", foregroundApp);
+            dataCollectionIntent.putExtra("capturingEvent", capturingEvent);
+            dataCollectionIntent.putExtra("photoName", pictureName);
+            getApplicationContext().startService(dataCollectionIntent);
+            Log.v(TAG, "11 surface Texture: " + surfaceTexture);
+            Log.v(TAG, "14 camera: " + camera);
+            Log.v(TAG, "data collection gets started.");
             camera.release();
-            pictureNameFromCallback = pictureName;
         }
 
         //Hilfsmethode
         private File getOutputMediaFile() {
             Log.v(TAG, "getOutputMediaFile() called.");
+            Log.v(TAG, "2 surface Texture: " + surfaceTexture);
             File filePath = new File(storagePath);
             Log.v(TAG, "File created.");
             DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
             String timeString = dateFormat.format(new Date());
             pictureName = userName + "_" + timeString + ".jpg";
             Toast.makeText(getApplicationContext(), filePath.getPath() + File.separator + pictureName, Toast.LENGTH_SHORT).show();
+            Log.v(TAG, "3 surface Texture: " + surfaceTexture);
             return new File(filePath.getPath() + File.separator + pictureName);
+        }
+
+        public SurfaceTexture getSurfaceTexture() {
+            return surfaceTexture;
+        }
+
+        public void setSurfaceTexture(SurfaceTexture surfaceTexture) {
+            this.surfaceTexture = surfaceTexture;
+        }
+
+        public void setForegroundApp(String foregroundApp) {
+            this.foregroundApp = foregroundApp;
+        }
+
+        public void setCapturingEvent(String capturingEvent) {
+            this.capturingEvent = capturingEvent;
         }
     }
 
