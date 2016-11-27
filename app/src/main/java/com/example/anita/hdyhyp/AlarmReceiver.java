@@ -1,11 +1,15 @@
 package com.example.anita.hdyhyp;
 
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -45,37 +49,27 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (powerManager.isScreenOn()){
             Log.v(TAG, "screen is on, handle alarm " + currentID);
             //inform controller
+            //create survey TODO: von controller übernehmen lassen, wenn er bild auslöst
+            NotificationCompat.Builder surveyNotificationBuilder =
+                    new NotificationCompat.Builder(context)
+                            .setSmallIcon(R.drawable.logo)
+                    .setContentTitle("HDYHYP")
+                    .setContentText("A survey is waiting for you");
+                Intent resultIntent = new Intent(context, SurveyActivity.class);
 
-            //create survey
-
-                NotificationCompat.Builder mBuilder =
-                        new NotificationCompat.Builder(yourActivity.this)
-                                .setSmallIcon(R.drawable.app_icon)
-                                .setContentTitle("title")
-                                .setContentText("text");
-                // Creates an explicit intent for an Activity in your app
-                Intent resultIntent = new Intent(yourActivity.this, wantToOpenActivity.this);
-
-                // The stack builder object will contain an artificial back stack for the
-                // started Activity.
-                // This ensures that navigating backward from the Activity leads out of
-                // your application to the Home screen.
-                TaskStackBuilder stackBuilder = TaskStackBuilder.create(yourActivity.this);
-                // Adds the back stack for the Intent (but not the Intent itself)
-                stackBuilder.addParentStack( wantToOpenActivity.this);
-                // Adds the Intent that starts the Activity to the top of the stack
+                //TaskStackBuilder stackBuilder = TaskStackBuilder.create(AlarmReceiver.this);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+                stackBuilder.addParentStack( SurveyActivity.class);
                 stackBuilder.addNextIntent(resultIntent);
                 PendingIntent resultPendingIntent =
                         stackBuilder.getPendingIntent(
                                 0,
                                 PendingIntent.FLAG_UPDATE_CURRENT
                         );
-                mBuilder.setContentIntent(resultPendingIntent);
-                NotificationManager mNotificationManager =
-                        (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-                // mId allows you to update the notification later on.
-                int mId=001;;
-                mNotificationManager.notify(mId, mBuilder.build());
+            surveyNotificationBuilder.setContentIntent(resultPendingIntent);
+                NotificationManager notificationManager =
+                        (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(currentID, surveyNotificationBuilder.build());
 
 
 
