@@ -1,9 +1,11 @@
 package com.example.anita.hdyhyp;
 
+import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.Picture;
+import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,11 +15,11 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.GridView;
+import android.widget.ProgressBar;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import static android.graphics.PorterDuff.Mode.SCREEN;
 import static com.example.anita.hdyhyp.ControllerService.storage;
 
 public class PictureReviewActivity extends AppCompatActivity {
@@ -30,14 +32,24 @@ public class PictureReviewActivity extends AppCompatActivity {
     private ArrayList<PictureItem> taggedToDeleteItems = new ArrayList<>();
     private Button deleteButton;
     private Button submitButton;
+    private ProgressBar progressBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_picture_review);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+    }
+
+    @Override
+    protected void onStart(){
+        super.onStart();
 
         gridView = (GridView) findViewById(R.id.gridView);
-        gridAdapter = new PictureReviewGridViewAdapter(getApplicationContext(), R.layout.picture_review_grid_item, getData());
+        ArrayList<PictureItem> dummy = new ArrayList<PictureItem>();
+        gridAdapter = new PictureReviewGridViewAdapter(getApplicationContext(), R.layout.picture_review_grid_item, dummy);
+        //gridAdapter = new PictureReviewGridViewAdapter(getApplicationContext(), R.layout.picture_review_grid_item, getData());
         gridView.setAdapter(gridAdapter);
 
         /*gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -120,9 +132,13 @@ public class PictureReviewActivity extends AppCompatActivity {
 
         submitButton = (Button) findViewById(R.id.picturesSendButton);
 
+        AsyncTaskBuildGrid stbg = new AsyncTaskBuildGrid();
+        stbg.execute();
+
     }
 
-    private ArrayList<PictureItem> getData(){
+    //private ArrayList<PictureItem> getData(){
+    private void getData(){
         File folder = new File(storage.getStoragePath() + File.separator);
         File[] listOfFiles = folder.listFiles();
 
@@ -150,9 +166,38 @@ public class PictureReviewActivity extends AppCompatActivity {
 
             PictureItem pictureItem = new PictureItem(scaledPicture, currentPath);
             pictureItems.add(pictureItem);
+            gridAdapter.addData(pictureItem);
 
         }
 
-        return pictureItems;
+        //return pictureItems;
     }
+
+    private class AsyncTaskBuildGrid extends AsyncTask<String, String, String> {
+        private ArrayList<PictureItem> data;
+        private String resp;
+
+        @Override
+        protected String doInBackground(String... params) {
+            getData();
+            return resp;
         }
+
+        @Override
+        protected void onPostExecute(String result) {
+            gridAdapter.notifyDataSetChanged();
+            progressBar.setVisibility(View.GONE);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            // Things to be done before execution of long running operation. For
+            // example showing ProgessDialog
+        }
+
+        @Override
+        protected void onProgressUpdate(String... text) {
+
+        }
+    }
+}

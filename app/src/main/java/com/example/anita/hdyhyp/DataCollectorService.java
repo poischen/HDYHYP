@@ -423,7 +423,6 @@ public class DataCollectorService extends IntentService implements GoogleApiClie
             this.mGoogleApiClient.disconnect();
             this.mGoogleApiClient = null;
         }
-        super.onDestroy();
     }
 
     }

@@ -1,5 +1,6 @@
 package com.example.anita.hdyhyp;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -37,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
     private Button reviewButton;
     private Button deleteButton;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
         settingsButton1 = (Button) findViewById(R.id.buttonSettings1);
         settingsButton2 = (Button) findViewById(R.id.buttonSettings2);
         reviewButton = (Button) findViewById(R.id.reviewButton);
-
 
         settingsButton1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -79,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+
 
         /**Asks for and inizilizes the users pseudonym to identify him during the study if it is not already set
          visual feedback / input not possible if the name is already set */
@@ -165,5 +166,13 @@ public class MainActivity extends AppCompatActivity {
         tellMeYourNameView.setEnabled(false);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 }

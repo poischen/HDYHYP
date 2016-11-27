@@ -93,4 +93,8 @@ public class PictureReviewGridViewAdapter extends ArrayAdapter {
         ImageView picture;
         CheckBox deleteCheckbox;
     }
+
+    public void addData (PictureItem pictureItem){
+        data.add(pictureItem);
+    }
 }

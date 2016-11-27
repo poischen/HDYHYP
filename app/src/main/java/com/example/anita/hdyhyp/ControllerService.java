@@ -1,7 +1,10 @@
 package com.example.anita.hdyhyp;
 
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
@@ -16,9 +19,11 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -33,12 +38,14 @@ it is realized as a foreground service so it won't be killed by Android and the 
 public class ControllerService extends Service implements Observer {
 
     private static final String TAG = ControllerService.class.getSimpleName();
+    private CapturePicService capturePictureService;
 
     private boolean firstTrySuccessfullyFlag;
     private String storagePath;
     private String userName;
     private BroadcastReceiver broadcastReceiver;
     private Thread picturesAreCurrentlyTakenThread;
+    protected Calendar alarm[] = new Calendar[6];
    // private CapturePicService currentCapturePicService;
 
     public static Storage storage;
@@ -65,13 +72,12 @@ public class ControllerService extends Service implements Observer {
             /**Starting the Shooting after inizialising the user name in order to test if everything works
              */
             Bundle extras = intent.getExtras();
-            //storagePath = (String) extras.get("storagePath");
-            //userName = (String) extras.get("userName");
             storage = new Storage(getApplicationContext());
             storagePath = storage.getStoragePath();
             userName = storage.getUserName();
             capturingEvent = NOTHING;
             startCapturePictureService();
+            setRandomPictureAlarms();
             firstTrySuccessfullyFlag = true;
 
         } catch (Exception e) {
@@ -108,6 +114,37 @@ public class ControllerService extends Service implements Observer {
 
         }
         return START_STICKY;
+    }
+
+    private void setRandomPictureAlarms() {
+        AlarmManager alarmManager = (AlarmManager) getApplication().getSystemService(Context.ALARM_SERVICE);
+        ArrayList<PendingIntent> pendingIntentArray = new ArrayList<PendingIntent>();
+        int[] alarmHour = new int[6];
+        int[] alarmMinutes = new int[6];
+        //alarm between 10 am and 22 pm in intervals of 2 hours
+        int hourCounter = 10;
+        for (int i=0; i<=5; i++){
+            alarmHour[i] = hourCounter + ((int)(Math.random() * 2));
+            alarmMinutes[i] = (int)(Math.random() * 59) + 1;
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(System.currentTimeMillis());
+            c.set(Calendar.HOUR_OF_DAY, alarmHour[i]);
+            c.set(Calendar.MINUTE, alarmMinutes[i]);
+            c.set(Calendar.SECOND, 0);
+            alarm[i] = c;
+            Log.v(TAG, "Alarm No. " + i + ": " + alarmHour[i] + ":" + alarmMinutes[i]);
+            hourCounter = hourCounter + 2;
+
+            Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+            intent.putExtra("id", i);
+            intent.putExtra("time", alarm[i].getTimeInMillis());
+            Log.v(TAG, "milli time: " + alarm[i].getTimeInMillis());
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), i, intent, 0);
+            alarmManager.setInexactRepeating(AlarmManager.RTC, alarm[i].getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+
+            //TODO: can be kept to clear alarm after interval is passed
+            pendingIntentArray.add(pendingIntent);
+        }
     }
 
 
@@ -151,6 +188,8 @@ public class ControllerService extends Service implements Observer {
 
 
     private void startCapturePictureService() {
+        capturePictureService = new CapturePicService();
+
         Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
         capturePicServiceIntent.putExtra("storagePath", storagePath);
         capturePicServiceIntent.putExtra("userName", userName);
@@ -158,6 +197,7 @@ public class ControllerService extends Service implements Observer {
         capturePicServiceIntent.putExtra("capturingEvent", capturingEvent);
         intentList.add(capturePicServiceIntent);
         getApplicationContext().startService(capturePicServiceIntent);
+
     }
 
     private void stopIfPicturesAreCurrentlyTaken(){
@@ -177,6 +217,7 @@ public class ControllerService extends Service implements Observer {
         }
     }
 
+    //TODO: finnish that and managa Abbrüche
     private Runnable runnableShootPicture = new Runnable() {
         @Override
         public void run() {
