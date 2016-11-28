@@ -5,8 +5,6 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-import android.widget.Toast;
-
 
 import java.io.File;
 
@@ -30,10 +28,12 @@ public class Storage extends SQLiteOpenHelper {
     public static final String COLUMN_PHOTO = "photoName";
     public static final String COLUMN_CAPTUREEVENT = "captureEvent";
     public static final String COLUMN_FOREGROUNDAPP = "foregroundApp";
-    public static final String COLUMN_GYROSCOPE = "accelerometer";
-    public static final String COLUMN_ACCELEROMETER = "accelerometer";
-    public static final String COLUMN_LINEAR_ACCELERATION = "lin_accelerometer";
-    public static final String COLUMN_ROTATION_VECTOR = "rotation_vector";
+    public static final String COLUMN_GYROSCOPEX = "gyroscopeX";
+    public static final String COLUMN_GYROSCOPEY = "gyroscopeY";
+    public static final String COLUMN_GYROSCOPEZ = "gyroscopeZ";
+    public static final String COLUMN_ACCELEROMETERX = "accelerometerX";
+    public static final String COLUMN_ACCELEROMETERY = "accelerometerY";
+    public static final String COLUMN_ACCELEROMETERZ = "accelerometerZ";
     public static final String COLUMN_LIGHT = "light";
     public static final String COLUMN_BRIGHTNESS = "screenLightness";
     public static final String COLUMN_ORIENTATION = "orientation";
@@ -43,8 +43,10 @@ public class Storage extends SQLiteOpenHelper {
     public static final String COLUMN_RIGHT = "rightEye";
     public static final String COLUMN_LEFT = "leftEye";
     public static final String COLUMN_MOUTH = "Mouth";
-
-
+    public static final String COLUMN_LOCATIONLATITUDE = "LocationLatitude";
+    public static final String COLUMN_LOCATIONLONGITUDE = "LocationLongitude";
+    public static final String COLUMN_LOCATIONROAD = "LocationRoad";
+    public static final String COLUMN_LOCATIONPOSTALCODE = "LocationPLZ";
 
 
     public static final String SQL_CREATE =
@@ -53,12 +55,18 @@ public class Storage extends SQLiteOpenHelper {
                     COLUMN_PHOTO + " TEXT, " +
                     COLUMN_CAPTUREEVENT + " TEXT, " +
                     COLUMN_FOREGROUNDAPP + " TEXT, " +
-                    COLUMN_ACCELEROMETER + " TEXT, " +
-                    COLUMN_GYROSCOPE + " TEXT, " +
-                    COLUMN_LINEAR_ACCELERATION  + " TEXT, " +
-                    COLUMN_ROTATION_VECTOR + " TEXT " +
-                    COLUMN_LIGHT + " INTEGER, " +
-                    COLUMN_BRIGHTNESS + " TEXT, " +
+                    COLUMN_LOCATIONLATITUDE + " INTEGER, " +
+                    COLUMN_LOCATIONLONGITUDE + " INTEGER, " +
+                    COLUMN_LOCATIONROAD + " TEXT, " +
+                    COLUMN_LOCATIONPOSTALCODE + " TEXT, " +
+                    COLUMN_ACCELEROMETERX + " TEXT, " +
+                    COLUMN_ACCELEROMETERY + " TEXT, " +
+                    COLUMN_ACCELEROMETERZ + " TEXT, " +
+                    COLUMN_GYROSCOPEX + " TEXT, " +
+                    COLUMN_GYROSCOPEY + " TEXT, " +
+                    COLUMN_GYROSCOPEZ + " TEXT, " +
+                    COLUMN_LIGHT + " TEXT, " +
+                    COLUMN_BRIGHTNESS + " INTEGER, " +
                     COLUMN_ORIENTATION + " TEXT, " +
                     COLUMN_PROXIMITY + " TEXT, " +
                     COLUMN_BATTERYSTATUS + " TEXT, " +

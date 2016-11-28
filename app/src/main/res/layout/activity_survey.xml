@@ -145,7 +145,7 @@
                     android:textSize="15dp"/>
 
                 <RadioButton
-                    android:text="both"
+                    android:text="staying"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/surveyQuestionUserPostureRadioButtonStaying"

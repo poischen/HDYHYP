@@ -16,13 +16,14 @@ import java.util.ArrayList;
 
 import static android.content.Context.ALARM_SERVICE;
 import static android.content.Context.POWER_SERVICE;
+import static java.lang.System.currentTimeMillis;
 
 public class AlarmReceiver extends BroadcastReceiver {
 
-    private boolean wasRescheduled = false;
+    private boolean[] wasRescheduled = new boolean[6];
     private long[] startTime = new long[6];
     private int[] rescheduleCounter = new int[] {0, 0, 0, 0, 0, 0};
-    private int shiftMillis = 5000;
+    private int shiftMillis = 20000;
 
     private static final String TAG = AlarmReceiver.class.getSimpleName();
     public AlarmReceiver() {
@@ -31,72 +32,69 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.v(TAG, "Alarm received");
-        int currentID = (int) intent.getExtras().get("id");
-        //long currentMillis = (long) intent.getExtras().get("time");
-        //if (rescheduleCounter[currentID] == 0){
-        //    startTime[currentID] = currentMillis;
-        //}
+        int requestID = (int) intent.getExtras().get("requestID");
 
-        if (!wasRescheduled){
+        if (startTime[requestID] == 0L){
             long time = (long) intent.getExtras().get("time");
-                startTime[currentID] = time;
-
+                startTime[requestID] = time;
         }
-        Log.v(TAG, "start time of current alarm: " + startTime[currentID]);
-        Log.v(TAG, "incoming intent id: " + currentID);
+
+        Log.v(TAG, "start time of current alarm: " + startTime[requestID]);
+        Log.v(TAG, "incoming intent id: " + requestID);
 
         PowerManager powerManager = (PowerManager) context.getSystemService(POWER_SERVICE);
         if (powerManager.isScreenOn()){
-            Log.v(TAG, "screen is on, handle alarm " + currentID);
+            Log.v(TAG, "screen is on, handle alarm " + requestID);
             //inform controller
-            //create survey TODO: von controller übernehmen lassen, wenn er bild auslöst
+            //create survey TODO: von controller übernehmen lassen, wenn er bild auslöst und somit auch Bildname kennt
             NotificationCompat.Builder surveyNotificationBuilder =
                     new NotificationCompat.Builder(context)
                             .setSmallIcon(R.drawable.logo)
-                    .setContentTitle("HDYHYP")
-                    .setContentText("A survey is waiting for you");
+                            .setContentTitle("HDYHYP")
+                            .setContentText("A questionnaire is waiting for you...")
+                            .setOngoing(true);
                 Intent resultIntent = new Intent(context, SurveyActivity.class);
+                resultIntent.putExtra("requestID", requestID);
 
-                //TaskStackBuilder stackBuilder = TaskStackBuilder.create(AlarmReceiver.this);
                 TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
                 stackBuilder.addParentStack( SurveyActivity.class);
                 stackBuilder.addNextIntent(resultIntent);
                 PendingIntent resultPendingIntent =
                         stackBuilder.getPendingIntent(
-                                0,
+                                (int)currentTimeMillis(),
                                 PendingIntent.FLAG_UPDATE_CURRENT
                         );
             surveyNotificationBuilder.setContentIntent(resultPendingIntent);
                 NotificationManager notificationManager =
                         (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                notificationManager.notify(currentID, surveyNotificationBuilder.build());
-
-
+                notificationManager.notify((requestID+42), surveyNotificationBuilder.build());
 
             //reset start time
             //if (rescheduleTimerCounter[currentID] > 0){
-            if (wasRescheduled){
+            if (wasRescheduled[requestID]){
                 Log.v(TAG, "alarm was rescheduled, reset now");
-                wasRescheduled = false;
-                rescheduleCounter[currentID] = 0;
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(context, currentID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                wasRescheduled[requestID] = false;
+                rescheduleCounter[requestID] = 0;
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                 AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-                alarmManager.set(AlarmManager.RTC, startTime[currentID], pendingIntent);
+                alarmManager.set(AlarmManager.RTC, startTime[requestID], pendingIntent);
+                Log.v(TAG, "alarm resetet to starttime.");
             }
         }
         else{
             //reschedule: shift alarm 5 minutes
-            Log.v(TAG, "reschedule alarm " + currentID);
+            Log.v(TAG, "reschedule alarm " + requestID);
 
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, currentID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-            Log.v(TAG, "rescheduleCounter" + rescheduleCounter[currentID]);
-            ++ rescheduleCounter[currentID];
-            Log.v(TAG, "rescheduleCounter new" + rescheduleCounter[currentID]);
-            long newTime = startTime[currentID] + (rescheduleCounter[currentID] * shiftMillis);
+            Log.v(TAG, "rescheduleCounter" + rescheduleCounter[requestID]);
+            ++ rescheduleCounter[requestID];
+            Log.v(TAG, "rescheduleCounter new" + rescheduleCounter[requestID]);
+            long newTime = startTime[requestID] + (rescheduleCounter[requestID] * shiftMillis);
             Log.v(TAG, "new time" + newTime);
             alarmManager.set(AlarmManager.RTC, newTime, pendingIntent );
-            wasRescheduled = true;
+            wasRescheduled[requestID] = true;
+
         }
     }
 }

@@ -3,7 +3,6 @@ package com.example.anita.hdyhyp;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.usage.UsageStats;
@@ -12,7 +11,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -23,7 +21,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -46,9 +43,10 @@ public class ControllerService extends Service implements Observer {
     private BroadcastReceiver broadcastReceiver;
     private Thread picturesAreCurrentlyTakenThread;
     protected Calendar alarm[] = new Calendar[6];
-   // private CapturePicService currentCapturePicService;
 
     public static Storage storage;
+
+
 
     public enum CapturingEvent {NOTHING, SCREENON, ORIENTATION, KEYBOARD, APPLICATION, PUSHNOTIFICATION, CAM};
     public CapturingEvent capturingEvent;
@@ -56,7 +54,6 @@ public class ControllerService extends Service implements Observer {
     private String currentForegroundApp;
     private boolean lastDetectedOrientaionPortrait = true;
     private Thread appDetectionThread;
-    private boolean dataFlag;
 
     List<Intent> intentList = new ArrayList<>(); //TODO: Wann werden die Intents aus der Liste gelöscht?
 
@@ -77,6 +74,7 @@ public class ControllerService extends Service implements Observer {
             userName = storage.getUserName();
             capturingEvent = NOTHING;
             startCapturePictureService();
+            //startDataCollectionService(getApplicationContext(), "HDYHYP", capturingEvent.toString(), "n./a.");
             setRandomPictureAlarms();
             firstTrySuccessfullyFlag = true;
 
@@ -88,7 +86,7 @@ public class ControllerService extends Service implements Observer {
         if (firstTrySuccessfullyFlag){
 
             //Register Broadcast Receiver for listening if the screen is on/off & if orientation has changed
-            broadcastReceiver = new MyBroadcastReceiver();
+            broadcastReceiver = new EventBroadcastReceiver();
             final IntentFilter onOffFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
             onOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
             final IntentFilter configurationFilter = new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED);
@@ -96,6 +94,8 @@ public class ControllerService extends Service implements Observer {
             registerReceiver(broadcastReceiver, onOffFilter);
             registerReceiver(broadcastReceiver, configurationFilter);
             registerReceiver(broadcastReceiver, camButtonFilter);
+
+
             ObservableObject.getInstance().addObserver(this);
 
             // Notification about starting the controller service foreground according to the design guidelines
@@ -116,9 +116,29 @@ public class ControllerService extends Service implements Observer {
         return START_STICKY;
     }
 
+    public static void startDataCollectionService(Context context, String foregroundApp, String capturingEvent, String pictureName, String faceDetectionLeftEye, String faceDetectionRightEye, String faceDetectionMouth) {
+        Intent dataCollectionIntent = new Intent(context, DataCollectorService.class);
+        dataCollectionIntent.putExtra("foregroundApp", foregroundApp);
+        dataCollectionIntent.putExtra("capturingEvent", capturingEvent);
+        dataCollectionIntent.putExtra("photoName", pictureName);
+        if (ObservableObject.getInstance().isOrientationPortrait()){
+            dataCollectionIntent.putExtra("orientation", "portrait");
+        } else {
+            dataCollectionIntent.putExtra("orientation", "landscape");
+        }
+        dataCollectionIntent.putExtra("faceDetectionLeftEye", faceDetectionLeftEye);
+        dataCollectionIntent.putExtra("faceDetectionRightEye", faceDetectionRightEye);
+        dataCollectionIntent.putExtra("faceDetectionMouth", faceDetectionMouth);
+        context.startService(dataCollectionIntent);
+    }
+
     private void setRandomPictureAlarms() {
-        AlarmManager alarmManager = (AlarmManager) getApplication().getSystemService(Context.ALARM_SERVICE);
-        ArrayList<PendingIntent> pendingIntentArray = new ArrayList<PendingIntent>();
+        IntentFilter filter = new IntentFilter("com.example.anita.hdyhyp.AlarmReceiver");
+        AlarmReceiver alarmReceiver = new AlarmReceiver();
+        registerReceiver(alarmReceiver, filter);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        //ArrayList<PendingIntent> pendingIntentArray = new ArrayList<PendingIntent>();
         int[] alarmHour = new int[6];
         int[] alarmMinutes = new int[6];
         //alarm between 10 am and 22 pm in intervals of 2 hours
@@ -135,16 +155,18 @@ public class ControllerService extends Service implements Observer {
             Log.v(TAG, "Alarm No. " + i + ": " + alarmHour[i] + ":" + alarmMinutes[i]);
             hourCounter = hourCounter + 2;
 
-            Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
-            intent.putExtra("id", i);
-            intent.putExtra("time", alarm[i].getTimeInMillis());
-            Log.v(TAG, "milli time: " + alarm[i].getTimeInMillis());
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), i, intent, 0);
-            alarmManager.setInexactRepeating(AlarmManager.RTC, alarm[i].getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+            Intent intent = new Intent(this, AlarmReceiver.class);
+            intent.putExtra("requestID", i);
+            intent.putExtra("time", c.getTimeInMillis());
+            intent.setAction("com.example.anita.hdyhyp.AlarmReceiver");
+            Log.v(TAG, "millis time: " + c.getTimeInMillis());
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), i, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+            alarmManager.setInexactRepeating(AlarmManager.RTC, c.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+            c = null;
 
-            //TODO: can be kept to clear alarm after interval is passed
-            pendingIntentArray.add(pendingIntent);
+            //pendingIntentArray.add(pendingIntent);
         }
+
     }
 
 

@@ -61,7 +61,7 @@
         android:layout_marginTop="14dp" />
 
     <Button
-        android:text=" delte name "
+        android:text=" delete name "
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/textColorPrimary"

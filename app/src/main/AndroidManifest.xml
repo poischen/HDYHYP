@@ -56,7 +56,7 @@
             android:enabled="true"
             android:exported="true" />
 
-        <receiver android:name=".MyBroadcastReceiver" />
+        <receiver android:name=".EventBroadcastReceiver" />
 
         <activity android:name=".PictureReviewActivity" />
         <!--

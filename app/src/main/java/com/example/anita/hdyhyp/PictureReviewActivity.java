@@ -162,7 +162,7 @@ public class PictureReviewActivity extends AppCompatActivity {
             float scaleHeight = ((float) 90) / height;
             Matrix matrix = new Matrix();
             matrix.postScale(scaleWidth, scaleHeight);
-            Bitmap scaledPicture = Bitmap.createBitmap(currentPicture, 0, 0, width, height, matrix, false);
+            Bitmap scaledPicture = Bitmap.createBitmap(currentPicture, 0, 0, width, height , matrix, false);
 
             PictureItem pictureItem = new PictureItem(scaledPicture, currentPath);
             pictureItems.add(pictureItem);

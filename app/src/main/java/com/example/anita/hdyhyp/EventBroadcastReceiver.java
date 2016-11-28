@@ -10,12 +10,9 @@ import android.util.Log;
  * Knows when the user switches the screen on or off and lets the Controller Service know
  */
 
-public class MyBroadcastReceiver extends BroadcastReceiver {
+public class EventBroadcastReceiver extends BroadcastReceiver {
 
-    private static final String TAG = MyBroadcastReceiver.class.getSimpleName();
-   // private boolean isScreenOn;
-
- //TODO: Case statt if?
+    private static final String TAG = EventBroadcastReceiver.class.getSimpleName();
     @Override
     public void onReceive(Context context, Intent intent) {
         switch ( intent.getAction()){
