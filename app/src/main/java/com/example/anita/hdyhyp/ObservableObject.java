@@ -8,9 +8,8 @@ import java.util.Observable;
 public class ObservableObject extends Observable {
     private static ObservableObject instance = new ObservableObject();
 
-   // private boolean isScreenOn = true;
-    private boolean isKeyboardVisible;
-    private boolean isOrientationPortrait;
+    //private boolean isKeyboardVisible;
+    private boolean isOrientationPortrait = true;
 
 
     public static ObservableObject getInstance() {
@@ -27,21 +26,8 @@ public class ObservableObject extends Observable {
         }
     }
 
-    /*public boolean getIsScreenOn(){
-        return isScreenOn;
-    }
-
-    public void setIsScreenOn(boolean isScreenOn){
-        isScreenOn = isScreenOn;
-    }
-*/
-    public boolean isKeyboardVisible() {
-        return isKeyboardVisible;
-    }
-
-    public void setKeyboardVisible(boolean keyboardVisible) {
-        isKeyboardVisible = keyboardVisible;
-    }
+    //public boolean isKeyboardVisible() {        return isKeyboardVisible;    }
+    //public void setKeyboardVisible(boolean keyboardVisible) {       isKeyboardVisible = keyboardVisible;    }
 
     public boolean isOrientationPortrait() {
         return isOrientationPortrait;

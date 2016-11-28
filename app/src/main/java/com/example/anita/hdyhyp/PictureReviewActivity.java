@@ -99,13 +99,6 @@ public class PictureReviewActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                /*for (int i=0; i < taggedToDeleteItems.size(); i++){
-                    PictureItem item = taggedToDeleteItems.get(i);
-                    gridAdapter.remove(item);
-                    File file = new File(taggedToDeleteItems.get(i).getPath());
-                    file.delete();
-                    Log.v(TAG, "File deleted: " + file);
-                }*/
 
 
                 ArrayList<PictureItem> pictureItems;

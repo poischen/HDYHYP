@@ -1,8 +1,10 @@
 package com.example.anita.hdyhyp;
 
 import android.app.NotificationManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +14,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+
+import static com.example.anita.hdyhyp.ControllerService.storage;
 
 public class SurveyActivity extends AppCompatActivity {
     private static final String TAG = SurveyActivity.class.getSimpleName();
@@ -34,9 +38,7 @@ public class SurveyActivity extends AppCompatActivity {
 
     Button surveySubmitButton;
 
-    String surveyQuestionDevicePositionValue;
-    String surveyQuestionHandValue;
-    String surveyQuestionUserPostureValue;
+    String pictureName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,45 +56,19 @@ public class SurveyActivity extends AppCompatActivity {
         surveyQuestionDevicePositionRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionDevicePositionRadioGroup);
         surveyQuestionDevicePositionRadioButtonHands = (RadioButton) findViewById(R.id.surveyQuestionDevicePositionRadioButtonHands);
         surveyQuestionDevicePositionRadioButtonSurface = (RadioButton) findViewById(R.id.surveyQuestionDevicePositionRadioButtonSurface);
-        /*surveyQuestionDevicePositionRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                RadioGroup rg = (RadioGroup) findViewById(i);
-                int radioButtonID = radioGroup.getCheckedRadioButtonId();
-                RadioButton rb = (RadioButton) radioGroup.findViewById(radioButtonID);
-                surveyQuestionDevicePositionValue = (String) rb.getText();
-            }
-        });*/
+
 
         surveyQuestionHandRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionHandRadioGroup);
         surveyQuestionHandRadioButtonDominant = (RadioButton) findViewById(R.id.surveyQuestionHandRadioButtonDominant);
         surveyQuestionHandRadioButtonNonDominant = (RadioButton) findViewById(R.id.surveyQuestionHandRadioButtonNonDominant);
         surveyQuestionHandRadioButtonBoth = (RadioButton) findViewById(R.id.surveyQuestionHandRadioButtonBoth);
         surveyQuestionHandRadioButtonNone = (RadioButton) findViewById(R.id.surveyQuestionHandRadioButtonNone);
-       /*surveyQuestionHandRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                RadioGroup rg = (RadioGroup) findViewById(i);
-                int radioButtonID = radioGroup.getCheckedRadioButtonId();
-                RadioButton rb = (RadioButton) radioGroup.findViewById(radioButtonID);
-                surveyQuestionHandValue = (String) rb.getText();
-            }
-        });*/
 
         surveyQuestionUserPostureRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionUserPostureRadioGroup);
         surveyQuestionUserPostureRadioButtonWalking = (RadioButton) findViewById(R.id.surveyQuestionUserPostureRadioButtonWalking);
         surveyQuestionUserPostureRadioButtonSitting = (RadioButton) findViewById(R.id.surveyQuestionUserPostureRadioButtonSitting);
         surveyQuestionUserPostureRadioButtonStaying = (RadioButton) findViewById(R.id.surveyQuestionUserPostureRadioButtonStaying);
         surveyQuestionUserPostureRadioButtonLying = (RadioButton) findViewById(R.id.surveyQuestionUserPostureRadioButtonLying);
-        /*surveyQuestionUserPostureRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                RadioGroup rg = (RadioGroup) findViewById(i);
-                int radioButtonID = radioGroup.getCheckedRadioButtonId();
-                RadioButton rb = (RadioButton) radioGroup.findViewById(radioButtonID);
-                surveyQuestionUserPostureValue = (String) rb.getText();
-            }
-        });*/
 
         surveySubmitButton = (Button) findViewById(R.id.surveySubmitButton);
         surveySubmitButton.setOnClickListener(new View.OnClickListener() {
@@ -114,6 +90,20 @@ public class SurveyActivity extends AppCompatActivity {
                 RadioButton rbUser = (RadioButton) rgUser.findViewById(radioButtonUserID);
                 String surveyQuestionUserPostureValue = (String) rbUser.getText();
                 Log.v(TAG, "userPosture: " + surveyQuestionUserPostureValue);
+
+                pictureName = (String) getIntent().getExtras().get("pictureName");
+                Log.v(TAG, "survey was for picture : " + pictureName);
+                ContentValues cv = new ContentValues();
+                cv.put(Storage.COLUMN_PHOTO, pictureName);
+                cv.put(Storage.COLUMN_DEVICEPOSITION, surveyQuestionDevicePositionValue);
+                cv.put(Storage.COLUMN_HAND, surveyQuestionHandValue);
+                cv.put(Storage.COLUMN_USERPOSTURE, surveyQuestionUserPostureValue);
+
+                SQLiteDatabase database = ControllerService.storage.getWritableDatabase();
+                long insertId = database.insert(Storage.DB_TABLESURVEY, null, cv);
+                Log.v(TAG, "survey data stored to db");
+                database.close();
+
                 finish();
             }
         });

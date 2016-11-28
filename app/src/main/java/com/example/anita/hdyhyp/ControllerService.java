@@ -24,7 +24,6 @@ import java.util.Observer;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.NOTHING;
 
 /*
 Controlls when and how often photos are captures and holds all necessary inforamtion
@@ -47,8 +46,9 @@ public class ControllerService extends Service implements Observer {
     public static Storage storage;
 
 
+    public enum CapturingEvent {NOTHING, SCREENON, ORIENTATION, KEYBOARD, APPLICATION, PUSHNOTIFICATION, RANDOM}
 
-    public enum CapturingEvent {NOTHING, SCREENON, ORIENTATION, KEYBOARD, APPLICATION, PUSHNOTIFICATION, CAM};
+    ;
     public CapturingEvent capturingEvent;
     private String LastAsNewDetectedApp = "com.example.anita.hdyhyp";
     private String currentForegroundApp;
@@ -63,7 +63,7 @@ public class ControllerService extends Service implements Observer {
     }
 
     @Override
-    public int onStartCommand (Intent intent, int flags, int startId) {
+    public int onStartCommand(Intent intent, int flags, int startId) {
 
         try {
             /**Starting the Shooting after inizialising the user name in order to test if everything works
@@ -72,10 +72,9 @@ public class ControllerService extends Service implements Observer {
             storage = new Storage(getApplicationContext());
             storagePath = storage.getStoragePath();
             userName = storage.getUserName();
-            capturingEvent = NOTHING;
+            capturingEvent = CapturingEvent.NOTHING;
             startCapturePictureService();
             //startDataCollectionService(getApplicationContext(), "HDYHYP", capturingEvent.toString(), "n./a.");
-            setRandomPictureAlarms();
             firstTrySuccessfullyFlag = true;
 
         } catch (Exception e) {
@@ -83,7 +82,9 @@ public class ControllerService extends Service implements Observer {
             firstTrySuccessfullyFlag = false;
         }
 
-        if (firstTrySuccessfullyFlag){
+        if (firstTrySuccessfullyFlag) {
+            ObservableObject.getInstance().addObserver(this);
+            setRandomPictureAlarms();
 
             //Register Broadcast Receiver for listening if the screen is on/off & if orientation has changed
             broadcastReceiver = new EventBroadcastReceiver();
@@ -96,7 +97,7 @@ public class ControllerService extends Service implements Observer {
             registerReceiver(broadcastReceiver, camButtonFilter);
 
 
-            ObservableObject.getInstance().addObserver(this);
+
 
             // Notification about starting the controller service foreground according to the design guidelines
             Notification notification = new Notification.Builder(getApplicationContext())
@@ -121,7 +122,7 @@ public class ControllerService extends Service implements Observer {
         dataCollectionIntent.putExtra("foregroundApp", foregroundApp);
         dataCollectionIntent.putExtra("capturingEvent", capturingEvent);
         dataCollectionIntent.putExtra("photoName", pictureName);
-        if (ObservableObject.getInstance().isOrientationPortrait()){
+        if (ObservableObject.getInstance().isOrientationPortrait()) {
             dataCollectionIntent.putExtra("orientation", "portrait");
         } else {
             dataCollectionIntent.putExtra("orientation", "landscape");
@@ -143,9 +144,9 @@ public class ControllerService extends Service implements Observer {
         int[] alarmMinutes = new int[6];
         //alarm between 10 am and 22 pm in intervals of 2 hours
         int hourCounter = 10;
-        for (int i=0; i<=5; i++){
-            alarmHour[i] = hourCounter + ((int)(Math.random() * 2));
-            alarmMinutes[i] = (int)(Math.random() * 59) + 1;
+        for (int i = 0; i <= 5; i++) {
+            alarmHour[i] = hourCounter + ((int) (Math.random() * 2));
+            alarmMinutes[i] = (int) (Math.random() * 59) + 1;
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(System.currentTimeMillis());
             c.set(Calendar.HOUR_OF_DAY, alarmHour[i]);
@@ -171,41 +172,40 @@ public class ControllerService extends Service implements Observer {
 
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         if (broadcastReceiver != null) {
             unregisterReceiver(broadcastReceiver);
             broadcastReceiver = null;
         }
-        if (appDetectionThread != null){
+        if (appDetectionThread != null) {
             appDetectionThread.interrupt();
         }
     }
 
-        @Override
+    @Override
     public void update(Observable observable, Object data) {
-            String action =  data.toString();
-            if (action.contains("android.intent.action.SCREEN_OFF")){
+        String action = data.toString();
+        Log.v(TAG, "action: " + action);
+        if (action.contains("AlarmReceiver")){
+            stopIfPicturesAreCurrentlyTaken();
+            this.capturingEvent = CapturingEvent.RANDOM;
+            Log.v(TAG, "Event detected, capturingEvent set to: " + this.capturingEvent);
+        } else if (action.contains("android.intent.action.SCREEN_OFF")){
+            stopIfPicturesAreCurrentlyTaken();
+        } else if (action.contains("android.intent.action.SCREEN_ON")){
+            stopIfPicturesAreCurrentlyTaken();
+            this.capturingEvent = CapturingEvent.SCREENON;
+            Log.v(TAG, "Event detected, capturingEvent set to: " + this.capturingEvent);
+        } else if (action.contains("android.intent.action.CONFIGURATION_CHANGED")){
+            if (ObservableObject.getInstance().isOrientationPortrait() != lastDetectedOrientaionPortrait) {
+                lastDetectedOrientaionPortrait = ObservableObject.getInstance().isOrientationPortrait();
                 stopIfPicturesAreCurrentlyTaken();
-            } else{
-                if (action.contains("android.intent.action.SCREEN_ON")){
-                    stopIfPicturesAreCurrentlyTaken();
-                    capturingEvent = CapturingEvent.SCREENON;
-                }
-                else if (action.contains("android.intent.action.CONFIGURATION_CHANGED")){
-                    if (ObservableObject.getInstance().isOrientationPortrait() != lastDetectedOrientaionPortrait){
-                        lastDetectedOrientaionPortrait = ObservableObject.getInstance().isOrientationPortrait();
-                        stopIfPicturesAreCurrentlyTaken();
-                        capturingEvent = CapturingEvent.ORIENTATION;
-                    }
-                }
-                else if (action.contains("android.intent.action.ACTION_CAMERA_BUTTON")){
-
-                    stopIfPicturesAreCurrentlyTaken();
-                    capturingEvent = CapturingEvent.CAM;
-                }
-                picturesAreCurrentlyTakenThread = new Thread(runnableShootPicture);
-                picturesAreCurrentlyTakenThread.start();
+                this.capturingEvent = CapturingEvent.ORIENTATION;
+                Log.v(TAG, "Event detected, capturingEvent set to: " + this.capturingEvent);
             }
+        }
+        picturesAreCurrentlyTakenThread = new Thread(runnableShootPicture);
+        picturesAreCurrentlyTakenThread.start();
     }
 
 
@@ -222,9 +222,9 @@ public class ControllerService extends Service implements Observer {
 
     }
 
-    private void stopIfPicturesAreCurrentlyTaken(){
-        if (picturesAreCurrentlyTakenThread != null){
-            if (picturesAreCurrentlyTakenThread.isAlive()){
+    private void stopIfPicturesAreCurrentlyTaken() {
+        if (picturesAreCurrentlyTakenThread != null) {
+            if (picturesAreCurrentlyTakenThread.isAlive()) {
                 picturesAreCurrentlyTakenThread.interrupt();
             }
             picturesAreCurrentlyTakenThread = null;
@@ -305,21 +305,21 @@ public class ControllerService extends Service implements Observer {
                     Log.v(TAG, "NOTIFICATION Event - Take 1. photo.");
                     startCapturePictureService();
                     break;
-                case CAM:
-                    Log.v(TAG, "REARCAM Event - Take 1. photo.");
+                case RANDOM:
+                    Log.v(TAG, "RANDOM Event - Take 1. photo.");
                     startCapturePictureService();
                     break;
                 default:
-                    Log.d(TAG, "No event was detected while runnableShootPicture was called.");
+                    Log.d(TAG, "No event was detected while runnableShootPicture was called. Event: " + capturingEvent);
                     break;
             }
 
-            capturingEvent = NOTHING;
-            if (picturesAreCurrentlyTakenThread != null && picturesAreCurrentlyTakenThread.isAlive()){
+            capturingEvent = CapturingEvent.NOTHING;
+            if (picturesAreCurrentlyTakenThread != null && picturesAreCurrentlyTakenThread.isAlive()) {
                 picturesAreCurrentlyTakenThread.interrupt();
                 picturesAreCurrentlyTakenThread = null;
             }
-            if (!intentList.isEmpty()){
+            if (!intentList.isEmpty()) {
                 intentList.clear();
             }
         }
@@ -350,7 +350,8 @@ public class ControllerService extends Service implements Observer {
         public void run() {
             while (true) {
                 detectApps();
-            }}
+            }
+        }
 
     };
 
@@ -370,15 +371,14 @@ public class ControllerService extends Service implements Observer {
                     currentApp = mySortedMap.get(mySortedMap.lastKey()).getPackageName();
                 }
             }
-        }
-        else {
+        } else {
             ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            currentApp=(manager.getRunningTasks(1).get(0)).topActivity.getPackageName();
+            currentApp = (manager.getRunningTasks(1).get(0)).topActivity.getPackageName();
             //(manager.getRunningTasks(1).get(0)).describeContents();
         }
-        if (LastAsNewDetectedApp !=null && !LastAsNewDetectedApp.equals(currentApp)){
+        if (LastAsNewDetectedApp != null && !LastAsNewDetectedApp.equals(currentApp)) {
             currentForegroundApp = currentApp;
-            if (currentApp !=null && !currentApp.contains("com.android.") && !currentApp.contains("com.google.android.googlequicksearchbox") && !currentApp.equals("com.example.anita.hdyhyp")){
+            if (currentApp != null && !currentApp.contains("com.android.") && !currentApp.contains("com.google.android.googlequicksearchbox") && !currentApp.equals("com.example.anita.hdyhyp")) {
                 Log.v(TAG, "Current SDK: " + Build.VERSION.SDK_INT + ", new app detected on foreground: " + currentApp);
                 LastAsNewDetectedApp = currentApp;
                 stopIfPicturesAreCurrentlyTaken();

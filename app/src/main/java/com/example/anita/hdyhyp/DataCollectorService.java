@@ -1,9 +1,11 @@
 package com.example.anita.hdyhyp;
 
 import android.app.IntentService;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -30,6 +32,8 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -41,6 +45,8 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.NOTHING;
+import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.RANDOM;
+import static java.lang.System.currentTimeMillis;
 
 /*
 *@class collects all data and write them into database
@@ -100,7 +106,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
 
     @Override
-    public void onCreate (){
+    public void onCreate() {
         Log.v(TAG, "starting data collection");
 
         //register necessary listener---------------------------------------------------------------
@@ -110,7 +116,6 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SensorManager.SENSOR_DELAY_FASTEST);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY), SensorManager.SENSOR_DELAY_FASTEST);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT), SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),SensorManager.SENSOR_DELAY_FASTEST);
 
         /*------------------------------------------------------------------------------------------
         mLocationRequest = LocationRequest.create();
@@ -125,10 +130,17 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     }
 
     @Override
-    public int onStartCommand (Intent intent, int flags, int startId) {
-        capturingEvent = (String) intent.getExtras().get("capturingEvent");
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        try {
+            Log.v(TAG, "intent " + intent);
+            Log.v(TAG, "intent extras " + intent.getExtras());
+            capturingEvent = (String) intent.getExtras().get("capturingEvent");
+        } catch (Exception e){
+            Log.v(TAG, "onStartCommand intent null");
+        }
+
         ContentValues cv = new ContentValues();
-        if (capturingEvent.equals("NOTHING")){
+        if (capturingEvent.equals("NOTHING")) {
             //read general sensor information and store to db---------------------------------------
             photoName = (String) intent.getExtras().get("photoName");
             cv.put(Storage.COLUMN_PHOTO, photoName);
@@ -371,7 +383,12 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
             cv.put(Storage.COLUMN_LEFT, faceDetectionLeftEye);
             cv.put(Storage.COLUMN_RIGHT, faceDetectionRightEye);
             cv.put(Storage.COLUMN_MOUTH, faceDetectionMouth);
-            Log.v(TAG, "face deteiction: left: " + faceDetectionLeftEye + ", right: " + faceDetectionRightEye + ", mouth: " + faceDetectionMouth);
+            Log.v(TAG, "face detection: left: " + faceDetectionLeftEye + ", right: " + faceDetectionRightEye + ", mouth: " + faceDetectionMouth);
+        }
+
+        //create survey
+        if (capturingEvent.equals(RANDOM)) {
+            createSurvey();
         }
 
         //write data to database--------------------------------------------------------------------
@@ -380,7 +397,12 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
         Log.v(TAG, "data stored to db");
         database.close();
 
-        //TODO: pause listening due to battery life?------------------------------------------------
+        //reset values not depending from sensor listener
+        photoName = foregroundApp = locationRoad = locationPLZ = orientation = batteryStatus = faceDetectionLeftEye = faceDetectionRightEye = faceDetectionMouth = "n./a.";
+        locationLatitude = locationLongitude = screenBrightness = -1;
+        capturingEvent = "NOTHING";
+
+        //TODO: pause listener due to battery life?------------------------------------------------
 
         return START_STICKY;
     }
@@ -412,6 +434,31 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
     }
 
+    public void createSurvey() {
+        //create survey
+        NotificationCompat.Builder surveyNotificationBuilder =
+                new NotificationCompat.Builder(getApplicationContext())
+                        .setSmallIcon(R.drawable.logo)
+                        .setContentTitle("HDYHYP")
+                        .setContentText("A questionnaire is waiting for you...")
+                        .setOngoing(true);
+        Intent resultIntent = new Intent(getApplicationContext(), SurveyActivity.class);
+        resultIntent.putExtra("photoName", photoName);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
+        stackBuilder.addParentStack(SurveyActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(
+                        (int) currentTimeMillis(),
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        surveyNotificationBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager notificationManager =
+                (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(42, surveyNotificationBuilder.build());
+    }
+
 
     protected synchronized void buildGoogleApiClient() {
         this.mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -425,7 +472,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     private void unregisterListener() {
     }
 
-    public void setProximity(String proximity){
+    public void setProximity(String proximity) {
         this.proximity = proximity;
     }
 
@@ -449,7 +496,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
         //TODO: in activity auslagern
         if (connectionResult.hasResolution()) {
             //connectionResult.startResolutionForResult(this, 1000);
-        }else {
+        } else {
             googleApiClientConnectionFailed = true;
         }
 

@@ -23,7 +23,7 @@ public class Storage extends SQLiteOpenHelper {
     private static final String TAG = Storage.class.getSimpleName();
 
     public static final String DB_NAME = "HDYHYPDataBase.db";
-    public static final String DB_TABLE = "HDHYHPDataCollection";
+    public static final String DB_TABLE = "HDYHYPDataCollection";
     public static final String COLUMN_CAPTURE_ID = "_id";
     public static final String COLUMN_PHOTO = "photoName";
     public static final String COLUMN_CAPTUREEVENT = "captureEvent";
@@ -48,8 +48,14 @@ public class Storage extends SQLiteOpenHelper {
     public static final String COLUMN_LOCATIONROAD = "LocationRoad";
     public static final String COLUMN_LOCATIONPOSTALCODE = "LocationPLZ";
 
+    public static final String DB_TABLESURVEY = "HDYHYPSurveyData";
+    public static final String COLUMN_SURVEY_ID = "_id";
+    public static final String COLUMN_DEVICEPOSITION = "devicePosition";
+    public static final String COLUMN_HAND = "holdingHand";
+    public static final String COLUMN_USERPOSTURE = "UserPosture";
 
-    public static final String SQL_CREATE =
+
+    public static final String SQL_CREATEDATA =
             "CREATE TABLE " + DB_TABLE +
                     "(" + COLUMN_CAPTURE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     COLUMN_PHOTO + " TEXT, " +
@@ -74,6 +80,16 @@ public class Storage extends SQLiteOpenHelper {
                     COLUMN_LEFT + " TEXT, " +
                     COLUMN_RIGHT + " TEXT, " +
                     COLUMN_MOUTH + " TEXT);";
+
+    public static final String SQL_CREATESURVEY =
+            "CREATE TABLE " + DB_TABLESURVEY +
+                    "(" + COLUMN_SURVEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    COLUMN_PHOTO + " TEXT, " +
+                    COLUMN_DEVICEPOSITION + " TEXT, " +
+                    COLUMN_HAND + " TEXT, " +
+                    COLUMN_USERPOSTURE + " TEXT, "
+                    + " FOREIGN KEY ("+COLUMN_PHOTO+") REFERENCES "+DB_TABLE+"("+COLUMN_PHOTO+"));";
+
 
     private static String storagePath = "storage/emulated/0/HDYHYP";
     //private UserNameStorage userNameStorage;
@@ -118,8 +134,10 @@ public class Storage extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         try {
-            db.execSQL(SQL_CREATE);
-            Log.v(TAG, "Table was created. " + SQL_CREATE + " angelegt.");
+            db.execSQL(SQL_CREATEDATA);
+            Log.v(TAG, "Table was created. " + SQL_CREATEDATA + " angelegt.");
+            db.execSQL(SQL_CREATESURVEY);
+            Log.v(TAG, "Table was created. " + SQL_CREATESURVEY + " angelegt.");
         }
         catch (Exception e) {
             Log.e(TAG, "Could not create table. " + e.getMessage());

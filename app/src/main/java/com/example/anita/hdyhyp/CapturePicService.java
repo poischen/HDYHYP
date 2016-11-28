@@ -186,6 +186,7 @@ public class CapturePicService extends Service {
     }
 
     public void finishCapturing(){
+
         String leftEyePoints = "n./a.";
         String rightEyePoints = "n./a.";
         String mouthPoints = "n./a.";
@@ -212,7 +213,7 @@ public class CapturePicService extends Service {
                     mouthPoints = mouthPoints + " " + mouthPointsList.get(i).toString();
                 }
             }
-
+            camera.stopFaceDetection();
         }
         ControllerService.startDataCollectionService(getApplicationContext(), foregroundApp, capturingEvent, pictureName, leftEyePoints, rightEyePoints, mouthPoints);
         camera = null;

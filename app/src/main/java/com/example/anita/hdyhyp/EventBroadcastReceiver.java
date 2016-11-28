@@ -33,13 +33,13 @@ public class EventBroadcastReceiver extends BroadcastReceiver {
                     Log.v(TAG, "Orientation changed to portrait.");
                     ObservableObject.getInstance().setOrientationPortrait(true);
                 }
-                if (configuration.keyboardHidden == Configuration.KEYBOARDHIDDEN_NO) {
+                /*if (configuration.keyboardHidden == Configuration.KEYBOARDHIDDEN_NO) {
                     Log.v(TAG, "Keyboard is opened.");
                     ObservableObject.getInstance().setKeyboardVisible(true);
                 }  else if (configuration.keyboardHidden == Configuration.KEYBOARDHIDDEN_YES) {
                     Log.v(TAG, "Keyboard is not opened.");
                     ObservableObject.getInstance().setKeyboardVisible(false);
-                }
+                }*/
             case Intent.ACTION_CAMERA_BUTTON:
                 Log.v(TAG, "Camera Button was pressed.");
                 break;

@@ -45,30 +45,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         PowerManager powerManager = (PowerManager) context.getSystemService(POWER_SERVICE);
         if (powerManager.isScreenOn()){
             Log.v(TAG, "screen is on, handle alarm " + requestID);
-            //inform controller
-            //create survey TODO: von controller übernehmen lassen, wenn er bild auslöst und somit auch Bildname kennt
-            NotificationCompat.Builder surveyNotificationBuilder =
-                    new NotificationCompat.Builder(context)
-                            .setSmallIcon(R.drawable.logo)
-                            .setContentTitle("HDYHYP")
-                            .setContentText("A questionnaire is waiting for you...")
-                            .setOngoing(true);
-                Intent resultIntent = new Intent(context, SurveyActivity.class);
-                resultIntent.putExtra("requestID", requestID);
-
-                TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-                stackBuilder.addParentStack( SurveyActivity.class);
-                stackBuilder.addNextIntent(resultIntent);
-                PendingIntent resultPendingIntent =
-                        stackBuilder.getPendingIntent(
-                                (int)currentTimeMillis(),
-                                PendingIntent.FLAG_UPDATE_CURRENT
-                        );
-            surveyNotificationBuilder.setContentIntent(resultPendingIntent);
-                NotificationManager notificationManager =
-                        (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                notificationManager.notify((requestID+42), surveyNotificationBuilder.build());
-
+            ObservableObject.getInstance().updateValue(intent);
             //reset start time
             //if (rescheduleTimerCounter[currentID] > 0){
             if (wasRescheduled[requestID]){
