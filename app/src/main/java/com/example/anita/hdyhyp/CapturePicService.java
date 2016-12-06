@@ -10,9 +10,17 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.SparseArray;
 import android.widget.Toast;
+
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.FaceDetector;
+import com.google.android.gms.vision.face.Landmark;
+
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,8 +30,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.FormatterClosedException;
 import java.util.List;
+
+import static com.google.android.gms.vision.face.FaceDetector.FAST_MODE;
 
 
 public class CapturePicService extends Service {
@@ -38,6 +47,9 @@ public class CapturePicService extends Service {
     private String foregroundApp;
     private FaceDetectionListener faceDetectionListener;
     private String pictureName;
+    private FaceDetector faceDetector;
+    private SparseArray<Face> faces;
+
 
     private Thread capturePhotoThread;
 
@@ -81,6 +93,11 @@ public class CapturePicService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        faceDetector = new FaceDetector.Builder(getApplicationContext())
+                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                .setMode(FAST_MODE)
+                .setTrackingEnabled(false)
+                .build();
         findFrontFacingCam();
         Log.v(TAG, "CapturePicService created.");
     }
@@ -104,9 +121,7 @@ public class CapturePicService extends Service {
         }
     }
 
-    //TODO: Test ob Camera anderweitig belegt
     public Camera getCameraInstance() {
-        //System.gc();
         Camera c = null;
         if (!getPackageManager()
                 .hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
@@ -131,7 +146,7 @@ public class CapturePicService extends Service {
         @Override
         public void run() {
             try {
-                capturePhoto(foregroundApp, capturingEvent);
+                capturePhoto();
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Log.e(TAG, "runnableShootPicture not successful");
@@ -139,51 +154,25 @@ public class CapturePicService extends Service {
         }
     };
 
-    private synchronized void capturePhoto(String foregroundApp, String capturingEvent) throws InterruptedException {
+    private synchronized void capturePhoto() throws InterruptedException {
         Log.v(TAG, "capturePhoto() is called.");
-        CameraPictureCallback pictureCallBack = new CameraPictureCallback(surfaceTexture, foregroundApp, capturingEvent, this);
-//        pictureCallBack.setSurfaceTexture(surfaceTexture);
-//        pictureCallBack.setForegroundApp(foregroundApp);
-//        pictureCallBack.setCapturingEvent(capturingEvent);
+        CameraPictureCallback pictureCallBack = new CameraPictureCallback(this);
 
         camera.startPreview();
-        Camera.Parameters params = camera.getParameters();
 
-        if (params.getMaxNumDetectedFaces() > 0) {
-            faceDetectionListener = new FaceDetectionListener();
-            camera.setFaceDetectionListener(faceDetectionListener);
-            camera.startFaceDetection();
+        if (Build.VERSION.SDK_INT < 17) {
+            Camera.Parameters params = camera.getParameters();
+            if (params.getMaxNumDetectedFaces() > 0) {
+                camera.setFaceDetectionListener(new FaceDetectionListener());
+                camera.startFaceDetection();
+            } else {
+                Log.e(TAG, "Face detection is not supported.");
+            }
         }
 
-        //recording additional information provided by the camera
-        //TODO: auf Displaygroesse mappen
-        Log.v(TAG, "3 camera: " + camera);
-
-        ////if (Build.VERSION.SDK_INT >= 17) {
-       // FaceDetector detector = new FaceDetector.Builder(getApplicationContext())
-         //       .setTrackingEnabled(false)
-           //     .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-             //   .build();
-
-       // detector.setProcessor(
-         //       new MultiProcessor.Builder<Face>()
-           //             .build(new GraphicFaceTrackerFactory()));
-
-   // } else {
-     //   if (params.getMaxNumDetectedFaces() > 0) {
- //           camera.setFaceDetectionListener(new FaceDetectionListener());
-
-   //         camera.startFaceDetection();
-
-     //   } else {
-       //     Log.e(TAG, "Face detection is not supported.");
-       // }
-    //////
-
-
-    //taking the picture
-    camera.takePicture(null, null, pictureCallBack);
-    }
+        //taking the picture
+        camera.takePicture(null, null, pictureCallBack);
+        }
 
     public void finishCapturing(){
 
@@ -191,30 +180,53 @@ public class CapturePicService extends Service {
         String rightEyePoints = "n./a.";
         String mouthPoints = "n./a.";
 
-        if (faceDetectionListener != null){
+        int facesSize = faces.size();
+        if (facesSize != 0) {
+            for (int i = 0; i < facesSize; i++) {
+                Face face = faces.valueAt(i);
+                Log.v(TAG, "found landmarks on face: " + face.getLandmarks().size());
+                for (Landmark landmark : face.getLandmarks()) {
+                    switch (landmark.getType()) {
+                        case Landmark.LEFT_EYE:
+                            leftEyePoints = leftEyePoints + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition() + ", ";
+                            break;
+                        case Landmark.RIGHT_EYE:
+                            rightEyePoints = rightEyePoints + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition() + ", ";
+                            break;
+                        case Landmark.BOTTOM_MOUTH:
+                            mouthPoints = mouthPoints + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition() + ", ";
+                    }
+                }
+            }
+            faces = null;
+            faceDetector.release();
+        }
+        else if (faceDetectionListener != null){
             List<Point> leftEyePointsList = faceDetectionListener.getLeftEyePoints();
             List<Point> rightEyePointsList = faceDetectionListener.getRightEyePoints();
             List<Point> mouthPointsList = faceDetectionListener.getMouthPoints();
 
             if (leftEyePointsList != null){
                 for (int i=0; i <= leftEyePointsList.size(); i++){
-                    leftEyePoints = leftEyePoints + " "  + leftEyePointsList.get(i).toString();
+                    leftEyePoints = leftEyePoints + i + ".: "  + leftEyePointsList.get(i).toString() +  ", ";
                 }
             }
 
             if (rightEyePointsList != null) {
                 for (int i = 0; i <= rightEyePointsList.size(); i++) {
-                    rightEyePoints = rightEyePoints + " " + rightEyePointsList.get(i).toString();
+                    rightEyePoints = rightEyePoints + i + ".: "  + rightEyePointsList.get(i).toString() + ", " ;
                 }
             }
 
             if (mouthPointsList != null) {
                 for (int i = 0; i <= mouthPointsList.size(); i++) {
-                    mouthPoints = mouthPoints + " " + mouthPointsList.get(i).toString();
+                    mouthPoints = mouthPoints + i + ".: "  + mouthPointsList.get(i).toString() + ", ";
                 }
             }
             camera.stopFaceDetection();
         }
+
+        camera.release();
         ControllerService.startDataCollectionService(getApplicationContext(), foregroundApp, capturingEvent, pictureName, leftEyePoints, rightEyePoints, mouthPoints);
         camera = null;
         pictureName = null;
@@ -226,20 +238,12 @@ public class CapturePicService extends Service {
         this.pictureName = pictureName;
     }
 
-
     public class CameraPictureCallback implements Camera.PictureCallback {
 
-    //boolean pictureTaken = false;
     private String pictureName;
-    private SurfaceTexture surfaceTexture;
-    private String foregroundApp;
-    private String capturingEvent;
     private CapturePicService cps;
 
-    public CameraPictureCallback (SurfaceTexture surfaceTexture, String foregroundApp, String capturingEvent, CapturePicService cps){
-        this.surfaceTexture = surfaceTexture;
-        this.foregroundApp = foregroundApp;
-        this.capturingEvent = capturingEvent;
+    public CameraPictureCallback (CapturePicService cps){
         this.cps = cps;
     }
 
@@ -256,11 +260,11 @@ public class CapturePicService extends Service {
         android.hardware.Camera.getCameraInfo(camId, info);
         int w = capturedImage.getWidth();
         int h = capturedImage.getHeight();
-        float scaleWidth = ((float) 50) / w;
-        float scaleHeight = ((float) 50) / h;
+        //float scaleWidth = ((float) 50) / w;
+       // float scaleHeight = ((float) 50) / h;
         Matrix matrix = new Matrix();
         matrix.postRotate(info.orientation);
-        matrix.postScale(scaleWidth, scaleHeight);
+        //matrix.postScale(scaleWidth, scaleHeight);
         Bitmap rotatedImage = Bitmap.createBitmap(capturedImage, 0, 0, w, h, matrix, true);
 
         try {
@@ -278,9 +282,21 @@ public class CapturePicService extends Service {
         }
 
         Log.v(TAG, "data collection gets started.");
+
+        //detect faces on the bitmap with google play service
+        if (!faceDetector.isOperational()) {
+            Log.v(TAG, "face detector is not operational.");
+        } else {
+            Log.v(TAG, "face detector is operational");
+            Frame frame = new Frame.Builder().setBitmap(rotatedImage).build();
+            faces = faceDetector.detect(frame);
+            Log.v(TAG, "facedetector detected number of faces: " + faces.size());
+            faceDetector.release();
+        }
+
+
         cps.setPictureName(pictureName);
-        camera.release();
-        //pictureTaken = true;
+        //camera.release();
         cps.finishCapturing();
     }
 
@@ -296,25 +312,6 @@ public class CapturePicService extends Service {
         return new File(filePath.getPath() + File.separator + pictureName);
     }
 
-    public SurfaceTexture getSurfaceTexture() {
-        return surfaceTexture;
-    }
-
-    public void setSurfaceTexture(SurfaceTexture surfaceTexture) {
-        this.surfaceTexture = surfaceTexture;
-    }
-
-    public void setForegroundApp(String foregroundApp) {
-        this.foregroundApp = foregroundApp;
-    }
-
-    public void setCapturingEvent(String capturingEvent) {
-        this.capturingEvent = capturingEvent;
-    }
-
-    //public boolean isPictureTaken(){
-    //    return pictureTaken;
-    //}
 }
 
 class FaceDetectionListener implements Camera.FaceDetectionListener {
@@ -335,7 +332,6 @@ class FaceDetectionListener implements Camera.FaceDetectionListener {
             rightEyePoints = new ArrayList<Point>();
             mouthPoints = new ArrayList<Point>();
 
-
             for (int i=0; i<faces.length; i++) {
                 Rect uRect = new Rect(faces[i].rect.left, faces[i].rect.top, faces[i].rect.right, faces[i].rect.bottom);
                 faceRects.add(uRect);
@@ -344,7 +340,6 @@ class FaceDetectionListener implements Camera.FaceDetectionListener {
                 mouthPoints.add(faces[i].mouth);
 
             }
-
         }
     }
 

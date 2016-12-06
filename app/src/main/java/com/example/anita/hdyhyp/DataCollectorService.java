@@ -117,13 +117,13 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY), SensorManager.SENSOR_DELAY_FASTEST);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT), SensorManager.SENSOR_DELAY_FASTEST);
 
-        /*------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         mLocationRequest.setInterval(1);
         mLocationRequest.setFastestInterval(1);
 
-        buildGoogleApiClient();*/
+        buildGoogleApiClient();
 
         Log.v(TAG, "listener registered.");
 
@@ -217,7 +217,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
             Log.v(TAG, "foregroundApp: " + foregroundApp);
 
             //location------------------------------------------------------------------------------
-            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD){
                 buildGoogleApiClient();
                 mGoogleApiClient.connect();
                 latestLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
@@ -264,7 +264,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                 @Override
                 public void onProviderDisabled(String provider) {
                 }
-            };*/
+            };
 
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -441,9 +441,12 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         .setSmallIcon(R.drawable.logo)
                         .setContentTitle("HDYHYP")
                         .setContentText("A questionnaire is waiting for you...")
-                        .setOngoing(true);
+                        .setOngoing(true)
+                        .setVibrate(new long[] { 1000, 500 });
+
         Intent resultIntent = new Intent(getApplicationContext(), SurveyActivity.class);
         resultIntent.putExtra("photoName", photoName);
+        resultIntent.putExtra("path", storage.getStoragePath());
 
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
         stackBuilder.addParentStack(SurveyActivity.class);

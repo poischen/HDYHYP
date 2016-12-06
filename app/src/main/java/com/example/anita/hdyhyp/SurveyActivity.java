@@ -5,20 +5,28 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+
+import java.io.File;
 
 import static com.example.anita.hdyhyp.ControllerService.storage;
 
 public class SurveyActivity extends AppCompatActivity {
     private static final String TAG = SurveyActivity.class.getSimpleName();
+
+    ImageView imageViewUsersPhoto;
 
     RadioGroup surveyQuestionDevicePositionRadioGroup;
     RadioButton surveyQuestionDevicePositionRadioButtonHands;
@@ -47,16 +55,22 @@ public class SurveyActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         int requestID = (int) intent.getExtras().get("requestID");
+        String photoName = (String) intent.getExtras().get("photoName");
+        String path = (String) intent.getExtras().get("path");
 
         NotificationManager notificationManager =
                 (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(requestID+42);
 
         //TODO: id des alarms speichern bzw auszulösendes Bild
+        imageViewUsersPhoto = (ImageView) findViewById(R.id.imageViewUsersPhoto);
+        File file = new File(path + File.separator + photoName);
+        Bitmap picture = BitmapFactory.decodeFile(file.getAbsolutePath());
+        imageViewUsersPhoto.setImageBitmap(picture);
+
         surveyQuestionDevicePositionRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionDevicePositionRadioGroup);
         surveyQuestionDevicePositionRadioButtonHands = (RadioButton) findViewById(R.id.surveyQuestionDevicePositionRadioButtonHands);
         surveyQuestionDevicePositionRadioButtonSurface = (RadioButton) findViewById(R.id.surveyQuestionDevicePositionRadioButtonSurface);
-
 
         surveyQuestionHandRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionHandRadioGroup);
         surveyQuestionHandRadioButtonDominant = (RadioButton) findViewById(R.id.surveyQuestionHandRadioButtonDominant);

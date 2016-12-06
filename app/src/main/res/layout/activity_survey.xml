@@ -1,175 +1,316 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_survey"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.anita.hdyhyp.SurveyActivity">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:srcCompat="@color/colorPrimaryDark"
+        android:id="@+id/imageViewUsersPhoto"
+        android:minHeight="150dp" />
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:weightSum="1"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true">
 
-        <TextView
-            android:text="The phone was..."
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/surveyQuestionDevicePositionText"
-            android:textSize="32dp"
-            android:layout_weight="0.05" />
-
         <LinearLayout
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="64dp">
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="140dp">
 
-            <RadioGroup
+            <TextView
+                android:text="The phone was..."
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/surveyQuestionDevicePositionText"
+                android:textSize="18dp" />
+
+            <LinearLayout
                 android:orientation="horizontal"
-                android:id="@+id/surveyQuestionDevicePositionRadioGroup">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-                <RadioButton
-                    android:text="in my hands"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionDevicePositionRadioButtonHands"
-                    android:layout_weight="1"
-                    android:textSize="15dp" />
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:id="@+id/surveyQuestionDevicePositionRadioGroup">
 
-                <RadioButton
-                    android:text="on a surface"
-                    android:layout_width="wrap_content"
+                    <RadioButton
+                        android:text="in my hands"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionDevicePositionRadioButtonHands"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="on a surface"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionDevicePositionRadioButtonSurface"
+                        android:layout_weight="1"
+                        android:textSize="12dp"/>
+                </RadioGroup>
+            </LinearLayout>
+
+            <TextView
+                android:text="The holding hand was..."
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:id="@+id/surveyQuestionHandText"
+                android:textSize="18dp" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioGroup
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionDevicePositionRadioButtonSurface"
-                    android:layout_weight="1"
-                    android:textSize="15dp"/>
-            </RadioGroup>
+                    android:orientation="horizontal"
+                    android:id="@+id/surveyQuestionHandRadioGroup">
+
+                    <RadioButton
+                        android:text="dominant"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionHandRadioButtonDominant"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="non dominant"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionHandRadioButtonNonDominant"
+                        android:layout_weight="1"
+                        android:textSize="12dp"/>
+
+                    <RadioButton
+                        android:text="both"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionHandRadioButtonBoth"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="none"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionHandRadioButtonNone"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <TextView
+                android:text="My position was..."
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:id="@+id/surveyQuestionUserPostureText"
+                android:textSize="18dp" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:id="@+id/surveyQuestionUserPostureRadioGroup">
+
+                    <RadioButton
+                        android:text="walking"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionUserPostureRadioButtonWalking"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="standing"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionUserPostureRadioButtonStaying"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="sitting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionUserPostureRadioButtonSitting"
+                        android:layout_weight="1"
+                        android:textSize="12dp"/>
+
+                    <RadioButton
+                        android:text="lying"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionUserPostureRadioButtonLying"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <TextView
+                android:text="I were...."
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:id="@+id/surveyQuestionUsersPositionText"
+                android:textSize="18dp" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:id="@+id/surveyQuestionUsersPositionRadioGroup">
+
+                    <RadioButton
+                        android:text="in transit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionUsersPositionRadioButtonTransit"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="at home"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionUsersPositionRadioButtonHome"
+                        android:layout_weight="1"
+                        android:textSize="12dp"/>
+
+                    <RadioButton
+                        android:text="at work/uni"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionUsersPositionRadioButtonWork"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="other"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionUsersPositionRadioButtonOther"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+                </RadioGroup>
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="31dp"
+                    android:text=""
+                    android:ems="10"
+                    android:enabled="false"
+                    android:id="@+id/surveyQuestionUsersPositionEditTextOther" />
+
+            </LinearLayout>
+
+
+
+            <TextView
+                android:text="While using my phone I was..."
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:id="@+id/surveyQuestionDoingSomethingText"
+                android:textSize="18dp" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:id="@+id/surveyQuestionDoingSomethingRadioGroup">
+
+                    <RadioButton
+                        android:text="watching TV"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionDoingSomethingRadioButtonTV"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="eating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionDoingSomethingRadioButtonEating"
+                        android:layout_weight="1"
+                        android:textSize="12dp"/>
+
+                    <RadioButton
+                        android:text="working/studying"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionDoingSomethingRadioButtonWork"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+
+                    <RadioButton
+                        android:text="other"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/surveyQuestionDoingSomethingRadioButtonOther"
+                        android:layout_weight="1"
+                        android:textSize="12dp" />
+                </RadioGroup>
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:text=""
+                    android:ems="10"
+                    android:enabled="false"
+                    android:id="@+id/surveyQuestionDoingSomethingEditTextOther" />
+            </LinearLayout>
+
+            <Button
+                android:text="Submit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/textColorPrimary"
+                android:id="@+id/surveySubmitButton"
+                android:paddingTop="8dp" />
+
+
         </LinearLayout>
 
-        <TextView
-            android:text="The holding hand was..."
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/surveyQuestionHandText"
-            android:textSize="32dp"
-            android:layout_weight="0.05" />
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="64dp">
-
-            <RadioGroup
-                android:layout_width="match_parent"
-                android:layout_height="138dp"
-                android:orientation="horizontal"
-                android:id="@+id/surveyQuestionHandRadioGroup">
-
-                <RadioButton
-                    android:text="dominant"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionHandRadioButtonDominant"
-                    android:layout_weight="1"
-                    android:textSize="15dp" />
-
-                <RadioButton
-                    android:text="non dominant"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionHandRadioButtonNonDominant"
-                    android:layout_weight="1"
-                    android:textSize="15dp"/>
-
-                <RadioButton
-                    android:text="both"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionHandRadioButtonBoth"
-                    android:layout_weight="1"
-                    android:textSize="15dp" />
-
-                <RadioButton
-                    android:text="none"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionHandRadioButtonNone"
-                    android:layout_weight="1"
-                    android:textSize="15dp" />
-            </RadioGroup>
-        </LinearLayout>
-
-        <TextView
-            android:text="I was..."
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/surveyQuestionUserPostureText"
-            android:textSize="32dp"
-            android:layout_weight="0.05" />
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="64dp">
-
-            <RadioGroup
-                android:layout_width="match_parent"
-                android:layout_height="141dp"
-                android:orientation="horizontal"
-                android:id="@+id/surveyQuestionUserPostureRadioGroup">
-
-                <RadioButton
-                    android:text="walking"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionUserPostureRadioButtonWalking"
-                    android:layout_weight="1"
-                    android:textSize="15dp" />
-
-                <RadioButton
-                    android:text="sitting"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionUserPostureRadioButtonSitting"
-                    android:layout_weight="1"
-                    android:textSize="15dp"/>
-
-                <RadioButton
-                    android:text="staying"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionUserPostureRadioButtonStaying"
-                    android:layout_weight="1"
-                    android:textSize="15dp" />
-
-                <RadioButton
-                    android:text="lying"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/surveyQuestionUserPostureRadioButtonLying"
-                    android:layout_weight="1"
-                    android:textSize="15dp" />
-            </RadioGroup>
-        </LinearLayout>
-
-        <Button
-            android:text="Submit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/colorPrimary"
-            android:textColor="@color/textColorPrimary"
-            android:id="@+id/surveySubmitButton"
-            android:layout_weight="0.05" />
-
-    </LinearLayout>
+    </RelativeLayout>
 </RelativeLayout>
