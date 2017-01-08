@@ -1,32 +1,25 @@
 package com.example.anita.hdyhyp;
 
 import android.app.AlarmManager;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
-
-import java.util.ArrayList;
 
 import static android.content.Context.ALARM_SERVICE;
 import static android.content.Context.POWER_SERVICE;
-import static java.lang.System.currentTimeMillis;
 
-public class AlarmReceiver extends BroadcastReceiver {
+public class RandomAlarmReceiver extends BroadcastReceiver {
 
     private boolean[] wasRescheduled = new boolean[6];
     private long[] startTime = new long[6];
     private int[] rescheduleCounter = new int[] {0, 0, 0, 0, 0, 0};
     private int shiftMillis = 20000;
 
-    private static final String TAG = AlarmReceiver.class.getSimpleName();
-    public AlarmReceiver() {
+    private static final String TAG = RandomAlarmReceiver.class.getSimpleName();
+    public RandomAlarmReceiver() {
     }
 
     @Override
