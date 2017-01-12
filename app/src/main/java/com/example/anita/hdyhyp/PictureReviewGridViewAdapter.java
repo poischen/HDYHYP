@@ -55,7 +55,6 @@ public class PictureReviewGridViewAdapter extends ArrayAdapter {
         deleteCheckbox.setTag(position);
 
         boolean checked = item.isTaggedToDelete();
-        Log.v(TAG, "Checkbox was checked: " + checked);
         if (checked){
             deleteCheckbox.setChecked(true);
         }
@@ -87,6 +86,10 @@ public class PictureReviewGridViewAdapter extends ArrayAdapter {
 
     public int getDataSize(){
         return data.size();
+    }
+
+    public ArrayList<PictureItem> getData(){
+        return data;
     }
 
     static class ViewHolder {

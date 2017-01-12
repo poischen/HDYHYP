@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_LOGS" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -13,18 +14,19 @@
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
     <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission android:name="android.permission.GET_RUNNING_TASKS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
-    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <uses-configuration android:name="android.configuration.keyboard" />
-
-    <receiver android:name=".AlarmReceiver" />
 
     <meta-data
         android:name="com.google.android.gms.vision.DEPENDENCIES"
@@ -40,7 +42,6 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -61,7 +62,8 @@
 
         <receiver android:name=".EventBroadcastReceiver" />
 
-        <activity android:name=".PictureReviewActivity"
+        <activity android:name=".PictureReviewActivity" />
+        <activity android:name="com.dropbox.client2.android.AuthActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <!-- Change this to be db- followed by your app key -->
@@ -80,11 +82,33 @@
             android:value="@integer/google_play_services_version" />
 
         <receiver
-            android:name=".AlarmReceiver"
-            android:enabled="true"
-            android:exported="true" />
+            android:name=".RandomAlarmReceiver" />
+
+        <receiver
+            android:name=".EventAlarmReceiver" />
+
+        <receiver
+            android:name=".RememberAlarmReceiver" />
+
+        <receiver
+            android:name=".RebootReceiver"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
+            android:enabled="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <activity android:name=".SurveyActivity"></activity>
+
+        <service android:name=".mNotificationListenerService"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

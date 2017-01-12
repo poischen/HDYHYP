@@ -8,7 +8,6 @@ import java.util.Observable;
 public class ObservableObject extends Observable {
     private static ObservableObject instance = new ObservableObject();
 
-    //private boolean isKeyboardVisible;
     private boolean isOrientationPortrait = true;
 
 
@@ -25,9 +24,6 @@ public class ObservableObject extends Observable {
             notifyObservers(data);
         }
     }
-
-    //public boolean isKeyboardVisible() {        return isKeyboardVisible;    }
-    //public void setKeyboardVisible(boolean keyboardVisible) {       isKeyboardVisible = keyboardVisible;    }
 
     public boolean isOrientationPortrait() {
         return isOrientationPortrait;

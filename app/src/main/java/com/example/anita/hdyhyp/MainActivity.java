@@ -9,6 +9,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.session.AppKeyPair;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private Spinner namesSpinner;
     private Button settingsButton1;
     private Button settingsButton2;
+    private Button settingsButton3;
     private Button reviewButton;
     private Button deleteButton;
 
@@ -39,11 +44,12 @@ public class MainActivity extends AppCompatActivity {
         helloTextView = (TextView) findViewById(R.id.helloTextView);
         settingsButton1 = (Button) findViewById(R.id.buttonSettings1);
         settingsButton2 = (Button) findViewById(R.id.buttonSettings2);
+        settingsButton3 = (Button) findViewById(R.id.buttonSettings3);
         reviewButton = (Button) findViewById(R.id.reviewButton);
 
         settingsButton1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //get permission reading information about current running apps
+                //get permission for usage stats
                 Intent settingsIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
                 startActivity(settingsIntent);
             }
@@ -51,10 +57,18 @@ public class MainActivity extends AppCompatActivity {
 
         settingsButton2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //get camera and storage permission
+                //get camera, storage and location permission
                 Intent permissionIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 Uri uri = Uri.fromParts("package", getPackageName(), null);
                 permissionIntent.setData(uri);
+                startActivity(permissionIntent);
+            }
+        });
+
+        settingsButton3.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                //get notification reading permissions
+                Intent permissionIntent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
                 startActivity(permissionIntent);
             }
         });
@@ -70,15 +84,14 @@ public class MainActivity extends AppCompatActivity {
 
         /**Asks for and inizilizes the users pseudonym to identify him during the study if it is not already set
          visual feedback / input not possible if the name is already set */
-        if (storage.getUserName() == null) {
-            //update UI
-            submitButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Log.v(TAG, "Submit Button clicked");
-                    storeUserName(namesSpinner.getSelectedItem().toString());
-                }
-            });
-        } else {
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.v(TAG, "Submit Button clicked");
+                storeUserName(namesSpinner.getSelectedItem().toString());
+            }
+        });
+
+        if (!(storage.getUserName() == null)) {
             userNameAlreadySet();
         }
 
@@ -103,6 +116,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+
     }
 
     /**
@@ -123,12 +138,8 @@ public class MainActivity extends AppCompatActivity {
 
         /*Starts a longlasting Service which controlls the Data Collection and the Photo Shooting
          */
-
         Intent controllerIntent = new Intent(this, ControllerService.class);
-        controllerIntent.putExtra("storagePath", storage.getStoragePath());
-        controllerIntent.putExtra("userName", storage.getUserName());
         getApplicationContext().startService(controllerIntent);
-
 
     }
 

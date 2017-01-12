@@ -19,5 +19,7 @@
         <item>Beefeater</item>
     </string-array>
 
+    <string name="dbName">HDYHYPDataBase.db</string>
+
 
 </resources>

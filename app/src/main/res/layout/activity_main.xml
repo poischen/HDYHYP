@@ -73,43 +73,56 @@
         android:layout_toEndOf="@+id/helloTextView" />
 
     <Button
+        android:text="1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonSettings1"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/textColorPrimary"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonSettings3"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/textColorPrimary"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
         android:text=" Review Photos "
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
         android:textColor="@color/textColorPrimary"
         android:id="@+id/reviewButton"
-        android:layout_above="@+id/buttonSettings1"
-        android:layout_alignRight="@+id/statusTextView"
-        android:layout_alignEnd="@+id/statusTextView"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginTop="94dp"
+        android:layout_below="@+id/statusTextView"
+        android:layout_alignEnd="@+id/statusTextView" />
 
     <Button
-        android:text=" Permissions 1 "
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/buttonSettings1"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/textColorPrimary"
-        android:layout_marginBottom="12dp"
-        android:layout_above="@+id/buttonSettings2"
-        android:layout_alignLeft="@+id/reviewButton"
-        android:layout_alignStart="@+id/reviewButton"
-        android:layout_alignRight="@+id/reviewButton"
-        android:layout_alignEnd="@+id/reviewButton" />
-
-    <Button
-        android:text=" Permissions 2 "
+        android:text="2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/buttonSettings2"
         android:background="@color/colorPrimary"
         android:textColor="@color/textColorPrimary"
-        android:layout_marginBottom="20dp"
         android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/buttonSettings1"
-        android:layout_alignEnd="@+id/buttonSettings1"
-        android:layout_alignLeft="@+id/buttonSettings1"
-        android:layout_alignStart="@+id/buttonSettings1" />
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:text="Permissions:"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="17dp"
+        android:id="@+id/permissionsTextView"
+        android:layout_above="@+id/buttonSettings1"
+        android:layout_alignParentStart="true"
+        android:autoText="false"
+        android:layout_alignParentEnd="true"
+        android:gravity="center" />
 
 </RelativeLayout>

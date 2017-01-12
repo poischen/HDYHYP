@@ -37,7 +37,7 @@ public class Storage extends SQLiteOpenHelper {
     public static final String COLUMN_LIGHT = "light";
     public static final String COLUMN_BRIGHTNESS = "screenLightness";
     public static final String COLUMN_ORIENTATION = "orientation";
-    public static final String COLUMN_PROXIMITY = "proximity";
+    //public static final String COLUMN_PROXIMITY = "proximity";
     public static final String COLUMN_BATTERYSTATUS = "batteryStatus";
     public static final String COLUMN_BATTERYLEVEL = "batteryLevel";
     public static final String COLUMN_RIGHT = "rightEye";
@@ -52,7 +52,11 @@ public class Storage extends SQLiteOpenHelper {
     public static final String COLUMN_SURVEY_ID = "_id";
     public static final String COLUMN_DEVICEPOSITION = "devicePosition";
     public static final String COLUMN_HAND = "holdingHand";
-    public static final String COLUMN_USERPOSTURE = "UserPosture";
+    public static final String COLUMN_USERPOSTURE = "userPosture";
+    public static final String COLUMN_USERPOSITION = "userPosition";
+    public static final String COLUMN_USERPOSITIONOTEHRANSWERR = "userPositionOtherAnswer";
+    public static final String COLUMN_DOINGSTH = "userDoingSomething";
+    public static final String COLUMN_DOINGSTHOTHERANSWER = "userDoingSomethingOtherAnswer";
 
 
     public static final String SQL_CREATEDATA =
@@ -74,7 +78,7 @@ public class Storage extends SQLiteOpenHelper {
                     COLUMN_LIGHT + " TEXT, " +
                     COLUMN_BRIGHTNESS + " INTEGER, " +
                     COLUMN_ORIENTATION + " TEXT, " +
-                    COLUMN_PROXIMITY + " TEXT, " +
+                    //COLUMN_PROXIMITY + " TEXT, " +
                     COLUMN_BATTERYSTATUS + " TEXT, " +
                     COLUMN_BATTERYLEVEL + " INTEGER, " +
                     COLUMN_LEFT + " TEXT, " +
@@ -87,11 +91,15 @@ public class Storage extends SQLiteOpenHelper {
                     COLUMN_PHOTO + " TEXT, " +
                     COLUMN_DEVICEPOSITION + " TEXT, " +
                     COLUMN_HAND + " TEXT, " +
-                    COLUMN_USERPOSTURE + " TEXT, "
+                    COLUMN_USERPOSTURE + " TEXT, " +
+                    COLUMN_USERPOSITION + " TEXT, " +
+                    COLUMN_USERPOSITIONOTEHRANSWERR + " TEXT, " +
+                    COLUMN_DOINGSTH + " TEXT, " +
+                    COLUMN_DOINGSTHOTHERANSWER + " TEXT, "
                     + " FOREIGN KEY ("+COLUMN_PHOTO+") REFERENCES "+DB_TABLE+"("+COLUMN_PHOTO+"));";
 
 
-    private static String storagePath = "storage/emulated/0/HDYHYP";
+    public static final String STORAGEPATH = "storage/emulated/0/HDYHYP";
     //private UserNameStorage userNameStorage;
     //public static SQLiteDatabase database = openOrCreateDatabase("HDHYHPDataCollection",MODE_PRIVATE,null);
 
@@ -117,18 +125,16 @@ public class Storage extends SQLiteOpenHelper {
     protected void setUserName(Context context, String input){
         userNameEditor.putString("User Name", input);
         userNameEditor.commit();
-        // this.userNameStorage.setUserName(input);
 
     }
 
     protected void deleteUserName(){
         userNameEditor.putString("User Name", null);
         userNameEditor.commit();
-        //userNameStorage.deleteUserName();
     }
 
     protected String getStoragePath(){
-        return storagePath;
+        return STORAGEPATH;
     }
 
     @Override
@@ -142,8 +148,6 @@ public class Storage extends SQLiteOpenHelper {
         catch (Exception e) {
             Log.e(TAG, "Could not create table. " + e.getMessage());
         }
-
-
     }
 
     @Override

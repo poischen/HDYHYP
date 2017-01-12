@@ -15,10 +15,9 @@ public class EventBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = EventBroadcastReceiver.class.getSimpleName();
     @Override
     public void onReceive(Context context, Intent intent) {
-        switch ( intent.getAction()){
+        switch (intent.getAction()){
             case Intent.ACTION_SCREEN_ON:
                 Log.v(TAG, "Screen is on now.");
-                //ObservableObject.getInstance().setIsScreenOn(true);
                 break;
             case Intent.ACTION_SCREEN_OFF:
                 Log.v(TAG, "Screen is off now.");
@@ -33,15 +32,12 @@ public class EventBroadcastReceiver extends BroadcastReceiver {
                     Log.v(TAG, "Orientation changed to portrait.");
                     ObservableObject.getInstance().setOrientationPortrait(true);
                 }
-                /*if (configuration.keyboardHidden == Configuration.KEYBOARDHIDDEN_NO) {
-                    Log.v(TAG, "Keyboard is opened.");
-                    ObservableObject.getInstance().setKeyboardVisible(true);
-                }  else if (configuration.keyboardHidden == Configuration.KEYBOARDHIDDEN_YES) {
-                    Log.v(TAG, "Keyboard is not opened.");
-                    ObservableObject.getInstance().setKeyboardVisible(false);
-                }*/
-            case Intent.ACTION_CAMERA_BUTTON:
-                Log.v(TAG, "Camera Button was pressed.");
+                break;
+            case Intent.ACTION_BOOT_COMPLETED:
+                //restarts the controller service after device reboot, which also sets new random alarms (which would be removed after device restart)
+                Log.v(TAG, "restart controller service after reboot");
+                Intent controllerIntent = new Intent(context, ControllerService.class);
+                context.startService(controllerIntent);
                 break;
             default:
         }

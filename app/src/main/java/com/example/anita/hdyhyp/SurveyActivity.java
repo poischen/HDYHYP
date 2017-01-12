@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.Settings;
@@ -15,9 +16,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import java.io.File;
 
@@ -27,6 +30,7 @@ public class SurveyActivity extends AppCompatActivity {
     private static final String TAG = SurveyActivity.class.getSimpleName();
 
     ImageView imageViewUsersPhoto;
+    TextView textViewDate;
 
     RadioGroup surveyQuestionDevicePositionRadioGroup;
     RadioButton surveyQuestionDevicePositionRadioButtonHands;
@@ -44,6 +48,21 @@ public class SurveyActivity extends AppCompatActivity {
     RadioButton surveyQuestionUserPostureRadioButtonStaying;
     RadioButton surveyQuestionUserPostureRadioButtonLying;
 
+    RadioGroup surveyQuestionUserPositionRadioGroup;
+    RadioButton surveyQuestionUserPositionRadioButtonTransit;
+    RadioButton surveyQuestionUserPositionRadioButtonHome;
+    RadioButton surveyQuestionUserPositionRadioButtonWork;
+    RadioButton surveyQuestionUserPoitionRadioButtonOther;
+    EditText surveyQuestionUserPoitionEditTextOther;
+
+    RadioGroup surveyQuestionDoingSomethingRadioGroup;
+    RadioButton surveyQuestionDoingSomethingRadioButtonTV;
+    RadioButton surveyQuestionDoingSomethingRadioButtonEating;
+    RadioButton surveyQuestionDoingSomethingRadioButtonWork;
+    RadioButton surveyQuestionDoingSomethingRadioButtonOther;
+    EditText surveyQuestionDoingSomethingEditTextOther;
+
+
     Button surveySubmitButton;
 
     String pictureName;
@@ -55,18 +74,31 @@ public class SurveyActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         int requestID = (int) intent.getExtras().get("requestID");
-        String photoName = (String) intent.getExtras().get("photoName");
+        String pictureName = (String) intent.getExtras().get("pictureName");
         String path = (String) intent.getExtras().get("path");
 
         NotificationManager notificationManager =
                 (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(requestID+42);
+        notificationManager.cancel(requestID);
 
-        //TODO: id des alarms speichern bzw auszulösendes Bild
-        imageViewUsersPhoto = (ImageView) findViewById(R.id.imageViewUsersPhoto);
-        File file = new File(path + File.separator + photoName);
-        Bitmap picture = BitmapFactory.decodeFile(file.getAbsolutePath());
-        imageViewUsersPhoto.setImageBitmap(picture);
+        try {
+            imageViewUsersPhoto = (ImageView) findViewById(R.id.imageViewUsersPhoto);
+
+            File file = new File(path + File.separator + pictureName);
+            Bitmap picture = BitmapFactory.decodeFile(file.getAbsolutePath());
+            int width = picture.getWidth();
+            int height = picture.getHeight();
+            Matrix matrix = new Matrix();
+            float scaleWidth = ((float) 90) / width;
+            float scaleHeight = ((float) 90) / height;
+            matrix.postScale(scaleWidth, scaleHeight);
+            Bitmap scaledPicture = Bitmap.createBitmap(picture, 0, 0, width, height, matrix, false);
+            imageViewUsersPhoto.setImageBitmap(scaledPicture);
+            textViewDate = (TextView) findViewById(R.id.textViewDate);
+            textViewDate.setText(pictureName.substring(0, pictureName.length()-4));
+        } catch (Exception e){
+            Log.d(TAG, "Image not found");
+        }
 
         surveyQuestionDevicePositionRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionDevicePositionRadioGroup);
         surveyQuestionDevicePositionRadioButtonHands = (RadioButton) findViewById(R.id.surveyQuestionDevicePositionRadioButtonHands);
@@ -84,34 +116,62 @@ public class SurveyActivity extends AppCompatActivity {
         surveyQuestionUserPostureRadioButtonStaying = (RadioButton) findViewById(R.id.surveyQuestionUserPostureRadioButtonStaying);
         surveyQuestionUserPostureRadioButtonLying = (RadioButton) findViewById(R.id.surveyQuestionUserPostureRadioButtonLying);
 
+        surveyQuestionUserPositionRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionUsersPositionRadioGroup);
+        surveyQuestionUserPositionRadioButtonTransit = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonTransit);
+        surveyQuestionUserPositionRadioButtonHome = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonHome);
+        surveyQuestionUserPositionRadioButtonWork = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonWork);
+        surveyQuestionUserPoitionRadioButtonOther = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonOther);
+        surveyQuestionUserPoitionEditTextOther = (EditText) findViewById(R.id.surveyQuestionUsersPositionEditTextOther);
+
+        surveyQuestionDoingSomethingRadioGroup  = (RadioGroup) findViewById(R.id.surveyQuestionDoingSomethingRadioGroup);
+        surveyQuestionDoingSomethingRadioButtonTV  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonTV);
+        surveyQuestionDoingSomethingRadioButtonEating  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonEating);
+        surveyQuestionDoingSomethingRadioButtonWork  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonWork);
+        surveyQuestionDoingSomethingRadioButtonOther = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonOther);
+        surveyQuestionDoingSomethingEditTextOther  = (EditText) findViewById(R.id.surveyQuestionDoingSomethingEditTextOther);
+
         surveySubmitButton = (Button) findViewById(R.id.surveySubmitButton);
         surveySubmitButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                RadioGroup rgDevice = (RadioGroup) findViewById(R.id.surveyQuestionDevicePositionRadioGroup);
-                int radioButtonDeviceID = rgDevice.getCheckedRadioButtonId();
-                RadioButton rbDevice = (RadioButton) rgDevice.findViewById(radioButtonDeviceID);
+                int radioButtonDeviceID = surveyQuestionDevicePositionRadioGroup.getCheckedRadioButtonId();
+                RadioButton rbDevice = (RadioButton) surveyQuestionDevicePositionRadioGroup.findViewById(radioButtonDeviceID);
                 String surveyQuestionDevicePositionValue = (String) rbDevice.getText();
                 Log.v(TAG, "devicePosition: " + surveyQuestionDevicePositionValue);
 
-                RadioGroup rgHand = (RadioGroup) findViewById(R.id.surveyQuestionHandRadioGroup);
-                int radioButtonHandID = rgHand.getCheckedRadioButtonId();
-                RadioButton rbHand = (RadioButton) rgHand.findViewById(radioButtonHandID);
+                int radioButtonHandID = surveyQuestionHandRadioGroup.getCheckedRadioButtonId();
+                RadioButton rbHand = (RadioButton) surveyQuestionHandRadioGroup.findViewById(radioButtonHandID);
                 String surveyQuestionHandValue = (String) rbHand.getText();
                 Log.v(TAG, "hand: " + surveyQuestionHandValue);
 
-                RadioGroup rgUser = (RadioGroup) findViewById(R.id.surveyQuestionUserPostureRadioGroup);
-                int radioButtonUserID = rgUser.getCheckedRadioButtonId();
-                RadioButton rbUser = (RadioButton) rgUser.findViewById(radioButtonUserID);
-                String surveyQuestionUserPostureValue = (String) rbUser.getText();
+                int radioButtonUserPostureID = surveyQuestionUserPostureRadioGroup.getCheckedRadioButtonId();
+                RadioButton rbUserPosture = (RadioButton) surveyQuestionUserPostureRadioGroup.findViewById(radioButtonUserPostureID);
+                String surveyQuestionUserPostureValue = (String) rbUserPosture.getText();
                 Log.v(TAG, "userPosture: " + surveyQuestionUserPostureValue);
 
-                pictureName = (String) getIntent().getExtras().get("pictureName");
-                Log.v(TAG, "survey was for picture : " + pictureName);
+                int radioButtonUserPositionID = surveyQuestionUserPositionRadioGroup.getCheckedRadioButtonId();
+                RadioButton rbUserPosition = (RadioButton) surveyQuestionUserPositionRadioGroup.findViewById(radioButtonUserPositionID);
+                String surveyQuestionUserPositionValue = (String) rbUserPosition.getText();
+                Log.v(TAG, "userPosition: " + surveyQuestionUserPositionValue);
+                String surveyQuestionUserPositionOtherAnswerValue = surveyQuestionUserPoitionEditTextOther.getText().toString();
+                //if (!surveyQuestionUserPoitionEditTextOther.getText().toString().isEmpty()){ };
+
+                int radioButtonDoingSthID = surveyQuestionDoingSomethingRadioGroup.getCheckedRadioButtonId();
+                RadioButton rbDoingSth = (RadioButton) surveyQuestionDoingSomethingRadioGroup.findViewById(radioButtonDoingSthID);
+                String surveyQuestionDoingSomethingValue = (String) rbDoingSth.getText();
+                Log.v(TAG, "userDoingSomething: " + surveyQuestionDoingSomethingValue);
+                String surveyQuestionDoingSomethingOtherAnswerValue = surveyQuestionDoingSomethingEditTextOther.getText().toString();
+
+                SurveyActivity.this.pictureName = (String) getIntent().getExtras().get("pictureName");
+                Log.v(TAG, "survey was for picture : " + SurveyActivity.this.pictureName);
                 ContentValues cv = new ContentValues();
-                cv.put(Storage.COLUMN_PHOTO, pictureName);
+                cv.put(Storage.COLUMN_PHOTO, SurveyActivity.this.pictureName);
                 cv.put(Storage.COLUMN_DEVICEPOSITION, surveyQuestionDevicePositionValue);
                 cv.put(Storage.COLUMN_HAND, surveyQuestionHandValue);
                 cv.put(Storage.COLUMN_USERPOSTURE, surveyQuestionUserPostureValue);
+                cv.put(Storage.COLUMN_USERPOSITION, surveyQuestionUserPositionValue);
+                cv.put(Storage.COLUMN_USERPOSITIONOTEHRANSWERR, surveyQuestionUserPositionOtherAnswerValue);
+                cv.put(Storage.COLUMN_DOINGSTH, surveyQuestionDoingSomethingValue);
+                cv.put(Storage.COLUMN_DOINGSTHOTHERANSWER, surveyQuestionDoingSomethingOtherAnswerValue);
 
                 SQLiteDatabase database = ControllerService.storage.getWritableDatabase();
                 long insertId = database.insert(Storage.DB_TABLESURVEY, null, cv);
@@ -130,6 +190,30 @@ public class SurveyActivity extends AppCompatActivity {
                 }
                 else {
                     surveyQuestionHandRadioButtonNone.setChecked(false);
+                }
+            }
+        });
+
+        surveyQuestionDoingSomethingRadioButtonOther.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((RadioButton) v).isChecked()) {
+                    surveyQuestionDoingSomethingEditTextOther.setEnabled(true);
+                }
+                else {
+                    surveyQuestionDoingSomethingEditTextOther.setEnabled(false);
+                }
+            }
+        });
+
+        surveyQuestionUserPoitionRadioButtonOther.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((RadioButton) v).isChecked()) {
+                    surveyQuestionUserPoitionEditTextOther.setEnabled(true);
+                }
+                else {
+                    surveyQuestionUserPoitionEditTextOther.setEnabled(false);
                 }
             }
         });
