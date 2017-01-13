@@ -1,5 +1,6 @@
 package com.example.anita.hdyhyp;
 
+import android.app.Fragment;
 import android.app.NotificationManager;
 import android.content.ContentValues;
 import android.content.Context;
@@ -11,26 +12,31 @@ import android.graphics.Matrix;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.Settings;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.io.File;
 
 import static com.example.anita.hdyhyp.ControllerService.storage;
 
-public class SurveyActivity extends AppCompatActivity {
+public class SurveyActivity extends FragmentActivity {
     private static final String TAG = SurveyActivity.class.getSimpleName();
 
-    ImageView imageViewUsersPhoto;
-    TextView textViewDate;
+    Button seePhotoButton;
+    SurveyPictureFragment pictureFragment;
 
     RadioGroup surveyQuestionDevicePositionRadioGroup;
     RadioButton surveyQuestionDevicePositionRadioButtonHands;
@@ -62,7 +68,6 @@ public class SurveyActivity extends AppCompatActivity {
     RadioButton surveyQuestionDoingSomethingRadioButtonOther;
     EditText surveyQuestionDoingSomethingEditTextOther;
 
-
     Button surveySubmitButton;
 
     String pictureName;
@@ -74,31 +79,34 @@ public class SurveyActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         int requestID = (int) intent.getExtras().get("requestID");
-        String pictureName = (String) intent.getExtras().get("pictureName");
-        String path = (String) intent.getExtras().get("path");
+        final String pictureName = (String) intent.getExtras().get("pictureName");
+        final String path = (String) intent.getExtras().get("path");
 
+        Log.v(TAG, "request id: " + requestID);
         NotificationManager notificationManager =
                 (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(requestID);
 
-        try {
-            imageViewUsersPhoto = (ImageView) findViewById(R.id.imageViewUsersPhoto);
+        seePhotoButton = (Button) findViewById(R.id.seePhotoButton);
+        seePhotoButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.v(TAG, "see photo");
+                Log.v(TAG, "path " + path);
+                Log.v(TAG, "pictureName " + pictureName);
+                pictureFragment = new SurveyPictureFragment();
+                Bundle bundle = new Bundle();
+                bundle.putString(SurveyPictureFragment.BUNDLEPATH, path);
+                bundle.putString(SurveyPictureFragment.BUNDLEPICTURENAME, pictureName);
+                pictureFragment.setArguments(bundle);
+                FragmentTransaction
+                        transaction =
+                        getSupportFragmentManager().beginTransaction();
+                transaction.replace(R.id.frameLayoutSurveyTapLong, pictureFragment);
+                transaction.addToBackStack(null);
+                transaction.commit();
+            }
 
-            File file = new File(path + File.separator + pictureName);
-            Bitmap picture = BitmapFactory.decodeFile(file.getAbsolutePath());
-            int width = picture.getWidth();
-            int height = picture.getHeight();
-            Matrix matrix = new Matrix();
-            float scaleWidth = ((float) 90) / width;
-            float scaleHeight = ((float) 90) / height;
-            matrix.postScale(scaleWidth, scaleHeight);
-            Bitmap scaledPicture = Bitmap.createBitmap(picture, 0, 0, width, height, matrix, false);
-            imageViewUsersPhoto.setImageBitmap(scaledPicture);
-            textViewDate = (TextView) findViewById(R.id.textViewDate);
-            textViewDate.setText(pictureName.substring(0, pictureName.length()-4));
-        } catch (Exception e){
-            Log.d(TAG, "Image not found");
-        }
+        });
 
         surveyQuestionDevicePositionRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionDevicePositionRadioGroup);
         surveyQuestionDevicePositionRadioButtonHands = (RadioButton) findViewById(R.id.surveyQuestionDevicePositionRadioButtonHands);

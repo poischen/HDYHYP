@@ -38,7 +38,7 @@ android:layout_height="wrap_content"
 </GridView>
 
     <Button
-        android:text="send"
+        android:text="send all"
         android:id="@+id/picturesSendButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

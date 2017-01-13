@@ -98,7 +98,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     String faceDetectionMouth = NASTRING; //CapturePictureService
     String capturingEvent = "INIT"; //ControllerService
 
-    private int requestID = 0;
+    private int requestID = 999;
 
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
@@ -518,13 +518,15 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         .setSmallIcon(R.drawable.logo)
                         .setContentTitle("HDYHYP")
                         .setContentText("A questionnaire is waiting for you...")
-                        .setOngoing(true);
+                        .setOngoing(true)
+                        .setAutoCancel(true);
 
         surveyNotificationBuilder.setLights(Color.rgb(230, 74, 25), 2500, 3000);
         surveyNotificationBuilder.setVibrate(new long[] { 1000, 1000, 1000 });
 
         Intent resultIntent = new Intent(getApplicationContext(), SurveyActivity.class);
         resultIntent.putExtra("requestID", requestID);
+        Log.v(TAG, "request id: " + requestID);
         requestID = requestID+1;
         resultIntent.putExtra("pictureName", photoName);
         resultIntent.putExtra("path", storage.getStoragePath());

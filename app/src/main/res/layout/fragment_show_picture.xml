@@ -2,12 +2,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="layout.ShowPictureFragment">
+    tools:context="layout.ShowPictureFragment" >
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:background="@color/colorPrimaryDark"
+        android:foregroundGravity="">
+        <TextView
+            android:text="(release to go back)"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/textRelease"
+            android:layout_margin="10dp"
+            android:paddingTop="10dp"
+            android:layout_gravity="bottom"
+            android:textColor="@color/textColorPrimary"
+            android:gravity="center" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageViewUsersPhoto" />
+
+        <TextView
+            android:text=""
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewDate"
+            android:layout_margin="10dp"
+            android:paddingTop="10dp"
+            android:textSize="18dp"
+            android:layout_gravity="bottom"
+            android:textColor="@color/textColorPrimary"
+            android:gravity="center" />
+    </LinearLayout>
 
 </FrameLayout>

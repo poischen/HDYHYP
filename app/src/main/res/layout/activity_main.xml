@@ -11,118 +11,159 @@
     tools:context="com.example.anita.hdyhyp.MainActivity">
 
 
-    <TextView
-        android:text="@string/hello"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/helloTextView"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
-
-    <TextView
-        android:text="@string/waiting"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/statusTextView"
-        android:layout_below="@+id/deleteButton"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="29dp" />
-
-    <TextView
-        android:text="@string/tellUrName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/tellMeYourNameTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="60dp" />
-
-    <Spinner
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/spinnerNames"
-        android:entries="@array/spinnerNamesEntries"
-        android:prompt="@string/spinnerNamesChoose"
-        android:textAlignment="center"
-        android:layout_below="@+id/tellMeYourNameTextView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="16dp" />
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true">
 
-    <Button
-        android:text="submit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColorPrimary"
-        android:background="@color/colorPrimary"
-        android:id="@+id/submitButton"
-        android:layout_below="@+id/spinnerNames"
-        android:layout_toLeftOf="@+id/helloTextView"
-        android:layout_toStartOf="@+id/helloTextView"
-        android:layout_marginTop="14dp" />
+        <TextView
+            android:text="Permissions:"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="17dp"
+            android:id="@+id/permissionsTextView"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:gravity="center" />
 
-    <Button
-        android:text=" delete name "
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColorPrimary"
-        android:background="@color/colorPrimary"
-        android:id="@+id/deleteButton"
-        android:layout_alignBaseline="@+id/submitButton"
-        android:layout_alignBottom="@+id/submitButton"
-        android:layout_toRightOf="@+id/helloTextView"
-        android:layout_toEndOf="@+id/helloTextView" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="7dp"
+            android:layout_marginRight="7dp" >
 
-    <Button
-        android:text="1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/buttonSettings1"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/textColorPrimary"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true" />
+            <Button
+                android:text="1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/buttonSettings1"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/textColorPrimary" />
 
-    <Button
-        android:text="3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/buttonSettings3"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/textColorPrimary"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true" />
+            <Button
+                android:text="3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/buttonSettings3"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/textColorPrimary"
+                android:layout_alignParentRight="true" />
 
-    <Button
-        android:text=" Review Photos "
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/textColorPrimary"
-        android:id="@+id/reviewButton"
-        android:layout_marginTop="94dp"
-        android:layout_below="@+id/statusTextView"
-        android:layout_alignEnd="@+id/statusTextView" />
+            <Button
+                android:text="2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/buttonSettings2"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/textColorPrimary"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
 
-    <Button
-        android:text="2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/buttonSettings2"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/textColorPrimary"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"/>
 
-    <TextView
-        android:text="Permissions:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="17dp"
-        android:id="@+id/permissionsTextView"
-        android:layout_above="@+id/buttonSettings1"
-        android:layout_alignParentStart="true"
-        android:autoText="false"
-        android:layout_alignParentEnd="true"
-        android:gravity="center" />
+            <TextView
+                android:text="@string/hello"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/helloTextView"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:gravity="center"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp" />
 
+            <TextView
+                android:text="@string/tellUrName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/tellMeYourNameTextView"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:gravity="center"
+                android:layout_marginBottom="15dp" />
+
+            <Spinner
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/spinnerNames"
+                android:entries="@array/spinnerNamesEntries"
+                android:prompt="@string/spinnerNamesChoose"
+                android:textAlignment="center"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:gravity="center"
+                android:layout_marginBottom="15dp"/>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" >
+            <Button
+                android:text="submit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/textColorPrimary"
+                android:background="@color/colorPrimary"
+                android:id="@+id/submitButton"
+                android:layout_alignParentStart="true"
+                android:layout_marginBottom="15dp"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" >
+            <Button
+                android:text=" delete "
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/textColorPrimary"
+                android:background="@color/colorPrimary"
+                android:id="@+id/deleteButton"
+                android:gravity="center"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginBottom="15dp"/>
+        </RelativeLayout>
+
+
+        <TextView
+            android:text="@string/waiting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/statusTextView"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:gravity="center"
+            android:layout_marginBottom="15dp"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"/>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" >
+        <Button
+            android:text=" Review Photos + Transfer Data "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:textColor="@color/textColorPrimary"
+            android:id="@+id/reviewButton" />
+        </RelativeLayout>
+
+    </LinearLayout>
 </RelativeLayout>
