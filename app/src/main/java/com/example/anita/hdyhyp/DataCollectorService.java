@@ -1,13 +1,11 @@
 package com.example.anita.hdyhyp;
 
-import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -45,6 +43,7 @@ import com.google.android.gms.location.LocationServices;
 import java.io.IOException;
 import java.util.List;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.INIT;
 import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.RANDOM;
 import static java.lang.System.currentTimeMillis;
@@ -57,8 +56,24 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
         GoogleApiClient.OnConnectionFailedListener, LocationListener, SensorEventListener {
 
     private static final String TAG = DataCollectorService.class.getSimpleName();
-    private static final String NASTRING = "n./a.";
-    private static final int NAINT = -1;
+    public static final String NASTRING = "n./a.";
+    public static final int NAINT = -1;
+    public static final String DCSCOMMAND = "command";
+    public static final String DCSCOMMANDREGISTER = "register";
+    public static final String DCSCOMMANDUNREGISTER = "unregister";
+    public static final String DCSCOMMANDCOLLECT = "collect";
+    public static final String CAPTURINGEVENT = "capturingEvent";
+    public static final String FOREGROUNDAPP = "foregroundApp";
+    public static final String PICTURENAME = "pictureName";
+    public static final String ORIENTATION = "orientation";
+    public static final String FDLEFTEYE = "faceDetectionLeftEye";
+    public static final String FDRIGHTEYE = "faceDetectionRightEye";
+    public static final String FDMOUTH = "faceDetectionMouth";
+    public static final String PORTAIT = "portrait";
+    public static final String LANDSCAPE = "landscape";
+    public static final String REQUESTID = "requestID";
+    public static final String PATH = "path";
+
 
     private SQLiteDatabase database;
     private Storage storage = ControllerService.storage;
@@ -152,27 +167,27 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
         try {
             Log.v(TAG, "intent " + intent);
             Log.v(TAG, "intent extras " + intent.getExtras());
-            command = (String) intent.getExtras().get("dcsCommand");
-            if (command.equals("collect")){
-                capturingEvent = (String) intent.getExtras().get("capturingEvent");
+            command = (String) intent.getExtras().get(DataCollectorService.DCSCOMMAND);
+            if (command.equals(DCSCOMMANDCOLLECT)){
+                capturingEvent = (String) intent.getExtras().get(CAPTURINGEVENT);
             }
         } catch (Exception e){
             Log.v(TAG, "onStartCommand intent null");
         }
 
         switch (command){
-            case "register":
+            case DCSCOMMANDREGISTER:
                 registerListener();
                 break;
-            case "unregister":
+            case DCSCOMMANDUNREGISTER:
                 unregisterListener();
                 break;
-            case "collect":
+            case DCSCOMMANDCOLLECT:
                 ContentValues cv = new ContentValues();
                 if (capturingEvent.equals("INIT")) {
                     //read general sensor information and store to db---------------------------------------
                     try {
-                        photoName = (String) intent.getExtras().get("pictureName");
+                        photoName = (String) intent.getExtras().get(PICTURENAME);
                     } catch (NullPointerException e){
                     }
                     cv.put(Storage.COLUMN_PHOTO, photoName);
@@ -253,7 +268,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                     //Read and store current data-----------------------------------------------------------
                     //picture name--------------------------------------------------------------------------
                     try {
-                        photoName = (String) intent.getExtras().get("pictureName");
+                        photoName = (String) intent.getExtras().get(PICTURENAME);
                     } catch (NullPointerException e){
                         Log.v(TAG, "photoName was null");
                     }
@@ -386,7 +401,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
                     //orientation---------------------------------------------------------------------------
                     try {
-                        orientation = (String) intent.getExtras().get("orientation");
+                        orientation = (String) intent.getExtras().get(ORIENTATION);
                     } catch (NullPointerException e){
 
                     }
@@ -435,17 +450,17 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
                     //face detection------------------------------------------------------------------------
                     try {
-                        faceDetectionLeftEye = (String) intent.getExtras().get("faceDetectionLeftEye");
+                        faceDetectionLeftEye = (String) intent.getExtras().get(FDLEFTEYE);
                     } catch (NullPointerException e){
 
                     }
                     try {
-                        faceDetectionRightEye = (String) intent.getExtras().get("faceDetectionRightEye");
+                        faceDetectionRightEye = (String) intent.getExtras().get(FDRIGHTEYE);
                     } catch (NullPointerException e){
 
                     }
                     try {
-                        faceDetectionMouth = (String) intent.getExtras().get("faceDetectionMouth");
+                        faceDetectionMouth = (String) intent.getExtras().get(FDMOUTH);
                     } catch (NullPointerException e){
 
                     }
@@ -466,9 +481,14 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
                 //create survey
                 if (capturingEvent.equals("RANDOM")) {
-                    Log.v(TAG, " call createSurvey()");
-                    createSurvey(photoName);
-
+                    Log.v(TAG, "createSurvey()");
+                    Intent surveyIntent = new Intent(getApplication().getApplicationContext(), SurveyActivity.class);
+                    surveyIntent.putExtra(REQUESTID, requestID);
+                    requestID = requestID+1;
+                    surveyIntent.putExtra(PICTURENAME, photoName);
+                    surveyIntent.putExtra(PATH, storage.getStoragePath());
+                    surveyIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(surveyIntent);
                 }
 
                 //reset values not depending from sensor listener
@@ -509,44 +529,6 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
-
-    public void createSurvey(String photoName) {
-        Log.v(TAG, " createSurvey() is called");
-        //create survey
-        NotificationCompat.Builder surveyNotificationBuilder =
-                new NotificationCompat.Builder(getApplicationContext())
-                        .setSmallIcon(R.drawable.logo)
-                        .setContentTitle("HDYHYP")
-                        .setContentText("A questionnaire is waiting for you...")
-                        .setOngoing(true)
-                        .setAutoCancel(true);
-
-        surveyNotificationBuilder.setLights(Color.rgb(230, 74, 25), 2500, 3000);
-        surveyNotificationBuilder.setVibrate(new long[] { 1000, 1000, 1000 });
-
-        Intent resultIntent = new Intent(getApplicationContext(), SurveyActivity.class);
-        resultIntent.putExtra("requestID", requestID);
-        Log.v(TAG, "request id: " + requestID);
-        requestID = requestID+1;
-        resultIntent.putExtra("pictureName", photoName);
-        resultIntent.putExtra("path", storage.getStoragePath());
-
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
-        stackBuilder.addParentStack(SurveyActivity.class);
-        stackBuilder.addNextIntent(resultIntent);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(
-                        (int) currentTimeMillis(),
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-
-        surveyNotificationBuilder.setContentIntent(resultPendingIntent);
-
-        NotificationManager notificationManager =
-                (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(42, surveyNotificationBuilder.build());
-    }
-
 
     protected synchronized void buildGoogleApiClient() {
         this.mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -617,5 +599,6 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
             this.mGoogleApiClient.disconnect();
             this.mGoogleApiClient = null;
         }
+        unregisterListener();
     }
 }

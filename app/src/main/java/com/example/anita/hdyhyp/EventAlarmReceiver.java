@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import static com.example.anita.hdyhyp.DataCollectorService.REQUESTID;
+
 public class EventAlarmReceiver extends BroadcastReceiver {
 
     private static final String TAG = EventAlarmReceiver.class.getSimpleName();
@@ -15,6 +17,8 @@ public class EventAlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.v(TAG, "Alarm received");
-            ObservableObject.getInstance().updateValue(intent);
+        int requestID = (int) intent.getExtras().get(REQUESTID);
+        //ObservableObject.getInstance().setPendingIntentRequestID(requestID);
+        ObservableObject.getInstance().updateValue(intent);
     }
 }

@@ -58,6 +58,7 @@ public class PictureReviewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ControllerService.pictureReviewAndUpload = true;
         setContentView(R.layout.activity_picture_review);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         initDropboxSession();
@@ -69,7 +70,7 @@ public class PictureReviewActivity extends AppCompatActivity {
     @Override
     protected void onStart(){
         super.onStart();
-
+        ControllerService.pictureReviewAndUpload = true;
         storage = new  Storage(getApplicationContext());
 
         gridView = (GridView) findViewById(R.id.gridView);
@@ -149,6 +150,7 @@ public class PictureReviewActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        ControllerService.pictureReviewAndUpload = true;
 
         if (!dropboxAPI.equals(null) && dropboxAPI.getSession().authenticationSuccessful()) {
             try {
@@ -172,6 +174,30 @@ public class PictureReviewActivity extends AppCompatActivity {
         super.onResume();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        ControllerService.pictureReviewAndUpload = false;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ControllerService.pictureReviewAndUpload = false;
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        ControllerService.pictureReviewAndUpload = true;
+    }
+
+    /*@Override
+    protected void onPause() {
+        super.onPause();
+        ControllerService.pictureReviewAndUpload = true;
+        Log.v(TAG, "onPause pictureReviewAndUpload: " + ControllerService.pictureReviewAndUpload);
+    }*/
 
     private final Handler handler = new Handler() {
         public void handleMessage(Message msg) {

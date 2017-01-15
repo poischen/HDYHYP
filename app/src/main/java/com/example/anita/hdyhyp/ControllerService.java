@@ -22,6 +22,8 @@ import java.util.Observer;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import static com.example.anita.hdyhyp.DataCollectorService.REQUESTID;
+
 
 /*
 Controlls when and how often photos are captures and holds all necessary information
@@ -38,10 +40,10 @@ public class ControllerService extends Service implements Observer {
     private String storagePath;
     private String userName;
     private BroadcastReceiver broadcastReceiver;
-    //private Thread picturesAreCurrentlyTakenThread;
     protected Calendar alarm[] = new Calendar[6];
 
     public static Storage storage;
+    public static boolean pictureReviewAndUpload;
 
     public enum CapturingEvent {INIT, SCREENON, ORIENTATION, APPLICATION, NOTIFICATION, RANDOM, STOP}
 
@@ -53,8 +55,12 @@ public class ControllerService extends Service implements Observer {
     public static String currentNotification;
 
     public static boolean pictureIsCurrentlyTaken = false;
-    ArrayList<PendingIntent> pendingIntentArray = new ArrayList<PendingIntent>();
-    AlarmManager alarmManager;
+    private ArrayList<PendingIntent> eventPendingIntentArray = new ArrayList<PendingIntent>();
+    private ArrayList<PendingIntent> randomPendingIntentArray = new ArrayList<PendingIntent>();
+    private AlarmManager alarmManager;
+
+    private RememberAlarmReceiver rememberAlarmReceiver;
+    private EventAlarmReceiver eventAlarmReceiver;
 
 
     public ControllerService() {
@@ -122,19 +128,19 @@ public class ControllerService extends Service implements Observer {
      */
     public static void startDataCollectionService(String command, Context context, String foregroundApp, String capturingEvent, String pictureName, String faceDetectionLeftEye, String faceDetectionRightEye, String faceDetectionMouth) {
         Intent dataCollectionIntent = new Intent(context, DataCollectorService.class);
-        dataCollectionIntent.putExtra("dcsCommand", command);
+        dataCollectionIntent.putExtra(DataCollectorService.DCSCOMMAND, command);
         if (command.equals("collect")){
-            dataCollectionIntent.putExtra("foregroundApp", foregroundApp);
-            dataCollectionIntent.putExtra("capturingEvent", capturingEvent);
-            dataCollectionIntent.putExtra("pictureName", pictureName);
+            dataCollectionIntent.putExtra(DataCollectorService.FOREGROUNDAPP, foregroundApp);
+            dataCollectionIntent.putExtra(DataCollectorService.CAPTURINGEVENT, capturingEvent);
+            dataCollectionIntent.putExtra(DataCollectorService.PICTURENAME, pictureName);
             if (ObservableObject.getInstance().isOrientationPortrait()) {
-                dataCollectionIntent.putExtra("orientation", "portrait");
+                dataCollectionIntent.putExtra(DataCollectorService.ORIENTATION, DataCollectorService.PORTAIT);
             } else {
-                dataCollectionIntent.putExtra("orientation", "landscape");
+                dataCollectionIntent.putExtra(DataCollectorService.ORIENTATION, DataCollectorService.LANDSCAPE);
             }
-            dataCollectionIntent.putExtra("faceDetectionLeftEye", faceDetectionLeftEye);
-            dataCollectionIntent.putExtra("faceDetectionRightEye", faceDetectionRightEye);
-            dataCollectionIntent.putExtra("faceDetectionMouth", faceDetectionMouth);
+            dataCollectionIntent.putExtra(DataCollectorService.FDLEFTEYE, faceDetectionLeftEye);
+            dataCollectionIntent.putExtra(DataCollectorService.FDRIGHTEYE, faceDetectionRightEye);
+            dataCollectionIntent.putExtra(DataCollectorService.FDMOUTH, faceDetectionMouth);
         }
         context.startService(dataCollectionIntent);
     }
@@ -151,7 +157,7 @@ public class ControllerService extends Service implements Observer {
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         //calculate and set random alarms
-        //ArrayList<PendingIntent> pendingIntentArray = new ArrayList<PendingIntent>();
+        //ArrayList<PendingIntent> eventPendingIntentArray = new ArrayList<PendingIntent>();
         int[] alarmHour = new int[6];
         int[] alarmMinutes = new int[6];
         //alarm between 10 am and 22 pm in intervals of 2 hours
@@ -174,13 +180,14 @@ public class ControllerService extends Service implements Observer {
             intent.setAction("com.example.anita.hdyhyp.RandomAlarmReceiver");
             Log.v(TAG, "millis time: " + c.getTimeInMillis());
             PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), i, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+            randomPendingIntentArray.add(pendingIntent);
             alarmManager.setInexactRepeating(AlarmManager.RTC, c.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
             c = null;
         }
 
         //set data transfer alarm
         IntentFilter rememberFilter = new IntentFilter("com.example.anita.hdyhyp.RememberAlarmReceiver");
-        RememberAlarmReceiver rememberAlarmReceiver = new RememberAlarmReceiver();
+        rememberAlarmReceiver = new RememberAlarmReceiver();
         registerReceiver(rememberAlarmReceiver, rememberFilter);
 
         Calendar c = Calendar.getInstance();
@@ -204,6 +211,26 @@ public class ControllerService extends Service implements Observer {
         if (appDetectionThread != null) {
             appDetectionThread.interrupt();
         }
+        if (rememberAlarmReceiver != null) {
+            unregisterReceiver(rememberAlarmReceiver);
+        }
+        if (rememberAlarmReceiver != null) {
+            unregisterReceiver(rememberAlarmReceiver);
+        }
+        //if (storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName())){
+        Intent intent = new Intent(getApplicationContext(), ControllerService.class);
+        stopService(intent);
+        //}
+
+        cancelFutureAlarms();
+
+        //TODO: cancel alarms not necessary? >> reboot: will be deleted, >> onDestroy -> after restart will be set new with flag "FLAG_CANCEL_CURRENT" -> yes because of possibility to delete user name and stop service with that
+        int a = randomPendingIntentArray.size();
+        if (a != 0){
+        for (int i=0; i<=a; i++){
+            alarmManager.cancel(randomPendingIntentArray.get(i));
+        }
+        }
     }
 
 
@@ -214,6 +241,16 @@ public class ControllerService extends Service implements Observer {
         if (action.contains("EventAlarmReceiver")){
             startCapturePictureService(capturingEvent);
             Log.v(TAG, "event has not changed, capture pic again");
+            /*remove pending intent from list
+            ObservableObject.getInstance().getPendingIntentRequestID();
+
+            int size = eventPendingIntentArray.size();
+            if ( size > 0) {
+                for (int i = 0; i < size; i++) {
+                    if (eventPendingIntentArray.get(i).get)
+                }
+            }*/
+
         } else if (action.contains("RandomAlarmReceiver")){
             this.capturingEvent = CapturingEvent.RANDOM;
             Log.v(TAG, "Event detected, capturingEvent set to: " + this.capturingEvent);
@@ -222,7 +259,7 @@ public class ControllerService extends Service implements Observer {
             Log.v(TAG, "screen was turned off, cancel future alarms");
             handleScreenOff();
         } else if (action.contains("android.intent.action.SCREEN_ON")){
-            startDataCollectionService("register", null, null, null, null, null, null, null);
+            startDataCollectionService(DataCollectorService.DCSCOMMANDREGISTER, getApplicationContext(), null, null, null, null, null, null);
             this.capturingEvent = CapturingEvent.SCREENON;
             Log.v(TAG, "Event detected, capturingEvent set to: " + this.capturingEvent);
             initPictureTakingSession(capturingEvent);
@@ -238,7 +275,7 @@ public class ControllerService extends Service implements Observer {
     }
 
     private void handleScreenOff(){
-        //startDataCollectionService("unregister", null, null, null, null, null, null, null);
+        startDataCollectionService(DataCollectorService.DCSCOMMANDUNREGISTER, getApplicationContext(), null, null, null, null, null, null);
         this.capturingEvent = CapturingEvent.STOP;
         cancelFutureAlarms();
     }
@@ -272,20 +309,6 @@ public class ControllerService extends Service implements Observer {
         //set one alarm for the events SCREENON, NOTIFICATION, APPLICATION & ORIENTATION
         if (capturingEvent.equals(CapturingEvent.SCREENON) || capturingEvent.equals(CapturingEvent.NOTIFICATION) ||
                 capturingEvent.equals(CapturingEvent.APPLICATION) || capturingEvent.equals(CapturingEvent.ORIENTATION)){
-            /*calendar.set(Calendar.SECOND, calendar.get(Calendar.SECOND) + 2);
-            //calendar.set(Calendar.MILLISECOND, calendar.get(Calendar.MILLISECOND) + 500);
-            intent = new Intent(this, EventAlarmReceiver.class);
-            intent.putExtra("requestID", requestId);
-            requestId++;
-            //intent.putExtra("time", calendar.getTimeInMillis());
-            intent.setAction("com.example.anita.hdyhyp.EventAlarmReceiver");
-            pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), requestId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-            pendingIntentArray.add(pendingIntent);
-            //alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
-            alarmManager.set(AlarmManager.RTC, currentTimeMillis + (tIteration1), pendingIntent);
-            Log.v(TAG, "alarm set in " + tIteration1 + " milliseconds.");
-            pendingIntent = null;
-            intent = null;*/
             Log.v(TAG, "set alarm.");
             setEventAlarm(tIteration1, requestId, currentTimeMillis);
             requestId++;
@@ -306,14 +329,14 @@ public class ControllerService extends Service implements Observer {
 
         //set alarms for taking pictures for the incoming event
         IntentFilter filter = new IntentFilter("com.example.anita.hdyhyp.EventAlarmReceiver");
-        EventAlarmReceiver eventAlarmReceiver = new EventAlarmReceiver();
+        eventAlarmReceiver = new EventAlarmReceiver();
         registerReceiver(eventAlarmReceiver, filter);
 
         Intent intent = new Intent(this, EventAlarmReceiver.class);
-        intent.putExtra("requestID", requestId);
+        intent.putExtra(REQUESTID, requestId);
         intent.setAction("com.example.anita.hdyhyp.EventAlarmReceiver");
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), requestId, intent, PendingIntent.FLAG_ONE_SHOT);
-        pendingIntentArray.add(pendingIntent);
+        eventPendingIntentArray.add(pendingIntent);
 
         //new Time
         Calendar currentTime = Calendar.getInstance();
@@ -325,21 +348,21 @@ public class ControllerService extends Service implements Observer {
         Log.v(TAG, "alarmtime " + calendar.getTimeInMillis());
 
         //alarmManager.setExact(AlarmManager.RTC, (currentTimeMillis + (iteration)), pendingIntent);
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        alarmManager.setExact(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
         Log.v(TAG, "alarm set in " + iteration + " milliseconds.");
     }
 
     private void cancelFutureAlarms(){
-        int size = pendingIntentArray.size();
+        int size = eventPendingIntentArray.size();
         if ( size > 0){
             for (int i=0; i<size; i++){
                 try {
-                    alarmManager.cancel(pendingIntentArray.get(i));
+                    alarmManager.cancel(eventPendingIntentArray.get(i));
                 } catch (Exception e){
                     Log.d(TAG, "Alarm was not found");
                 }
             }
-            pendingIntentArray.clear();
+            eventPendingIntentArray.clear();
         }
     }
 
@@ -357,7 +380,6 @@ public class ControllerService extends Service implements Observer {
         }
         //collect and write data to emphasize that a picture of the session is missing
         else {
-
             Log.v(TAG, "CapturePicService will not be started, because another picture is currently taken");
             startDataCollectionService("collect", getApplicationContext(), currentForegroundApp, capturingEvent.toString(), "no Picture was taken", NASTRING, NASTRING, NASTRING);
         }
@@ -405,20 +427,20 @@ public class ControllerService extends Service implements Observer {
 
             }
 
+        //TODO: Push seperat speichern und checken ob neu (nicht mehrfach selbe push hinereinander)
         //check if the usagestats is a foregeround application or a status bar notification
-
-        if (lastAsNewDetectedApp != null && !lastAsNewDetectedApp.equals(currentAppName)) {
+        try { if (lastAsNewDetectedApp != null && !lastAsNewDetectedApp.equals(currentAppName)) {
             currentForegroundApp = currentAppName;
             if (currentAppName != null) {
                 if (!currentAppName.contains("com.android.") && !currentAppName.contains("com.google.android.googlequicksearchbox")
-                        && !currentAppName.equals("com.example.anita.hdyhyp") && !currentAppName.contains("dropbox"))
-                    //TODO: improve catching dropbox for data transfer -> browser?
-                {
+                        && !currentAppName.equals("com.example.anita.hdyhyp")){
+                    if (!pictureReviewAndUpload){
+                    Log.v(TAG, "pictureReviewAndUpload: " + pictureReviewAndUpload);
                     Log.v(TAG, "new app detected on foreground: " + currentAppName);
                     Log.v(TAG, "current notification name " + currentNotification);
                     lastAsNewDetectedApp = currentAppName;
 
-                    if (currentNotification.equals(currentAppName)){
+                    if (!(currentAppName == null) && currentNotification.equals(currentAppName)){
                         capturingEvent = CapturingEvent.NOTIFICATION;
                         currentNotification = "";
                         Log.v(TAG, "new on foreground detected app was a notification " + currentNotification);
@@ -431,111 +453,12 @@ public class ControllerService extends Service implements Observer {
                     }
                     initPictureTakingSession(capturingEvent);
                 }
-
+                }
             }
+        } } catch (Exception e){
+            Log.d(TAG, "detecting app failed: " + e.toString());
         }
 
     }
-
-    /*
-    private void stopIfPicturesAreCurrentlyTaken() {
-        if (picturesAreCurrentlyTakenThread != null) {
-            if (picturesAreCurrentlyTakenThread.isAlive()) {
-                picturesAreCurrentlyTakenThread.interrupt();
-            }
-            picturesAreCurrentlyTakenThread = null;
-            //if (!intentList.isEmpty()){
-                //for (Intent i : intentList) {
-                  //  stopService(i);
-                   // intentList.remove(i);
-                //}
-            //}
-            Log.v(TAG, "Picture taking interrupted.");
-        }
-    }*/
-
-   /*
-    private Runnable runnableShootPicture = new Runnable() {
-        @Override
-        public void run() {
-            switch (capturingEvent) {
-                case SCREENON:
-                    Log.v(TAG, "SCREENON Event - Take 1. photo.");
-                    initPictureTakingSession();
-                    try {
-                        Thread.sleep(3000);
-                        Log.v(TAG, "SCREENON Event - Take 2. photo.");
-                        initPictureTakingSession();
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "SCREENON Event - Thread cannot sleep :(");
-                        e.printStackTrace();
-                    }
-                    try {
-                        Thread.sleep(8000);
-                        Log.v(TAG, "SCREENON Event - Take 3. photo.");
-                        initPictureTakingSession();
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "SCREENON Event - Sad thread cannot sleep yet another time :(");
-                        e.printStackTrace();
-                    }
-                    break;
-
-                case ORIENTATION:
-                    Log.v(TAG, "ORIENTATION Event - Take 1. photo.");
-                    initPictureTakingSession();
-                    try {
-                        Thread.sleep(3000);
-                        Log.v(TAG, "ORIENTATION Event - Take 2. photo.");
-                        initPictureTakingSession();
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "ORIENTATION Event - Thread cannot sleep :(");
-                        e.printStackTrace();
-                    }
-                    break;
-                case KEYBOARD:
-                    break;
-                case APPLICATION:
-                    Log.v(TAG, "APPLICATION Event - Take 1. photo.");
-                    initPictureTakingSession();
-                    try {
-                        Thread.sleep(3000);
-                        Log.v(TAG, "APPLICATION Event - Take 2. photo.");
-                        initPictureTakingSession();
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "APPLICATION Event - Thread cannot sleep :(");
-                        e.printStackTrace();
-                    }
-                    try {
-                        Thread.sleep(25000);
-                        Log.v(TAG, "APPLICATION Event - Take 3. photo.");
-                        initPictureTakingSession();
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "APPLICATION Event - Sad thread cannot sleep yet another time :(");
-                        e.printStackTrace();
-                    }
-                    break;
-                case NOTIFICATION:
-                    Log.v(TAG, "NOTIFICATION Event - Take 1. photo.");
-                    initPictureTakingSession();
-                    break;
-                case RANDOM:
-                    Log.v(TAG, "RANDOM Event - Take 1. photo.");
-                    initPictureTakingSession();
-                    break;
-                default:
-                    Log.d(TAG, "No event was detected while runnableShootPicture was called. Event: " + capturingEvent);
-                    break;
-            }
-
-            capturingEvent = CapturingEvent.NOTHING;
-            if (picturesAreCurrentlyTakenThread != null && picturesAreCurrentlyTakenThread.isAlive()) {
-                picturesAreCurrentlyTakenThread.interrupt();
-                picturesAreCurrentlyTakenThread = null;
-            }
-            //if (!intentList.isEmpty()) {
-              //  intentList.clear();
-            //}
-        }
-    };*/
 
 }

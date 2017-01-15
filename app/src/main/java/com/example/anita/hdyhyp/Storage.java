@@ -1,5 +1,6 @@
 package com.example.anita.hdyhyp;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
@@ -153,6 +154,18 @@ public class Storage extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
+    }
+
+    public static boolean isServiceRunning(Context context, String serviceName){
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceName.equals(service.service.getClassName())) {
+                Log.v(TAG, serviceName + " is running.");
+                return true;
+            }
+        }
+        Log.v(TAG, "ControllerService is not running.");
+        return false;
     }
 
 }

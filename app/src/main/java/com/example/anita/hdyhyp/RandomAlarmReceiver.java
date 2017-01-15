@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.os.PowerManager;
 import android.util.Log;
 
+import java.util.Calendar;
+
 import static android.content.Context.ALARM_SERVICE;
 import static android.content.Context.POWER_SERVICE;
 
@@ -36,43 +38,56 @@ public class RandomAlarmReceiver extends BroadcastReceiver {
         Log.v(TAG, "start time of current alarm: " + startTime[requestID]);
         Log.v(TAG, "incoming intent id: " + requestID);
 
-        PowerManager powerManager = (PowerManager) context.getSystemService(POWER_SERVICE);
-        int rescheduleTime;
-        if (powerManager.isScreenOn()){
-            Log.v(TAG, "screen is on, handle alarm " + requestID);
-            ObservableObject.getInstance().updateValue(intent);
-            //reset start time
-            //if (rescheduleTimerCounter[currentID] > 0){
-            if (wasRescheduled[requestID]){
-                Log.v(TAG, "alarm has been rescheduled, reset now");
-                wasRescheduled[requestID] = false;
-                rescheduleCounter[requestID] = 0;
+        //check if alarm is in current time intervall (necessary after restart/reboot)
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        long currentHour = c.get(Calendar.HOUR_OF_DAY);
+        c.setTimeInMillis(startTime[requestID]);
+        long alarmHour = c.get(Calendar.HOUR_OF_DAY);
+        if (((currentHour - alarmHour) >= 2)){
+        Log.v(TAG, "incoming alarm not necessary to handle");
+        } else {
+            Log.v(TAG, "incoming alarm necessary to handle");
+            PowerManager powerManager = (PowerManager) context.getSystemService(POWER_SERVICE);
+            int rescheduleTime;
+            if (powerManager.isScreenOn()){
+                Log.v(TAG, "screen is on, handle alarm " + requestID);
+                ObservableObject.getInstance().updateValue(intent);
+                //reset start time
+                //if (rescheduleTimerCounter[currentID] > 0){
+                if (wasRescheduled[requestID]){
+                    Log.v(TAG, "alarm has been rescheduled, reset now");
+                    wasRescheduled[requestID] = false;
+                    rescheduleCounter[requestID] = 0;
+                    PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+                    alarmManager.set(AlarmManager.RTC, startTime[requestID], pendingIntent);
+                    Log.v(TAG, "alarm reset to starttime.");
+                }
+            }
+            else{
+                if (ControllerService.pictureIsCurrentlyTaken){
+                    rescheduleTime = shiftMillisPicIsCurrentlyTaken;
+                } else {
+                    rescheduleTime = shiftMillisScreenOff;
+                }
+
+                //reschedule: shift alarm for 5 minutes if the screen was off, or for 2 seconds, if a picture is currently taken due to an event
+                Log.v(TAG, "screen off, reschedule alarm " + requestID);
+
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                //TODO: bleibt durch FLAG_UPDATE_CURRENT das PendingIntent immernoch ein FLAG_ONE_SHOOT?
                 AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-                alarmManager.set(AlarmManager.RTC, startTime[requestID], pendingIntent);
-                Log.v(TAG, "alarm reset to starttime.");
+                Log.v(TAG, "rescheduleCounter" + rescheduleCounter[requestID]);
+                ++ rescheduleCounter[requestID];
+                Log.v(TAG, "rescheduleCounter new" + rescheduleCounter[requestID]);
+                long newTime = startTime[requestID] + (rescheduleCounter[requestID] * rescheduleTime);
+                Log.v(TAG, "new time" + newTime);
+                alarmManager.set(AlarmManager.RTC, newTime, pendingIntent);
+                wasRescheduled[requestID] = true;
+                rescheduleTime = 0;
             }
         }
-        else{
-            if (ControllerService.pictureIsCurrentlyTaken){
-                rescheduleTime = shiftMillisPicIsCurrentlyTaken;
-            } else {
-                rescheduleTime = shiftMillisScreenOff;
-            }
 
-            //reschedule: shift alarm for 5 minutes if the screen was off, or for 2 seconds, if a picture is currently taken due to an event
-            Log.v(TAG, "reschedule alarm " + requestID);
-
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-            AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-            Log.v(TAG, "rescheduleCounter" + rescheduleCounter[requestID]);
-            ++ rescheduleCounter[requestID];
-            Log.v(TAG, "rescheduleCounter new" + rescheduleCounter[requestID]);
-            long newTime = startTime[requestID] + (rescheduleCounter[requestID] * rescheduleTime);
-            Log.v(TAG, "new time" + newTime);
-            alarmManager.set(AlarmManager.RTC, newTime, pendingIntent);
-            wasRescheduled[requestID] = true;
-            rescheduleTime = 0;
-        }
     }
 }

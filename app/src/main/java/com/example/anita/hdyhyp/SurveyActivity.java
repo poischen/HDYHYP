@@ -1,36 +1,26 @@
 package com.example.anita.hdyhyp;
 
-import android.app.Fragment;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.net.Uri;
-import android.provider.ContactsContract;
-import android.provider.Settings;
+import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.ScrollView;
-import android.widget.TextView;
+import android.widget.Toast;
 
-import java.io.File;
-
-import static com.example.anita.hdyhyp.ControllerService.storage;
+import static java.lang.System.currentTimeMillis;
 
 public class SurveyActivity extends FragmentActivity {
     private static final String TAG = SurveyActivity.class.getSimpleName();
@@ -58,8 +48,8 @@ public class SurveyActivity extends FragmentActivity {
     RadioButton surveyQuestionUserPositionRadioButtonTransit;
     RadioButton surveyQuestionUserPositionRadioButtonHome;
     RadioButton surveyQuestionUserPositionRadioButtonWork;
-    RadioButton surveyQuestionUserPoitionRadioButtonOther;
-    EditText surveyQuestionUserPoitionEditTextOther;
+    RadioButton surveyQuestionUserPositionRadioButtonOther;
+    EditText surveyQuestionUserPositionEditTextOther;
 
     RadioGroup surveyQuestionDoingSomethingRadioGroup;
     RadioButton surveyQuestionDoingSomethingRadioButtonTV;
@@ -71,21 +61,22 @@ public class SurveyActivity extends FragmentActivity {
     Button surveySubmitButton;
 
     String pictureName;
+    String path;
+    int requestID;
+    boolean saved = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_survey);
 
         Intent intent = getIntent();
-        int requestID = (int) intent.getExtras().get("requestID");
-        final String pictureName = (String) intent.getExtras().get("pictureName");
-        final String path = (String) intent.getExtras().get("path");
+        int requestID = (int) intent.getExtras().get(DataCollectorService.REQUESTID);
+        pictureName = (String) intent.getExtras().get(DataCollectorService.PICTURENAME);
+        path = (String) intent.getExtras().get(DataCollectorService.PATH);
 
         Log.v(TAG, "request id: " + requestID);
-        NotificationManager notificationManager =
-                (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(requestID);
 
         seePhotoButton = (Button) findViewById(R.id.seePhotoButton);
         seePhotoButton.setOnClickListener(new View.OnClickListener() {
@@ -128,8 +119,8 @@ public class SurveyActivity extends FragmentActivity {
         surveyQuestionUserPositionRadioButtonTransit = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonTransit);
         surveyQuestionUserPositionRadioButtonHome = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonHome);
         surveyQuestionUserPositionRadioButtonWork = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonWork);
-        surveyQuestionUserPoitionRadioButtonOther = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonOther);
-        surveyQuestionUserPoitionEditTextOther = (EditText) findViewById(R.id.surveyQuestionUsersPositionEditTextOther);
+        surveyQuestionUserPositionRadioButtonOther = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonOther);
+        surveyQuestionUserPositionEditTextOther = (EditText) findViewById(R.id.surveyQuestionUsersPositionEditTextOther);
 
         surveyQuestionDoingSomethingRadioGroup  = (RadioGroup) findViewById(R.id.surveyQuestionDoingSomethingRadioGroup);
         surveyQuestionDoingSomethingRadioButtonTV  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonTV);
@@ -143,29 +134,54 @@ public class SurveyActivity extends FragmentActivity {
             public void onClick(View v) {
                 int radioButtonDeviceID = surveyQuestionDevicePositionRadioGroup.getCheckedRadioButtonId();
                 RadioButton rbDevice = (RadioButton) surveyQuestionDevicePositionRadioGroup.findViewById(radioButtonDeviceID);
-                String surveyQuestionDevicePositionValue = (String) rbDevice.getText();
+                String surveyQuestionDevicePositionValue;
+                if (!(rbDevice == null)){
+                surveyQuestionDevicePositionValue = (String) rbDevice.getText();
+                } else {
+                    surveyQuestionDevicePositionValue = DataCollectorService.NASTRING;
+                }
                 Log.v(TAG, "devicePosition: " + surveyQuestionDevicePositionValue);
 
                 int radioButtonHandID = surveyQuestionHandRadioGroup.getCheckedRadioButtonId();
                 RadioButton rbHand = (RadioButton) surveyQuestionHandRadioGroup.findViewById(radioButtonHandID);
-                String surveyQuestionHandValue = (String) rbHand.getText();
+                String surveyQuestionHandValue;
+                if (!(rbHand == null)){
+                     surveyQuestionHandValue = (String) rbHand.getText();
+                } else {
+                    surveyQuestionHandValue = DataCollectorService.NASTRING;
+                }
                 Log.v(TAG, "hand: " + surveyQuestionHandValue);
 
                 int radioButtonUserPostureID = surveyQuestionUserPostureRadioGroup.getCheckedRadioButtonId();
                 RadioButton rbUserPosture = (RadioButton) surveyQuestionUserPostureRadioGroup.findViewById(radioButtonUserPostureID);
-                String surveyQuestionUserPostureValue = (String) rbUserPosture.getText();
+                String surveyQuestionUserPostureValue;
+                if (!(rbUserPosture == null)){
+                    surveyQuestionUserPostureValue = (String) rbUserPosture.getText();
+                } else {
+                    surveyQuestionUserPostureValue = DataCollectorService.NASTRING;
+                }
                 Log.v(TAG, "userPosture: " + surveyQuestionUserPostureValue);
 
                 int radioButtonUserPositionID = surveyQuestionUserPositionRadioGroup.getCheckedRadioButtonId();
                 RadioButton rbUserPosition = (RadioButton) surveyQuestionUserPositionRadioGroup.findViewById(radioButtonUserPositionID);
-                String surveyQuestionUserPositionValue = (String) rbUserPosition.getText();
+                String surveyQuestionUserPositionValue;
+                if (!(rbUserPosition == null)){
+                    surveyQuestionUserPositionValue = (String) rbUserPosition.getText();
+                } else {
+                    surveyQuestionUserPositionValue = DataCollectorService.NASTRING;
+                }
                 Log.v(TAG, "userPosition: " + surveyQuestionUserPositionValue);
-                String surveyQuestionUserPositionOtherAnswerValue = surveyQuestionUserPoitionEditTextOther.getText().toString();
-                //if (!surveyQuestionUserPoitionEditTextOther.getText().toString().isEmpty()){ };
+                String surveyQuestionUserPositionOtherAnswerValue = surveyQuestionUserPositionEditTextOther.getText().toString();
+                //if (!surveyQuestionUserPositionEditTextOther.getText().toString().isEmpty()){ };
 
                 int radioButtonDoingSthID = surveyQuestionDoingSomethingRadioGroup.getCheckedRadioButtonId();
                 RadioButton rbDoingSth = (RadioButton) surveyQuestionDoingSomethingRadioGroup.findViewById(radioButtonDoingSthID);
-                String surveyQuestionDoingSomethingValue = (String) rbDoingSth.getText();
+                String surveyQuestionDoingSomethingValue;
+                if (!(rbDoingSth == null)){
+                    surveyQuestionDoingSomethingValue = (String) rbDoingSth.getText();
+                } else {
+                    surveyQuestionDoingSomethingValue = DataCollectorService.NASTRING;
+                }
                 Log.v(TAG, "userDoingSomething: " + surveyQuestionDoingSomethingValue);
                 String surveyQuestionDoingSomethingOtherAnswerValue = surveyQuestionDoingSomethingEditTextOther.getText().toString();
 
@@ -185,8 +201,9 @@ public class SurveyActivity extends FragmentActivity {
                 long insertId = database.insert(Storage.DB_TABLESURVEY, null, cv);
                 Log.v(TAG, "survey data stored to db");
                 database.close();
-
                 finish();
+
+                saved = true;
             }
         });
 
@@ -214,17 +231,85 @@ public class SurveyActivity extends FragmentActivity {
             }
         });
 
-        surveyQuestionUserPoitionRadioButtonOther.setOnClickListener(new View.OnClickListener() {
+        surveyQuestionUserPositionRadioButtonOther.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (((RadioButton) v).isChecked()) {
-                    surveyQuestionUserPoitionEditTextOther.setEnabled(true);
+                    surveyQuestionUserPositionEditTextOther.setEnabled(true);
                 }
                 else {
-                    surveyQuestionUserPoitionEditTextOther.setEnabled(false);
+                    surveyQuestionUserPositionEditTextOther.setEnabled(false);
                 }
             }
         });
 
     }
+
+    @Override
+    protected void onStart(){
+        super.onStart();
+        NotificationManager notificationManager =
+                (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(requestID);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!saved){
+            doSurveyLater();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    private void doSurveyLater(){
+        if (!saved){
+            Toast.makeText(getApplicationContext(), "Please do the survey as soon as you have time.", Toast.LENGTH_LONG).show();
+
+            NotificationCompat.Builder surveyNotificationBuilder =
+                    new NotificationCompat.Builder(getApplicationContext())
+                            .setSmallIcon(R.drawable.logo)
+                            .setContentTitle("HDYHYP")
+                            .setContentText("A questionnaire is waiting for you...")
+                            .setOngoing(true)
+                            .setAutoCancel(true);
+
+            Intent resultIntent = new Intent(getApplicationContext(), SurveyActivity.class);
+            resultIntent.putExtra(DataCollectorService.REQUESTID, requestID);
+            Log.v(TAG, "request id: " + requestID);
+            resultIntent.putExtra(DataCollectorService.PICTURENAME, pictureName);
+            resultIntent.putExtra(DataCollectorService.PATH, path);
+
+            surveyNotificationBuilder.setLights(Color.rgb(230, 74, 25), 2500, 3000);
+            surveyNotificationBuilder.setVibrate(new long[] { 1000, 1000, 1000 });
+
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
+            stackBuilder.addParentStack(SurveyActivity.class);
+            stackBuilder.addNextIntent(resultIntent);
+            PendingIntent resultPendingIntent =
+                    stackBuilder.getPendingIntent(
+                            (int) currentTimeMillis(),
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                    );
+
+            surveyNotificationBuilder.setContentIntent(resultPendingIntent);
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(42, surveyNotificationBuilder.build());
+        }
+    }
 }
+
+
+
+

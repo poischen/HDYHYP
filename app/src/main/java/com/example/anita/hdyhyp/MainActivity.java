@@ -1,5 +1,7 @@
 package com.example.anita.hdyhyp;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
@@ -9,17 +11,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
-import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.android.AndroidAuthSession;
-import com.dropbox.client2.session.AppKeyPair;
-
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private TextView readyTextView;
-    private Button submitButton;
+    private Button startButton;
     private TextView tellMeYourNameView;
     private TextView helloTextView;
     private Storage storage;
@@ -38,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         storage = new Storage(getApplicationContext());
 
         readyTextView = (TextView) findViewById(R.id.statusTextView);
-        submitButton = (Button) findViewById(R.id.submitButton);
+        startButton = (Button) findViewById(R.id.submitButton);
         namesSpinner = (Spinner) findViewById(R.id.spinnerNames);
         tellMeYourNameView = (TextView) findViewById(R.id.tellMeYourNameTextView);
         helloTextView = (TextView) findViewById(R.id.helloTextView);
@@ -83,36 +81,45 @@ public class MainActivity extends AppCompatActivity {
 
 
         /**Asks for and inizilizes the users pseudonym to identify him during the study if it is not already set
-         visual feedback / input not possible if the name is already set */
-        submitButton.setOnClickListener(new View.OnClickListener() {
+         visual feedback / input not possible if the name is already set
+         if the username is stored, but the Controller Service is not running, restart the service */
+        startButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.v(TAG, "Submit Button clicked");
-                storeUserName(namesSpinner.getSelectedItem().toString());
+                if (storage.getUserName() == null){
+                    storeUserName(namesSpinner.getSelectedItem().toString());
+                }
+                if (!(storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName()))){
+                        startControllerService();
+                }
             }
         });
 
+        //give feedback, if a userName is already stored and restart the service, if it is not running although a username is already set
         if (!(storage.getUserName() == null)) {
             userNameAlreadySet();
+            if (!(storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName()))){
+                startControllerService();
+            }
         }
 
-        /**Temporary possibility to delete the user name
-         * TODO: remove or hide for user
+        /*Temporary possibility to delete the user name
          */
         deleteButton = (Button) findViewById(R.id.deleteButton);
         deleteButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 storage.deleteUserName();
-                submitButton.setEnabled(true);
                 helloTextView.setText(R.string.hello);
                 readyTextView.setText(R.string.waiting);
                 namesSpinner.setEnabled(true);
                 tellMeYourNameView.setEnabled(true);
-                submitButton.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        Log.v(TAG, "Submit Button clicked");
-                        storeUserName(namesSpinner.getSelectedItem().toString());
-                    }
-                });
+
+                //cancel Service if running
+                //if (storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName())){
+                    Intent intent = new Intent(getApplicationContext(), ControllerService.class);
+                    stopService(intent);
+                //}
+
             }
         });
 
@@ -135,12 +142,6 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Study user name not stored.");
         }
 
-
-        /*Starts a longlasting Service which controlls the Data Collection and the Photo Shooting
-         */
-        Intent controllerIntent = new Intent(this, ControllerService.class);
-        getApplicationContext().startService(controllerIntent);
-
     }
 
     /**
@@ -157,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void userNameAlreadySet() {
         String username = storage.getUserName();
-        submitButton.setEnabled(false);
+        namesSpinner.setPrompt(username);
         helloTextView.setText("Hello " + username + "!");
         readyTextView.setText(R.string.ready);
         namesSpinner.setEnabled(false);
@@ -172,5 +173,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    /*Starts a longlasting Service which controlls the Data Collection and the Photo Shooting
+ */
+    private void startControllerService(){
+        Intent controllerIntent = new Intent(this, ControllerService.class);
+        getApplicationContext().startService(controllerIntent);
     }
 }
