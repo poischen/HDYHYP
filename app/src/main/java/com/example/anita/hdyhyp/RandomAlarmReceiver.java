@@ -35,15 +35,14 @@ public class RandomAlarmReceiver extends BroadcastReceiver {
                 startTime[requestID] = time;
         }
 
-        Log.v(TAG, "start time of current alarm: " + startTime[requestID]);
-        Log.v(TAG, "incoming intent id: " + requestID);
-
         //check if alarm is in current time intervall (necessary after restart/reboot)
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(System.currentTimeMillis());
         long currentHour = c.get(Calendar.HOUR_OF_DAY);
         c.setTimeInMillis(startTime[requestID]);
         long alarmHour = c.get(Calendar.HOUR_OF_DAY);
+        long alarmMinute = c.get(Calendar.MINUTE);
+        Log.v(TAG, "incoming intent id: " + requestID + ", time: " + alarmHour + ":" + alarmMinute);
         if (((currentHour - alarmHour) >= 2)){
         Log.v(TAG, "incoming alarm not necessary to handle");
         } else {

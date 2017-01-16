@@ -45,7 +45,7 @@ public class CapturePicService extends Service {
     private String storagePath;
     private String userName;
     private SurfaceTexture surfaceTexture;
-    private String capturingEvent;
+    private ControllerService.CapturingEvent capturingEvent;
     private String foregroundApp;
     //private FaceDetectionListener faceDetectionListener;
     private String pictureName;
@@ -66,7 +66,7 @@ public class CapturePicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         ControllerService.pictureIsCurrentlyTaken = true;
         try {
-            capturingEvent = intent.getExtras().get("capturingEvent").toString();
+            capturingEvent = (ControllerService.CapturingEvent) intent.getExtras().get(DataCollectorService.CAPTURINGEVENT);
             foregroundApp = (String) intent.getExtras().get("foregroundApp");
         } catch (Exception e) {
             Log.d(TAG, "intent extras were empty");

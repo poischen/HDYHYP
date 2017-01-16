@@ -10,21 +10,6 @@
         android:layout_height="match_parent"
         android:background="@color/colorPrimaryDark"
         android:foregroundGravity="">
-        <TextView
-            android:text="(release to go back)"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/textRelease"
-            android:layout_margin="10dp"
-            android:paddingTop="10dp"
-            android:layout_gravity="bottom"
-            android:textColor="@color/textColorPrimary"
-            android:gravity="center" />
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/imageViewUsersPhoto" />
 
         <TextView
             android:text=""
@@ -37,6 +22,12 @@
             android:layout_gravity="bottom"
             android:textColor="@color/textColorPrimary"
             android:gravity="center" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageViewUsersPhotoFragment" />
+
     </LinearLayout>
 
 </FrameLayout>

@@ -7,12 +7,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -62,6 +64,7 @@ public class SurveyActivity extends FragmentActivity {
 
     String pictureName;
     String path;
+    int displayWidth;
     int requestID;
     boolean saved = false;
 
@@ -76,6 +79,11 @@ public class SurveyActivity extends FragmentActivity {
         pictureName = (String) intent.getExtras().get(DataCollectorService.PICTURENAME);
         path = (String) intent.getExtras().get(DataCollectorService.PATH);
 
+        Display display = getWindowManager().getDefaultDisplay();
+        Point displaySize = new Point();
+        display.getSize(displaySize);
+        displayWidth = displaySize.x;
+
         Log.v(TAG, "request id: " + requestID);
 
         seePhotoButton = (Button) findViewById(R.id.seePhotoButton);
@@ -88,6 +96,7 @@ public class SurveyActivity extends FragmentActivity {
                 Bundle bundle = new Bundle();
                 bundle.putString(SurveyPictureFragment.BUNDLEPATH, path);
                 bundle.putString(SurveyPictureFragment.BUNDLEPICTURENAME, pictureName);
+                bundle.putInt(SurveyPictureFragment.BUNDLEDISPLAYWITH, displayWidth);
                 pictureFragment.setArguments(bundle);
                 FragmentTransaction
                         transaction =
@@ -290,7 +299,6 @@ public class SurveyActivity extends FragmentActivity {
             resultIntent.putExtra(DataCollectorService.PATH, path);
 
             surveyNotificationBuilder.setLights(Color.rgb(230, 74, 25), 2500, 3000);
-            surveyNotificationBuilder.setVibrate(new long[] { 1000, 1000, 1000 });
 
             TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
             stackBuilder.addParentStack(SurveyActivity.class);
@@ -305,7 +313,7 @@ public class SurveyActivity extends FragmentActivity {
 
             NotificationManager notificationManager =
                     (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(42, surveyNotificationBuilder.build());
+            notificationManager.notify(requestID, surveyNotificationBuilder.build());
         }
     }
 }

@@ -39,8 +39,6 @@ public class ControllerService extends Service implements Observer {
     private boolean firstTrySuccessfullyFlag;
     private String storagePath;
     private String userName;
-    private BroadcastReceiver broadcastReceiver;
-    protected Calendar alarm[] = new Calendar[6];
 
     public static Storage storage;
     public static boolean pictureReviewAndUpload;
@@ -61,7 +59,9 @@ public class ControllerService extends Service implements Observer {
 
     private RememberAlarmReceiver rememberAlarmReceiver;
     private EventAlarmReceiver eventAlarmReceiver;
-
+    private RandomAlarmReceiver randomAlarmReceiver;
+    private BroadcastReceiver broadcastReceiver;
+    protected Calendar alarm[] = new Calendar[6];
 
     public ControllerService() {
         super();
@@ -126,7 +126,7 @@ public class ControllerService extends Service implements Observer {
     /*
 
      */
-    public static void startDataCollectionService(String command, Context context, String foregroundApp, String capturingEvent, String pictureName, String faceDetectionLeftEye, String faceDetectionRightEye, String faceDetectionMouth) {
+    public static void startDataCollectionService(String command, Context context, String foregroundApp, CapturingEvent capturingEvent, String pictureName, String faceDetectionLeftEye, String faceDetectionRightEye, String faceDetectionMouth) {
         Intent dataCollectionIntent = new Intent(context, DataCollectorService.class);
         dataCollectionIntent.putExtra(DataCollectorService.DCSCOMMAND, command);
         if (command.equals("collect")){
@@ -152,7 +152,7 @@ public class ControllerService extends Service implements Observer {
     private void setRandomPictureAndDatatransferAlarms() {
 
         IntentFilter filter = new IntentFilter("com.example.anita.hdyhyp.RandomAlarmReceiver");
-        RandomAlarmReceiver randomAlarmReceiver = new RandomAlarmReceiver();
+        randomAlarmReceiver = new RandomAlarmReceiver();
         registerReceiver(randomAlarmReceiver, filter);
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -178,11 +178,9 @@ public class ControllerService extends Service implements Observer {
             intent.putExtra("requestID", i);
             intent.putExtra("time", c.getTimeInMillis());
             intent.setAction("com.example.anita.hdyhyp.RandomAlarmReceiver");
-            Log.v(TAG, "millis time: " + c.getTimeInMillis());
             PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), i, intent, PendingIntent.FLAG_CANCEL_CURRENT);
             randomPendingIntentArray.add(pendingIntent);
             alarmManager.setInexactRepeating(AlarmManager.RTC, c.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
-            c = null;
         }
 
         //set data transfer alarm
@@ -204,33 +202,51 @@ public class ControllerService extends Service implements Observer {
 
     @Override
     public void onDestroy() {
+         //cancel receiver
         if (broadcastReceiver != null) {
             unregisterReceiver(broadcastReceiver);
             broadcastReceiver = null;
         }
-        if (appDetectionThread != null) {
-            appDetectionThread.interrupt();
-        }
         if (rememberAlarmReceiver != null) {
             unregisterReceiver(rememberAlarmReceiver);
+            rememberAlarmReceiver = null;
         }
-        if (rememberAlarmReceiver != null) {
-            unregisterReceiver(rememberAlarmReceiver);
+        if (eventAlarmReceiver != null) {
+            unregisterReceiver(eventAlarmReceiver);
+            eventAlarmReceiver = null;
         }
-        //if (storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName())){
-        Intent intent = new Intent(getApplicationContext(), ControllerService.class);
-        stopService(intent);
-        //}
 
+        //stop DataCollectorService
+        Intent intent = new Intent(getApplicationContext(), DataCollectorService.class);
+        stopService(intent);
+
+        //cancel data transfer teminder
+        PendingIntent reminderPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 70, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        alarmManager.cancel(reminderPendingIntent);
+
+        //cancel alarms of capturing session
         cancelFutureAlarms();
 
+        //cancel random alarms
         //TODO: cancel alarms not necessary? >> reboot: will be deleted, >> onDestroy -> after restart will be set new with flag "FLAG_CANCEL_CURRENT" -> yes because of possibility to delete user name and stop service with that
         int a = randomPendingIntentArray.size();
         if (a != 0){
-        for (int i=0; i<=a; i++){
+        for (int i=0; i<a; i++){
             alarmManager.cancel(randomPendingIntentArray.get(i));
         }
         }
+        if (randomAlarmReceiver != null) {
+            unregisterReceiver(randomAlarmReceiver);
+            randomAlarmReceiver = null;
+        }
+
+        //stop detecting apps thread
+        if (appDetectionThread != null) {
+            appDetectionThread.interrupt();
+        }
+
+        //stop Controller Service
+        stopSelf();
     }
 
 
@@ -305,7 +321,7 @@ public class ControllerService extends Service implements Observer {
 
         int requestId = 80;
 
-        Log.v(TAG, "event in initPictureTakingSession() before setting alarms: "+ capturingEvent);
+        Log.v(TAG, "event in initPictureTakingSession() before setting alarms: "+ capturingEvent.toString());
         //set one alarm for the events SCREENON, NOTIFICATION, APPLICATION & ORIENTATION
         if (capturingEvent.equals(CapturingEvent.SCREENON) || capturingEvent.equals(CapturingEvent.NOTIFICATION) ||
                 capturingEvent.equals(CapturingEvent.APPLICATION) || capturingEvent.equals(CapturingEvent.ORIENTATION)){
@@ -374,14 +390,14 @@ public class ControllerService extends Service implements Observer {
             capturePicServiceIntent.putExtra("storagePath", storagePath);
             capturePicServiceIntent.putExtra("userName", userName);
             capturePicServiceIntent.putExtra("foregroundApp", currentForegroundApp);
-            capturePicServiceIntent.putExtra("capturingEvent", capturingEvent);
+            capturePicServiceIntent.putExtra(DataCollectorService.CAPTURINGEVENT, capturingEvent);
             getApplicationContext().startService(capturePicServiceIntent);
             Log.v(TAG, "CapturePicService will be started now");
         }
         //collect and write data to emphasize that a picture of the session is missing
         else {
             Log.v(TAG, "CapturePicService will not be started, because another picture is currently taken");
-            startDataCollectionService("collect", getApplicationContext(), currentForegroundApp, capturingEvent.toString(), "no Picture was taken", NASTRING, NASTRING, NASTRING);
+            startDataCollectionService("collect", getApplicationContext(), currentForegroundApp, capturingEvent, "no Picture was taken", NASTRING, NASTRING, NASTRING);
         }
     }
 

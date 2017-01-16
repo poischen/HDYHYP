@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
                     storeUserName(namesSpinner.getSelectedItem().toString());
                 }
                 if (!(storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName()))){
-                        startControllerService();
+                    startControllerService();
                 }
             }
         });
@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         if (!(storage.getUserName() == null)) {
             userNameAlreadySet();
             if (!(storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName()))){
-                startControllerService();
+                readyTextView.setText("App is ready but not running, please start.");
             }
         }
 
