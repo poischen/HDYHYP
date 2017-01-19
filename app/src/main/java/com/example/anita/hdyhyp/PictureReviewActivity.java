@@ -24,25 +24,38 @@ import android.widget.ProgressBar;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.exception.DropboxException;
 
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.graphics.Bitmap.createBitmap;
+import static com.example.anita.hdyhyp.R.color.colorAccent;
 
 public class PictureReviewActivity extends AppCompatActivity {
 
     private static final String TAG = PictureReviewActivity.class.getSimpleName();
+    private static final String HOST = "ftp.mkhamis.com";
+    private static final int PORT = 21;
+    private static final String USER = "anita@mkhamis.com";
+    private static final String PASSWORD = "dd)WN~AfiPtF";
 
     private GridView gridView;
     private PictureReviewGridViewAdapter gridAdapter;
     private ArrayList<PictureItem> pictureItems;
     private ArrayList<PictureItem> taggedToDeleteItems = new ArrayList<>();
     private Button deleteButton;
-    private Button submitButton;
+    private Button sendMailButton;
+    private Button uploadFTPButton;
     private Button logcatButton;
     private ProgressBar progressBar;
     private ProgressDialog uploadProgressDialog;
@@ -121,15 +134,18 @@ public class PictureReviewActivity extends AppCompatActivity {
             }
         });
 
-        submitButton = (Button) findViewById(R.id.picturesSendMailButton);
-        submitButton.setOnClickListener(new View.OnClickListener() {
+        sendMailButton = (Button) findViewById(R.id.picturesSendMailButton);
+        sendMailButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
                 //ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, gridAdapter.getData(), handler);
                 //list.execute();
 
+                sendMailButton.setHighlightColor(getResources().getColor(colorAccent));
+
                 Intent mailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                mailIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
                 mailIntent.setType("text/plain");
                 mailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
                         new String[]{"anita.baier@gmx.de"});
@@ -139,18 +155,35 @@ public class PictureReviewActivity extends AppCompatActivity {
                 //convert from paths to Android friendly Parcelable Uri's
 
                 for (int i=0; i< pictureItems.size(); i++){
-                   File file = new File(pictureItems.get(i).getAbsolutePath());
-                    Uri u = Uri.fromFile(file);
+                   File picturefile = new File(pictureItems.get(i).getAbsolutePath());
+                    Uri u = Uri.fromFile(picturefile);
                     uris.add(u);
                 }
+                File logfile = new File(createLogcat());
+                File databaseFile = new File (getDatabase());
+                Uri u = Uri.fromFile(logfile);
+                uris.add(u);
+                //u = Uri.fromFile(databaseFile);
+                //uris.add(u);
+//TODO: add database
 
                 mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-                mailIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-                getApplicationContext().startActivity(Intent.createChooser(mailIntent, "Send mail..."));
+                Intent shareIntent = Intent.createChooser(mailIntent, "Share via");
+                shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getApplicationContext().startActivity(shareIntent);
 
-                //TODO: add logfile & database
-                //TODO: Delete after send
+            }
+        });
 
+        uploadFTPButton = (Button) findViewById(R.id.picturesUploadButton);
+        uploadFTPButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                if (!(pictureItems == null)) {
+                    Log.v(TAG, "upload via ftp");
+                    AsyncTaskConnectAndUploadToFTP ftpTask = new AsyncTaskConnectAndUploadToFTP();
+                    ftpTask.execute();
+                }
             }
         });
 
@@ -162,6 +195,23 @@ public class PictureReviewActivity extends AppCompatActivity {
                 ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, null,
                         handler);
                 list.execute();*/
+
+                Intent mailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                mailIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+                mailIntent.setType("text/plain");
+                mailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
+                        new String[]{"anita.baier@gmx.de"});
+                mailIntent.putExtra(Intent.EXTRA_SUBJECT, storage.getUserName() + "'s photos");
+                mailIntent.putExtra(Intent.EXTRA_TEXT, "Please find attached todays photos.");
+                ArrayList<Uri> uris = new ArrayList<Uri>();
+                File logfile = new File(createLogcat());
+                File databaseFile = new File (getDatabase());
+                Uri u = Uri.fromFile(logfile);
+                uris.add(u);
+                mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+                Intent shareIntent = Intent.createChooser(mailIntent, "Share via");
+                shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getApplicationContext().startActivity(shareIntent);
             }
         });
 
@@ -228,6 +278,40 @@ public class PictureReviewActivity extends AppCompatActivity {
             }
         }
     };
+
+    private String createLogcat(){
+        File logFile = null;
+        String path =null;
+        try {
+            logFile = new File("storage/emulated/0/HDYHYP/debug");
+            if (!logFile.exists()) {
+                logFile.mkdir();
+            }
+
+            DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
+            String timeString = dateFormat.format(new Date());
+            path = File.separator
+                    + "logcat_"
+                    + timeString
+                    + ".txt";
+            Runtime.getRuntime().exec(
+                    "logcat  -d -f " + logFile + path);
+            Log.e(TAG, "logfile written");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return ("storage/emulated/0/HDYHYP/debug" + path);
+    }
+
+    private String getDatabase(){
+        String sqlPath = storage.getWritableDatabase().getPath();
+            Log.v(TAG, "SqlPath: " + sqlPath);
+            //File sqlFile = new File(sqlPath);
+            //FileInputStream inputStreamSQL = new FileInputStream(sqlFile);
+
+            return sqlPath;
+    }
 
     /*private void initDropboxSession() {
         Log.v(TAG, "initialize Dropbox");
@@ -345,6 +429,85 @@ public class PictureReviewActivity extends AppCompatActivity {
     }
 
 
+    class AsyncTaskConnectAndUploadToFTP extends AsyncTask<String, String, String> {
+
+        public AsyncTaskConnectAndUploadToFTP() {
+            uploadProgressDialog = new ProgressDialog(PictureReviewActivity.this);
+            uploadProgressDialog.setTitle("Uploading images to Dropbox");
+            uploadProgressDialog.setMessage("Upload in progress... ");
+            uploadProgressDialog.setProgressStyle(uploadProgressDialog.STYLE_HORIZONTAL);
+            uploadProgressDialog.setProgress(0);
+            uploadProgressDialog.setMax(pictureItems.size() + 1);
+            uploadProgressDialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            FTPClient con = null;
+
+            try {
+                con = new FTPClient();
+                con.connect(HOST, PORT);
+
+                if (con.login(USER, PASSWORD)) {
+                    con.enterLocalPassiveMode();
+                    con.setFileType(FTP.BINARY_FILE_TYPE);
+
+
+                    for (int i = 0; i < pictureItems.size(); i++) {
+                        FileInputStream in = new FileInputStream(new File(pictureItems.get(i).getAbsolutePath()));
+                        boolean result = con.storeFile(pictureItems.get(i).getAbsolutePath(), in);
+                        in.close();
+                        if (result) Log.v("upload result", "succeeded");
+                        uploadProgressDialog.incrementProgressBy(1);
+                        //delete file
+                    }
+
+                    /*String log = createLogcat();
+                    File logfile = new File(log);
+                    FileInputStream inLog = new FileInputStream(logfile);
+                    boolean resultLog = con.storeFile(log, inLog);
+                    inLog.close();
+                    if (resultLog) Log.v("upload result", "succeeded");
+                    uploadProgressDialog.incrementProgressBy(1);*/
+
+                    String dataBase = getDatabase();
+                    File databaseFile = new File(dataBase);
+                    FileInputStream inDB = new FileInputStream(databaseFile);
+                    boolean resultDB = con.storeFile(dataBase, inDB);
+                    inDB.close();
+                    if (resultDB) Log.v("upload result", "succeeded");
+                    uploadProgressDialog.incrementProgressBy(1);
+
+                    con.logout();
+                    con.disconnect();
+                    uploadProgressDialog.dismiss();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            //gridAdapter.notifyDataSetChanged();
+            progressBar.setVisibility(View.GONE);
+        }
+
+        @Override
+        protected void onPreExecute() {
+
+        }
+
+        @Override
+        protected void onProgressUpdate(String... text) {
+
+        }
+    }
+
+
+    //dropbox unused
     class ListUploadDropboxFiles extends AsyncTask<Void, Void, ArrayList<String>> {
 
         private DropboxAPI<?> dropbox;
@@ -473,5 +636,4 @@ public class PictureReviewActivity extends AppCompatActivity {
             }
         }
     }
-
 }
