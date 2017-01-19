@@ -57,7 +57,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
     private static final String TAG = DataCollectorService.class.getSimpleName();
     public static final String NASTRING = "n./a.";
-    public static final int NAINT = -1;
+    public static final int NAINT = -11;
     public static final String DCSCOMMAND = "command";
     public static final String DCSCOMMANDREGISTER = "register";
     public static final String DCSCOMMANDUNREGISTER = "unregister";
@@ -67,8 +67,12 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     public static final String PICTURENAME = "pictureName";
     public static final String ORIENTATION = "orientation";
     public static final String FDLEFTEYE = "faceDetectionLeftEye";
+    public static final String FDLEFTEYEOPEN = "faceDetectionLeftEyeOpen";
     public static final String FDRIGHTEYE = "faceDetectionRightEye";
+    public static final String FDRIGHTEYEOPEN = "faceDetectionRightEyeOpen";
     public static final String FDMOUTH = "faceDetectionMouth";
+    public static final String FDEULERY = "faceDetectionMouthY";
+    public static final String FDEULERZ = "faceDetectionMouthZ";
     public static final String PORTAIT = "portrait";
     public static final String LANDSCAPE = "landscape";
     public static final String REQUESTID = "requestID";
@@ -108,8 +112,12 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     String batteryStatus = NASTRING; //DataColletorService - read directly
     int batteryLevel = NAINT; //DataColletorService - read directly
     String faceDetectionLeftEye = NASTRING; //CapturePictureService
+    String faceDetectionLeftEyeOpen = NASTRING; //CapturePictureService
     String faceDetectionRightEye = NASTRING; //CapturePictureService
+    String faceDetectionRightEyeOpen = NASTRING; //CapturePictureService
     String faceDetectionMouth = NASTRING; //CapturePictureService
+    String faceDetectionEulerY = NASTRING; //CapturePictureService
+    String faceDetectionEulerZ = NASTRING; //CapturePictureService
     ControllerService.CapturingEvent capturingEvent = INIT; //ControllerService
 
     private int requestID = 999;
@@ -257,11 +265,23 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         cv.put(Storage.COLUMN_LEFT, faceDetectionLeftEye);
                         Log.v(TAG, "faceDetectionLeftEye: " + faceDetectionLeftEye);
 
+                        cv.put(Storage.COLUMN_LEFTOPEN, faceDetectionLeftEyeOpen);
+                        Log.v(TAG, "faceDetectionLeftEyeOpen: " + faceDetectionLeftEyeOpen);
+
                         cv.put(Storage.COLUMN_RIGHT, faceDetectionRightEye);
                         Log.v(TAG, "faceDetectionRightEye: " + faceDetectionRightEye);
 
+                        cv.put(Storage.COLUMN_RIGHTOPEN, faceDetectionRightEyeOpen);
+                        Log.v(TAG, "faceDetectionRightEyeOpen: " + faceDetectionRightEyeOpen);
+
                         cv.put(Storage.COLUMN_MOUTH, faceDetectionMouth);
                         Log.v(TAG, "faceDetectionMouth: " + faceDetectionMouth);
+
+                        cv.put(Storage.COLUMN_EULERY, faceDetectionEulerY);
+                        Log.v(TAG, "faceDetectionEulerY: " + faceDetectionEulerY);
+
+                        cv.put(Storage.COLUMN_EULERZ, faceDetectionEulerZ);
+                        Log.v(TAG, "faceDetectionEulerZ: " + faceDetectionEulerZ);
 
                         Log.v(TAG, "VALUES " + cv.toString());
                     } else {
@@ -453,23 +473,40 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         try {
                             faceDetectionLeftEye = (String) intent.getExtras().get(FDLEFTEYE);
                         } catch (NullPointerException e) {
-
                         }
                         try {
                             faceDetectionRightEye = (String) intent.getExtras().get(FDRIGHTEYE);
                         } catch (NullPointerException e) {
-
                         }
                         try {
                             faceDetectionMouth = (String) intent.getExtras().get(FDMOUTH);
                         } catch (NullPointerException e) {
-
+                        }
+                        try {
+                            faceDetectionLeftEyeOpen = (String) intent.getExtras().get(FDLEFTEYEOPEN);
+                        } catch (NullPointerException e) {
+                        }
+                        try {
+                            faceDetectionRightEyeOpen = (String) intent.getExtras().get(FDRIGHTEYEOPEN);
+                        } catch (NullPointerException e) {
+                        }
+                        try {
+                            faceDetectionEulerY = (String) intent.getExtras().get(FDEULERY);
+                        } catch (NullPointerException e) {
+                        }
+                        try {
+                            faceDetectionEulerZ = (String) intent.getExtras().get(FDEULERZ);
+                        } catch (NullPointerException e) {
                         }
 
                         cv.put(Storage.COLUMN_LEFT, faceDetectionLeftEye);
+                        cv.put(Storage.COLUMN_LEFTOPEN, faceDetectionLeftEyeOpen);
                         cv.put(Storage.COLUMN_RIGHT, faceDetectionRightEye);
+                        cv.put(Storage.COLUMN_RIGHTOPEN, faceDetectionRightEyeOpen);
                         cv.put(Storage.COLUMN_MOUTH, faceDetectionMouth);
-                        Log.v(TAG, "face detection: left: " + faceDetectionLeftEye + ", right: " + faceDetectionRightEye + ", mouth: " + faceDetectionMouth);
+                        cv.put(Storage.COLUMN_EULERY, faceDetectionEulerY);
+                        cv.put(Storage.COLUMN_EULERZ, faceDetectionEulerZ);
+                        Log.v(TAG, "face detection: left: " + faceDetectionLeftEye + ", right: " + faceDetectionRightEye + ", mouth: " + faceDetectionMouth+ ", left open: " + faceDetectionLeftEyeOpen + ", right open: " + faceDetectionRightEyeOpen + ", euler y: " + faceDetectionEulerZ + ", euler z: " + faceDetectionEulerZ);
                     }
 
 

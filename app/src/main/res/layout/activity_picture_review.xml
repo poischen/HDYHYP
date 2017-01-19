@@ -22,13 +22,13 @@ android:layout_height="wrap_content"
     android:layout_height="wrap_content"
         android:gravity="center_horizontal"
     android:columnWidth="100dp"
-    android:numColumns="auto_fit"
+    android:numColumns="3"
     android:verticalSpacing="10dp"
     android:horizontalSpacing="10dp"
     android:stretchMode="columnWidth"
     android:scrollbars="horizontal"
-        android:paddingTop="10dp"
-        android:padding="10dp"
+        android:paddingTop="5dp"
+        android:padding="5dp"
     android:focusable="true"
     android:clickable="true"
         android:layout_alignParentTop="true"
@@ -38,38 +38,51 @@ android:layout_height="wrap_content"
 </GridView>
 
     <Button
-        android:text="send all"
-        android:id="@+id/picturesSendButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColorPrimary"
-        android:background="@color/colorPrimary"
-        android:layout_marginRight="55dp"
-        android:layout_marginEnd="27dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true" />
-
-    <Button
         android:text="delete"
         android:id="@+id/picturesDeleteButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/textColorPrimary"
         android:background="@color/colorPrimary"
-        android:layout_marginLeft="55dp"
-        android:layout_marginStart="24dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
         android:elevation="0dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true" />
 
+
     <Button
-        android:text="send Log"
+        android:text="upload"
+        android:id="@+id/picturesUploadButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textColorPrimary"
+        android:background="@color/colorPrimary"
+        android:layout_marginRight="5dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:text="mail"
+        android:id="@+id/picturesSendMailButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textColorPrimary"
+        android:background="@color/colorPrimary"
+        android:layout_marginRight="5dp"
+
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@+id/picturesUploadButton" />
+
+    <Button
+        android:text="Log"
         android:id="@+id/logcatButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/textColorPrimary"
         android:background="@color/colorPrimary"
-        android:layout_marginRight="55dp"
+        android:layout_marginRight="5dp"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_toEndOf="@+id/picturesDeleteButton" />
+
 </RelativeLayout>

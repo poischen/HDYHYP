@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if (!(storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName()))){
                     startControllerService();
+                    readyTextView.setText("App is ready and running.");
                 }
             }
         });
@@ -103,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        /*Temporary possibility to delete the user name
+        /* stop controller service and delete user name
          */
         deleteButton = (Button) findViewById(R.id.deleteButton);
         deleteButton.setOnClickListener(new View.OnClickListener() {
@@ -132,7 +133,16 @@ public class MainActivity extends AppCompatActivity {
      */
     private void storeUserName(String input) {
         try {
-            storage.setUserName(getApplicationContext(), input);
+
+            //get index of spinner
+            int index = 0;
+            for (int i=0;i<namesSpinner.getCount();i++){
+                if (namesSpinner.getItemAtPosition(i).toString().equalsIgnoreCase(input)){
+                    index = i;
+                    break;
+                }
+            }
+            storage.setUserName(getApplicationContext(), input, index);
             Log.v(TAG, "Study user name read: " + input);
             Toast.makeText(this, "Thanks!", Toast.LENGTH_SHORT).show();
             userNameAlreadySet();
@@ -158,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void userNameAlreadySet() {
         String username = storage.getUserName();
-        namesSpinner.setPrompt(username);
+        namesSpinner.setSelection(storage.getUserNameIndex());
         helloTextView.setText("Hello " + username + "!");
         readyTextView.setText(R.string.ready);
         namesSpinner.setEnabled(false);

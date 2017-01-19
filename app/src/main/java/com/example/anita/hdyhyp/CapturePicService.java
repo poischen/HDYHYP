@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
@@ -32,13 +35,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.example.anita.hdyhyp.DataCollectorService.NAINT;
+import static com.example.anita.hdyhyp.DataCollectorService.NASTRING;
 import static com.google.android.gms.vision.face.FaceDetector.FAST_MODE;
 
 
 public class CapturePicService extends Service {
 
     private static final String TAG = CapturePicService.class.getSimpleName();
-    private static final String NASTRING = "n./a.";
 
     private int camId = -2;
     private Camera camera = null;
@@ -75,24 +79,23 @@ public class CapturePicService extends Service {
             camera = getCameraInstance();
             surfaceTexture = new SurfaceTexture(0);
 
-
+            if (!(faceDetector == null)){
+                faceDetector.release();
+                faceDetector = null;
+            }
             faceDetector = new FaceDetector.Builder(getApplicationContext())
                     .setLandmarkType(FaceDetector.ALL_LANDMARKS)
                     .setMode(FAST_MODE)
                     .setTrackingEnabled(false)
                     .build();
-            try {
-                camera.setPreviewTexture(surfaceTexture);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
+            camera.setPreviewTexture(surfaceTexture);
             capturePhoto();
 
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, " could not be handled.");
-
-        }
+            Log.d(TAG, " could not be handled. " + e);
+         }
 
         return START_STICKY;
     }
@@ -100,11 +103,6 @@ public class CapturePicService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-       /* faceDetector = new FaceDetector.Builder(getApplicationContext())
-                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-                .setMode(FAST_MODE)
-                .setTrackingEnabled(false)
-                .build();*/
         Storage storage = new Storage(getApplicationContext());
         storagePath = storage.getStoragePath();
         userName = storage.getUserName();
@@ -180,36 +178,73 @@ public class CapturePicService extends Service {
     /* after picture was taken, the method detects face landmarks in the detected faces, which should be stored in the surveys database,
     * it releases the camera and the detector and starts the DataCollectorService
     */
-    public void finishCapturing(){
+    public void finishCapturing(Bitmap picture, File capturedPhotoFile){
+
+        Canvas canvas = new Canvas(picture);
+        Paint paint = new Paint();
+        paint.setColor(Color.YELLOW);
 
         //detect face landmarks with google play service
         String leftEyePoints = NASTRING;
         String rightEyePoints = NASTRING;
         String mouthPoints = NASTRING;
+        String eulerY = NASTRING;
+        String eulerZ = NASTRING;
+        String leftEyeOpen = NASTRING;
+        String rightEyeOpen = NASTRING;
 
-        /*int facesSize = faces.size();
-        if (facesSize != 0) {
-            for (int i = 0; i < facesSize; i++) {
-                Face face = faces.valueAt(i);
-                Log.v(TAG, "found landmarks on face: " + face.getLandmarks().size());
-                for (Landmark landmark : face.getLandmarks()) {
-                    switch (landmark.getType()) {
-                        case Landmark.LEFT_EYE:
-                            leftEyePoints = leftEyePoints + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition() + ", ";
-                            break;
-                        case Landmark.RIGHT_EYE:
-                            rightEyePoints = rightEyePoints + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition() + ", ";
-                            break;
-                        case Landmark.BOTTOM_MOUTH:
-                            mouthPoints = mouthPoints + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition() + ", ";
+        if (!(faces == null)){
+            int facesSize = faces.size();
+            if (facesSize != 0) {
+                for (int i = 0; i < facesSize; i++) {
+                    Face face = faces.valueAt(i);
+
+                    float eulerYFloat = face.getEulerY();
+                    eulerY = eulerY + " " + i + ".) " + eulerYFloat + ", ";
+                    float eulerZFloat = face.getEulerZ();
+                    eulerZ = eulerZ + " " + i + ".) " + eulerZFloat + ", ";
+
+                    leftEyeOpen = leftEyeOpen + " " + i + ".) " + face.getIsLeftEyeOpenProbability() + ", ";
+                    rightEyeOpen = rightEyeOpen + " " + i + ".) " + face.getIsRightEyeOpenProbability() + ", ";
+
+                    Log.v(TAG, "found landmarks on face: " + face.getLandmarks().size());
+                    for (Landmark landmark : face.getLandmarks()) {
+                        switch (landmark.getType()) {
+                            case Landmark.LEFT_EYE:
+                                canvas.drawCircle(landmark.getPosition().x, landmark.getPosition().y, 2, paint);
+                                leftEyePoints = leftEyePoints + " " + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition().y + ", ";
+                                break;
+                            case Landmark.RIGHT_EYE:
+                                canvas.drawCircle(landmark.getPosition().x, landmark.getPosition().y, 2, paint);
+                                rightEyePoints = rightEyePoints + " " + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition().y + ", ";
+                                break;
+                            case Landmark.BOTTOM_MOUTH:
+                                canvas.drawCircle(landmark.getPosition().x, landmark.getPosition().y, 2, paint);
+                                mouthPoints = mouthPoints + " " + i + ".) x: " + landmark.getPosition().x + " y: " + landmark.getPosition().y + ", ";
+                                break;
+                        }
                     }
                 }
+                faces = null;
             }
-            faces = null;
+        }
 
-        }*/
+        //store picture with coordiantes drawed on it
+        try {
+            FileOutputStream fos = new FileOutputStream(capturedPhotoFile);
+            //canvas.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            picture.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found: " + e.getMessage());
+            e.getStackTrace();
+        } catch (IOException e) {
+            Log.e(TAG, "I/O error writing file: " + e.getMessage());
+            e.getStackTrace();
+        }
 
-        //unused due to decreased api level
+        //unused due to increased api level
         /*else if (faceDetectionListener != null){
             List<Point> leftEyePointsList = faceDetectionListener.getLeftEyePoints();
             List<Point> rightEyePointsList = faceDetectionListener.getRightEyePoints();
@@ -233,11 +268,21 @@ public class CapturePicService extends Service {
             camera.stopFaceDetection();
         }*/
 
-        camera.release();
-        //faceDetector.release();
+        try {
+            camera.release();
+        } catch (Exception e){
+            Log.d(TAG, "Camera could not be released: " + e);
+        }
+        try {
+            faceDetector.release();
+        } catch (Exception e){
+            Log.d(TAG, "FaceDetector could not be released: " + e);
+        }
+
         ControllerService.pictureIsCurrentlyTaken = false;
-        ControllerService.startDataCollectionService("collect", getApplicationContext(), foregroundApp, capturingEvent, pictureName, leftEyePoints, rightEyePoints, mouthPoints);
+        ControllerService.startDataCollectionService("collect", getApplicationContext(), foregroundApp, capturingEvent, pictureName, leftEyePoints, rightEyePoints, mouthPoints, eulerY, eulerZ, rightEyeOpen, leftEyeOpen);
         camera = null;
+        faceDetector = null;
         pictureName = null;
     }
 
@@ -270,7 +315,10 @@ public class CapturePicService extends Service {
             android.hardware.Camera.getCameraInfo(camId, info);
             int w = capturedImage.getWidth();
             int h = capturedImage.getHeight();
+            float scaleWidth = ((float) (w/2)) / w;
+            float scaleHeight = ((float) (h/2)) / h;
             Matrix matrix = new Matrix();
+            matrix.postScale(scaleWidth, scaleHeight);
             matrix.postRotate(info.orientation);
             Bitmap rotatedImage = Bitmap.createBitmap(capturedImage, 0, 0, w, h, matrix, true);
 
@@ -291,16 +339,16 @@ public class CapturePicService extends Service {
             Log.v(TAG, "data collection gets started.");
 
             //detect faces on the bitmap with google play service
-            if (faceDetector.isOperational()) {
+            if (!(faceDetector == null) && faceDetector.isOperational()) {
                 Log.v(TAG, "face detector is operational");
                 Frame frame = new Frame.Builder().setBitmap(rotatedImage).build();
-                //faces = faceDetector.detect(frame); -> java.lang.RuntimeException: Cannot use detector after release()
-                //Log.v(TAG, "face detector detected number of faces: " + faces.size());
+                faces = faceDetector.detect(frame);
+                Log.v(TAG, "face detector detected number of faces: " + faces.size());
             } else {
                 Log.v(TAG, "face detector is not operational.");
             }
             cps.setPictureName(pictureName);
-            cps.finishCapturing();
+            cps.finishCapturing(rotatedImage, capturedPhotoFile);
         }
 
         //helpermethod

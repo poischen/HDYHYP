@@ -3,17 +3,18 @@ package com.example.anita.hdyhyp;
 import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
+import android.graphics.Point;
+import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -21,17 +22,16 @@ import android.widget.GridView;
 import android.widget.ProgressBar;
 
 import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
-import com.dropbox.client2.session.AccessTokenPair;
-import com.dropbox.client2.session.AppKeyPair;
-import com.dropbox.client2.session.Session;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static android.graphics.Bitmap.createBitmap;
 
 public class PictureReviewActivity extends AppCompatActivity {
 
@@ -47,11 +47,11 @@ public class PictureReviewActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private ProgressDialog uploadProgressDialog;
 
-    private DropboxAPI<AndroidAuthSession> dropboxAPI;
+    /*private DropboxAPI<AndroidAuthSession> dropboxAPI;
     private final static String ACCESS_KEY = "8d7mhculhyjk8yf";
     private final static String ACCESS_SECRET = "4s5digo1cwmxmqe";
     private final static String DROPBOX_NAME = "dropbox_prefs";
-    final static public Session.AccessType ACCESS_TYPE = Session.AccessType.DROPBOX;
+    final static public Session.AccessType ACCESS_TYPE = Session.AccessType.DROPBOX;*/
 
     private Storage storage;
 
@@ -61,7 +61,7 @@ public class PictureReviewActivity extends AppCompatActivity {
         ControllerService.pictureReviewAndUpload = true;
         setContentView(R.layout.activity_picture_review);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        initDropboxSession();
+        //initDropboxSession();
         NotificationManager notificationManager =
                 (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(41);
@@ -99,7 +99,6 @@ public class PictureReviewActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                ArrayList<PictureItem> pictureItems;
                 int s = gridAdapter.getDataSize();
                 for (int i=0; i < s; i++){
                     PictureItem currentItem = (PictureItem) gridAdapter.getItem(i);
@@ -113,6 +112,7 @@ public class PictureReviewActivity extends AppCompatActivity {
                     gridAdapter.remove(currentItem);
                     File file = new File(taggedToDeleteItems.get(i).getAbsolutePath());
                     file.delete();
+                    pictureItems.remove(currentItem); //TODO: test
                     Log.v(TAG, "File deleted: " + file);
                 }
 
@@ -121,15 +121,36 @@ public class PictureReviewActivity extends AppCompatActivity {
             }
         });
 
-        submitButton = (Button) findViewById(R.id.picturesSendButton);
+        submitButton = (Button) findViewById(R.id.picturesSendMailButton);
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
+                //ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, gridAdapter.getData(), handler);
+                //list.execute();
 
-                Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
-                ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, gridAdapter.getData(),
-                        handler);
-                list.execute();
+                Intent mailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                mailIntent.setType("text/plain");
+                mailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
+                        new String[]{"anita.baier@gmx.de"});
+                mailIntent.putExtra(Intent.EXTRA_SUBJECT, storage.getUserName() + "'s photos");
+                mailIntent.putExtra(Intent.EXTRA_TEXT, "Please find attached todays photos.");
+                ArrayList<Uri> uris = new ArrayList<Uri>();
+                //convert from paths to Android friendly Parcelable Uri's
+
+                for (int i=0; i< pictureItems.size(); i++){
+                   File file = new File(pictureItems.get(i).getAbsolutePath());
+                    Uri u = Uri.fromFile(file);
+                    uris.add(u);
+                }
+
+                mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+                mailIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+                getApplicationContext().startActivity(Intent.createChooser(mailIntent, "Send mail..."));
+
+                //TODO: add logfile & database
+                //TODO: Delete after send
+
             }
         });
 
@@ -137,10 +158,10 @@ public class PictureReviewActivity extends AppCompatActivity {
         logcatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
+                /*Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
                 ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, null,
                         handler);
-                list.execute();
+                list.execute();*/
             }
         });
 
@@ -150,9 +171,10 @@ public class PictureReviewActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        super.onResume();
         ControllerService.pictureReviewAndUpload = true;
 
-        if (!dropboxAPI.equals(null) && dropboxAPI.getSession().authenticationSuccessful()) {
+        /*if (!dropboxAPI.equals(null) && dropboxAPI.getSession().authenticationSuccessful()) {
             try {
                 dropboxAPI.getSession().finishAuthentication();
                 String accessToken = dropboxAPI.getSession().getOAuth2AccessToken();
@@ -170,8 +192,7 @@ public class PictureReviewActivity extends AppCompatActivity {
             } catch (IllegalStateException e) {
                 Log.d(TAG, "dropbox authentication failed");
             }
-        }
-        super.onResume();
+        }*/
     }
 
     @Override
@@ -208,7 +229,7 @@ public class PictureReviewActivity extends AppCompatActivity {
         }
     };
 
-    private void initDropboxSession() {
+    /*private void initDropboxSession() {
         Log.v(TAG, "initialize Dropbox");
         // store app key and secret key
         AppKeyPair appKeys = new AppKeyPair(ACCESS_KEY, ACCESS_SECRET);
@@ -243,40 +264,56 @@ public class PictureReviewActivity extends AppCompatActivity {
 
         }
         dropboxAPI.getSession().startOAuth2Authentication(PictureReviewActivity.this);
-    }
+    }*/
 
-    private void getData(){
+    private void getData() {
         File folder = new File(storage.getStoragePath() + File.separator);
         File[] listOfFiles = folder.listFiles();
 
-        for (File file : listOfFiles) {
+        try {
+            for (File file : listOfFiles) {
             if (file.isFile()) {
 
             }
         }
 
-        pictureItems = new ArrayList<PictureItem>();
-        for(int i=0;i<listOfFiles.length;i++)
-        {
-            Log.v("Image: "+i+": path", listOfFiles[i].getAbsolutePath());
+        if (listOfFiles.length > 0) {
+            //calculate scale
+            Display display = getWindowManager().getDefaultDisplay();
+            Point displaySize = new Point();
+            display.getSize(displaySize);
+            int displayWidth = displaySize.x;
 
-            String currentPath = listOfFiles[i].getAbsolutePath();
-            if (!(currentPath.contains("logcat"))){
-            Bitmap currentPicture = BitmapFactory.decodeFile(listOfFiles[i].getAbsolutePath());
+            int width;
+            int height;
 
-            int width = currentPicture.getWidth();
-            int height = currentPicture.getHeight();
-            Matrix matrix = new Matrix();
-            float scaleWidth = ((float) 90) / width;
-            float scaleHeight = ((float) 90) / height;
-            matrix.postScale(scaleWidth, scaleHeight);
-            Bitmap scaledPicture = Bitmap.createBitmap(currentPicture, 0, 0, width, height , matrix, false);
+            Bitmap picture = BitmapFactory.decodeFile(listOfFiles[0].getAbsolutePath());
+            width = picture.getWidth();
+            height = picture.getHeight();
 
-            PictureItem pictureItem = new PictureItem(scaledPicture, currentPath);
-            pictureItems.add(pictureItem);
-            gridAdapter.addData(pictureItem);
+            float scaledWidth = displayWidth / 3;
+            float scalefactor = width / scaledWidth;
+            float scaledHeight = height / scalefactor;
+            int scaledWidthInt = (int) scaledWidth;
+            int scaledHeightInt = (int) scaledHeight;
+
+            //get pictures
+            pictureItems = new ArrayList<PictureItem>();
+            for (int i = 0; i < listOfFiles.length; i++) {
+
+                Log.v(TAG, "Image: " + i + ": path: " + listOfFiles[i].getAbsolutePath());
+                String currentPath = listOfFiles[i].getAbsolutePath();
+                Bitmap currentPicture = BitmapFactory.decodeFile(listOfFiles[i].getAbsolutePath());
+
+                Bitmap scaledPicture = Bitmap.createScaledBitmap(currentPicture, scaledWidthInt, scaledHeightInt, false);
+
+                PictureItem pictureItem = new PictureItem(scaledPicture, currentPath);
+                pictureItems.add(pictureItem);
+                gridAdapter.addData(pictureItem);
             }
-
+        }
+    } catch (Exception e) {
+            Log.d(TAG, "could not load files: " + e);
         }
     }
 
@@ -341,7 +378,7 @@ public class PictureReviewActivity extends AppCompatActivity {
             //logcat upload
             File logFile = null;
             try {
-                logFile = new File("storage/emulated/0/HDYHYP/");
+                logFile = new File("storage/emulated/0/HDYHYP/debug/");
                 if (!logFile.exists()) {
                     logFile.mkdir();
                 }
@@ -355,10 +392,10 @@ public class PictureReviewActivity extends AppCompatActivity {
             }
 
             try {
-                File logcatFile = new File("storage/emulated/0/HDYHYP/logcat.txt");
+                File logcatFile = new File("storage/emulated/0/HDYHYP/debug/logcat.txt");
 
                 FileInputStream inputStreamLogcat = new FileInputStream(logcatFile);
-                dropbox.putFile((userName + File.separator + "storage/emulated/0/HDYHYP/logcat.txt"), inputStreamLogcat,
+                dropbox.putFile((userName + File.separator + "storage/emulated/0/HDYHYP/debug/logcat.txt"), inputStreamLogcat,
                         logcatFile.length(), null, null);
                 Log.v(TAG, "Logfile uploaded.");
                 logcatFile.delete();
@@ -438,4 +475,3 @@ public class PictureReviewActivity extends AppCompatActivity {
     }
 
 }
-

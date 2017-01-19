@@ -222,7 +222,7 @@
         </LinearLayout>
 
         <TextView
-            android:text="I were...."
+            android:text="I were at/in..."
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="8dp"
@@ -254,27 +254,35 @@
                 android:id="@+id/surveyQuestionUsersPositionRadioGroup">
 
                 <RadioButton
-                    android:text="in transit"
+                    android:text="transit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/surveyQuestionUsersPositionRadioButtonTransit"
-                    android:layout_weight=".25"
+                    android:layout_weight=".2"
                     android:textSize="12dp" />
 
                 <RadioButton
-                    android:text="at home"
+                    android:text="car"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/surveyQuestionUsersPositionRadioButtonCar"
+                    android:layout_weight=".2"
+                    android:textSize="12dp" />
+
+                <RadioButton
+                    android:text="home"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/surveyQuestionUsersPositionRadioButtonHome"
-                    android:layout_weight=".25"
+                    android:layout_weight=".2"
                     android:textSize="12dp"/>
 
                 <RadioButton
-                    android:text="at work/uni"
+                    android:text="work/uni"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/surveyQuestionUsersPositionRadioButtonWork"
-                    android:layout_weight=".25"
+                    android:layout_weight=".2"
                     android:textSize="12dp" />
 
                 <RadioButton
@@ -282,9 +290,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/surveyQuestionUsersPositionRadioButtonOther"
-                    android:layout_weight=".25"
+                    android:layout_weight=".2"
                     android:textSize="12dp" />
             </RadioGroup>
+
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -304,7 +313,7 @@
 
 
         <TextView
-            android:text="While using my phone I was..."
+            android:text="While using my phone I was doing something else..."
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="8dp"
@@ -335,7 +344,7 @@
                 android:orientation="horizontal"
                 android:id="@+id/surveyQuestionDoingSomethingRadioGroup">
 
-                <RadioButton
+                <!--<RadioButton
                     android:text="watching TV"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -365,7 +374,26 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/surveyQuestionDoingSomethingRadioButtonOther"
                     android:layout_weight=".25"
+                    android:textSize="12dp" /> -->
+
+
+                <RadioButton
+                    android:text="no"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/surveyQuestionDoingSomethingRadioButtonNo"
+                    android:layout_weight=".5"
                     android:textSize="12dp" />
+
+                <RadioButton
+                    android:text="yes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/surveyQuestionDoingSomethingRadioButtonYes"
+                    android:layout_weight=".5"
+                    android:textSize="12dp" />
+
+
             </RadioGroup>
             <EditText
                 android:layout_width="match_parent"

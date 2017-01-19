@@ -49,8 +49,9 @@ public class SurveyPictureFragment extends Fragment {
 
             File file = new File(path + File.separator + pictureName);
             Log.v(TAG, "file: " + path + File.separator + pictureName);
-        if (!(file.equals(null))){
+
             Bitmap picture = BitmapFactory.decodeFile(file.getAbsolutePath());
+        if (!(picture.equals(null))){
             int width = picture.getWidth();
             int height = picture.getHeight();
 

@@ -19,10 +19,12 @@ public class mNotificationListenerService extends android.service.notification.N
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-
-        String packageName = sbn.getPackageName();
+        try {String packageName = sbn.getPackageName();
         Log.i(TAG, "onNotificationPosted(), package name: " + packageName);
         ControllerService.currentNotification = packageName;
+            } catch (Exception e) {
+            Log.d(TAG, "incoming push package Name could not be read");
+        }
 
     }
 

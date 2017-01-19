@@ -9,7 +9,6 @@ import android.util.Log;
 
 import java.io.File;
 
-import static android.content.Context.MODE_PRIVATE;
 import static android.database.sqlite.SQLiteDatabase.openOrCreateDatabase;
 
 /**
@@ -42,7 +41,11 @@ public class Storage extends SQLiteOpenHelper {
     public static final String COLUMN_BATTERYSTATUS = "batteryStatus";
     public static final String COLUMN_BATTERYLEVEL = "batteryLevel";
     public static final String COLUMN_RIGHT = "rightEye";
+    public static final String COLUMN_RIGHTOPEN = "rightEyeOpen";
     public static final String COLUMN_LEFT = "leftEye";
+    public static final String COLUMN_LEFTOPEN = "leftEyeOpen";
+    public static final String COLUMN_EULERY = "eulerY";
+    public static final String COLUMN_EULERZ = "eulerZ";
     public static final String COLUMN_MOUTH = "Mouth";
     public static final String COLUMN_LOCATIONLATITUDE = "LocationLatitude";
     public static final String COLUMN_LOCATIONLONGITUDE = "LocationLongitude";
@@ -56,7 +59,7 @@ public class Storage extends SQLiteOpenHelper {
     public static final String COLUMN_USERPOSTURE = "userPosture";
     public static final String COLUMN_USERPOSITION = "userPosition";
     public static final String COLUMN_USERPOSITIONOTEHRANSWERR = "userPositionOtherAnswer";
-    public static final String COLUMN_DOINGSTH = "userDoingSomething";
+    public static final String COLUMN_USERDOINGSTH = "userDoingSomething";
     public static final String COLUMN_DOINGSTHOTHERANSWER = "userDoingSomethingOtherAnswer";
 
 
@@ -82,8 +85,12 @@ public class Storage extends SQLiteOpenHelper {
                     //COLUMN_PROXIMITY + " TEXT, " +
                     COLUMN_BATTERYSTATUS + " TEXT, " +
                     COLUMN_BATTERYLEVEL + " INTEGER, " +
+                    COLUMN_EULERY + " TEXT, " +
+                    COLUMN_EULERZ + " TEXT, " +
                     COLUMN_LEFT + " TEXT, " +
+                    COLUMN_LEFTOPEN + " TEXT, " +
                     COLUMN_RIGHT + " TEXT, " +
+                    COLUMN_RIGHTOPEN + " TEXT, " +
                     COLUMN_MOUTH + " TEXT);";
 
     public static final String SQL_CREATESURVEY =
@@ -95,12 +102,13 @@ public class Storage extends SQLiteOpenHelper {
                     COLUMN_USERPOSTURE + " TEXT, " +
                     COLUMN_USERPOSITION + " TEXT, " +
                     COLUMN_USERPOSITIONOTEHRANSWERR + " TEXT, " +
-                    COLUMN_DOINGSTH + " TEXT, " +
+                    COLUMN_USERDOINGSTH + " TEXT, " +
                     COLUMN_DOINGSTHOTHERANSWER + " TEXT, "
                     + " FOREIGN KEY ("+COLUMN_PHOTO+") REFERENCES "+DB_TABLE+"("+COLUMN_PHOTO+"));";
 
 
-    public static final String STORAGEPATH = "storage/emulated/0/HDYHYP";
+    public static final String STORAGEPATHIMG = "storage/emulated/0/HDYHYP/images";
+    public static final String STORAGEPATHLOG = "storage/emulated/0/HDYHYP/debug";
     //private UserNameStorage userNameStorage;
     //public static SQLiteDatabase database = openOrCreateDatabase("HDHYHPDataCollection",MODE_PRIVATE,null);
 
@@ -113,38 +121,44 @@ public class Storage extends SQLiteOpenHelper {
         Log.v(TAG, "Database created " + getDatabaseName());
         //userNameStorage = new UserNameStorage(context);
         //storagePath = (context.getFilesDir().toString());
-        new File("storage/emulated/0/HDYHYP").mkdir();
+        new File(STORAGEPATHIMG).mkdir();
+        new File(STORAGEPATHLOG).mkdir();
         userNameStorage = context.getSharedPreferences("User Name Storage", 0);
         userNameEditor = userNameStorage.edit();
     }
 
     public String getUserName(){
         return userNameStorage.getString("User Name", null);
-        //return this.userNameStorage.getUserName();
     }
 
-    protected void setUserName(Context context, String input){
+    public int getUserNameIndex(){
+        return userNameStorage.getInt("User Name Index", 0);
+    }
+
+    protected void setUserName(Context context, String input, int index){
         userNameEditor.putString("User Name", input);
+        userNameEditor.putInt("User Name Index", index);
         userNameEditor.commit();
 
     }
 
     protected void deleteUserName(){
         userNameEditor.putString("User Name", null);
+        //userNameEditor.putInt("User Name Index", 0);
         userNameEditor.commit();
     }
 
     protected String getStoragePath(){
-        return STORAGEPATH;
+        return STORAGEPATHIMG;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         try {
             db.execSQL(SQL_CREATEDATA);
-            Log.v(TAG, "Table was created. " + SQL_CREATEDATA + " angelegt.");
+            Log.v(TAG, "Table was created. " + SQL_CREATEDATA + " created.");
             db.execSQL(SQL_CREATESURVEY);
-            Log.v(TAG, "Table was created. " + SQL_CREATESURVEY + " angelegt.");
+            Log.v(TAG, "Table was created. " + SQL_CREATESURVEY + " created.");
         }
         catch (Exception e) {
             Log.e(TAG, "Could not create table. " + e.getMessage());

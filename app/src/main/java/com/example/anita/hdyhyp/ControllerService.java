@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -22,6 +23,7 @@ import java.util.Observer;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.STOP;
 import static com.example.anita.hdyhyp.DataCollectorService.REQUESTID;
 
 
@@ -42,15 +44,19 @@ public class ControllerService extends Service implements Observer {
 
     public static Storage storage;
     public static boolean pictureReviewAndUpload;
+    private boolean isScreenActive = true;
 
     public enum CapturingEvent {INIT, SCREENON, ORIENTATION, APPLICATION, NOTIFICATION, RANDOM, STOP}
 
+    private static final String HDYHYPPACKAGENAME = "com.example.anita.hdyhyp";
     public CapturingEvent capturingEvent;
-    private String lastAsNewDetectedApp = "com.example.anita.hdyhyp";
-    private String currentForegroundApp;
+    private String lastAsNewDetectedApp = HDYHYPPACKAGENAME;
+    private String currentForegroundApp = HDYHYPPACKAGENAME;
     private boolean lastDetectedOrientationPortrait = true;
     private Thread appDetectionThread;
-    public static String currentNotification;
+    public static String currentNotification = HDYHYPPACKAGENAME;
+    private String lastAsNewDetectedNotification = HDYHYPPACKAGENAME;
+    private String homeScreenName;
 
     public static boolean pictureIsCurrentlyTaken = false;
     private ArrayList<PendingIntent> eventPendingIntentArray = new ArrayList<PendingIntent>();
@@ -72,11 +78,14 @@ public class ControllerService extends Service implements Observer {
         super.onCreate();
         Log.v(TAG, "ControllerService created.");
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        findHomeScreenPackageName();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
+        if (homeScreenName == null){
+            findHomeScreenPackageName();
+        }
         /**Starting the Shooting after inizialising the user name in order to test if everything works
          */
         try {
@@ -105,6 +114,10 @@ public class ControllerService extends Service implements Observer {
             registerReceiver(broadcastReceiver, onOffFilter);
             registerReceiver(broadcastReceiver, configurationFilter);
 
+            IntentFilter filter = new IntentFilter("com.example.anita.hdyhyp.EventAlarmReceiver");
+            eventAlarmReceiver = new EventAlarmReceiver();
+            registerReceiver(eventAlarmReceiver, filter);
+
             // Notification about starting the controller service foreground according to the design guidelines
             Notification notification = new Notification.Builder(getApplicationContext())
                     .setContentTitle("HDYHYP")
@@ -123,10 +136,20 @@ public class ControllerService extends Service implements Observer {
         return START_STICKY;
     }
 
+    private void findHomeScreenPackageName() {
+        PackageManager localPackageManager = getPackageManager();
+        Intent intent = new Intent("android.intent.action.MAIN");
+        intent.addCategory("android.intent.category.HOME");
+        //intent.addCategory("android.intent.category.LAUNCHER");
+        homeScreenName = localPackageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY).activityInfo.packageName;
+        //launcherName = localPackageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY).activityInfo.packageName;
+        Log.v(TAG, "homeScreen packageName: " + homeScreenName);
+    }
+
     /*
 
      */
-    public static void startDataCollectionService(String command, Context context, String foregroundApp, CapturingEvent capturingEvent, String pictureName, String faceDetectionLeftEye, String faceDetectionRightEye, String faceDetectionMouth) {
+    public static void startDataCollectionService(String command, Context context, String foregroundApp, CapturingEvent capturingEvent, String pictureName, String faceDetectionLeftEye, String faceDetectionRightEye, String faceDetectionMouth, String eulerY, String eulerZ, String rightEyeOpen, String leftEyeOpen) {
         Intent dataCollectionIntent = new Intent(context, DataCollectorService.class);
         dataCollectionIntent.putExtra(DataCollectorService.DCSCOMMAND, command);
         if (command.equals("collect")){
@@ -141,6 +164,10 @@ public class ControllerService extends Service implements Observer {
             dataCollectionIntent.putExtra(DataCollectorService.FDLEFTEYE, faceDetectionLeftEye);
             dataCollectionIntent.putExtra(DataCollectorService.FDRIGHTEYE, faceDetectionRightEye);
             dataCollectionIntent.putExtra(DataCollectorService.FDMOUTH, faceDetectionMouth);
+            dataCollectionIntent.putExtra(DataCollectorService.FDLEFTEYEOPEN, leftEyeOpen);
+            dataCollectionIntent.putExtra(DataCollectorService.FDRIGHTEYEOPEN, rightEyeOpen);
+            dataCollectionIntent.putExtra(DataCollectorService.FDEULERY, eulerY);
+            dataCollectionIntent.putExtra(DataCollectorService.FDEULERZ, eulerZ);
         }
         context.startService(dataCollectionIntent);
     }
@@ -202,30 +229,52 @@ public class ControllerService extends Service implements Observer {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
+        Log.v(TAG, "onDestroy()");
          //cancel receiver
         if (broadcastReceiver != null) {
-            unregisterReceiver(broadcastReceiver);
-            broadcastReceiver = null;
+            try {
+                unregisterReceiver(broadcastReceiver);
+                broadcastReceiver = null;
+                Log.v(TAG, "broadcastReceiver unregistered");
+            } catch (Exception e){
+                Log.d(TAG, "broadcastReceiver could not be unregistered");
+            }
+
         }
         if (rememberAlarmReceiver != null) {
-            unregisterReceiver(rememberAlarmReceiver);
-            rememberAlarmReceiver = null;
+            try {
+                unregisterReceiver(rememberAlarmReceiver);
+                rememberAlarmReceiver = null;
+                Log.v(TAG, "rememberAlarmReceiver unregistered");
+        } catch (Exception e){
+                Log.d(TAG, "rememberAlarmReceiver could not be unregistered");
+            }
+
         }
         if (eventAlarmReceiver != null) {
-            unregisterReceiver(eventAlarmReceiver);
-            eventAlarmReceiver = null;
+            try {
+                unregisterReceiver(eventAlarmReceiver);
+                eventAlarmReceiver = null;
+                Log.v(TAG, "eventAlarmReceiver unregistered");
+            } catch (Exception e){
+            Log.d(TAG, "eventAlarmReceiver could not be unregistered");
         }
+    }
 
         //stop DataCollectorService
         Intent intent = new Intent(getApplicationContext(), DataCollectorService.class);
         stopService(intent);
+        Log.v(TAG, "DataCollectorService stopped");
 
-        //cancel data transfer teminder
+        //cancel data transfer reminder
         PendingIntent reminderPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 70, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         alarmManager.cancel(reminderPendingIntent);
+        Log.v(TAG, "data transfer reminder canceled");
 
         //cancel alarms of capturing session
         cancelFutureAlarms();
+        Log.v(TAG, "future capture session alarms canceled");
 
         //cancel random alarms
         //TODO: cancel alarms not necessary? >> reboot: will be deleted, >> onDestroy -> after restart will be set new with flag "FLAG_CANCEL_CURRENT" -> yes because of possibility to delete user name and stop service with that
@@ -240,10 +289,14 @@ public class ControllerService extends Service implements Observer {
             randomAlarmReceiver = null;
         }
 
+        Log.v(TAG, "random alarms canceled & receiver unregistered");
+
         //stop detecting apps thread
-        if (appDetectionThread != null) {
+        /*if (appDetectionThread != null) {
             appDetectionThread.interrupt();
-        }
+            Log.v(TAG, "appDetection interrupted");
+        }*/
+        isScreenActive = false;
 
         //stop Controller Service
         stopSelf();
@@ -252,9 +305,16 @@ public class ControllerService extends Service implements Observer {
 
     @Override
     public void update(Observable observable, Object data) {
-        String action = data.toString();
-        Log.v(TAG, "action: " + action);
-        if (action.contains("EventAlarmReceiver")){
+        String action = "empty";
+        try {
+            action = data.toString();
+        } catch (Exception e) {
+            Log.d(TAG, "could not get action; " + e);
+        }
+
+        if (!(action.equals("empty"))) {
+            Log.v(TAG, "action: " + action);
+        if (action.contains("EventAlarmReceiver")) {
             startCapturePictureService(capturingEvent);
             Log.v(TAG, "event has not changed, capture pic again");
             /*remove pending intent from list
@@ -267,19 +327,27 @@ public class ControllerService extends Service implements Observer {
                 }
             }*/
 
-        } else if (action.contains("RandomAlarmReceiver")){
+        } else if (action.contains("RandomAlarmReceiver")) {
             this.capturingEvent = CapturingEvent.RANDOM;
             Log.v(TAG, "Event detected, capturingEvent set to: " + this.capturingEvent);
             initPictureTakingSession(capturingEvent);
-        } else if (action.contains("android.intent.action.SCREEN_OFF")){
+        } else if (action.contains("android.intent.action.SCREEN_OFF")) {
             Log.v(TAG, "screen was turned off, cancel future alarms");
+            isScreenActive = false;
             handleScreenOff();
-        } else if (action.contains("android.intent.action.SCREEN_ON")){
-            startDataCollectionService(DataCollectorService.DCSCOMMANDREGISTER, getApplicationContext(), null, null, null, null, null, null);
+        } else if (action.contains("android.intent.action.SCREEN_ON")) {
+            startDataCollectionService(DataCollectorService.DCSCOMMANDREGISTER, getApplicationContext(), null, null, null, null, null, null, null, null, null, null);
+            isScreenActive = true;
+            if (!(appDetectionThread==null)) {
+                appDetectionThread.run();
+            } else {
+                appDetectionThread = new Thread(runnableAppDetector);
+                appDetectionThread.start();
+            }
             this.capturingEvent = CapturingEvent.SCREENON;
             Log.v(TAG, "Event detected, capturingEvent set to: " + this.capturingEvent);
             initPictureTakingSession(capturingEvent);
-        } else if (action.contains("android.intent.action.CONFIGURATION_CHANGED")){
+        } else if (action.contains("android.intent.action.CONFIGURATION_CHANGED")) {
             if (ObservableObject.getInstance().isOrientationPortrait() != lastDetectedOrientationPortrait) {
                 lastDetectedOrientationPortrait = ObservableObject.getInstance().isOrientationPortrait();
                 this.capturingEvent = CapturingEvent.ORIENTATION;
@@ -287,12 +355,18 @@ public class ControllerService extends Service implements Observer {
                 initPictureTakingSession(capturingEvent);
             }
         }
+    }
 
     }
 
     private void handleScreenOff(){
-        startDataCollectionService(DataCollectorService.DCSCOMMANDUNREGISTER, getApplicationContext(), null, null, null, null, null, null);
-        this.capturingEvent = CapturingEvent.STOP;
+        startDataCollectionService(DataCollectorService.DCSCOMMANDUNREGISTER, getApplicationContext(), null, null, null, null, null, null, null, null, null, null);
+        this.capturingEvent = STOP;
+        try {
+            appDetectionThread.interrupt();
+        } catch (Exception e){
+            Log.v(TAG, "appDetectionThread not interrupted, is alive: " + appDetectionThread.isAlive());
+        }
         cancelFutureAlarms();
     }
 
@@ -344,10 +418,6 @@ public class ControllerService extends Service implements Observer {
     private void setEventAlarm(int iteration, int requestId, long currentTimeMillis){
 
         //set alarms for taking pictures for the incoming event
-        IntentFilter filter = new IntentFilter("com.example.anita.hdyhyp.EventAlarmReceiver");
-        eventAlarmReceiver = new EventAlarmReceiver();
-        registerReceiver(eventAlarmReceiver, filter);
-
         Intent intent = new Intent(this, EventAlarmReceiver.class);
         intent.putExtra(REQUESTID, requestId);
         intent.setAction("com.example.anita.hdyhyp.EventAlarmReceiver");
@@ -359,13 +429,10 @@ public class ControllerService extends Service implements Observer {
         currentTime.setTimeInMillis(currentTimeMillis);
         Calendar calendar = (Calendar) currentTime.clone();
         calendar.set(Calendar.SECOND, calendar.get(Calendar.SECOND) + iteration);
-        Log.v(TAG, "currentTimeMillis" + currentTimeMillis);
-        Log.v(TAG, "currentSysTime " + System.currentTimeMillis());
-        Log.v(TAG, "alarmtime " + calendar.getTimeInMillis());
 
         //alarmManager.setExact(AlarmManager.RTC, (currentTimeMillis + (iteration)), pendingIntent);
         alarmManager.setExact(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
-        Log.v(TAG, "alarm set in " + iteration + " milliseconds.");
+        Log.v(TAG, "alarm set in " + iteration + " seconds.");
     }
 
     private void cancelFutureAlarms(){
@@ -397,7 +464,7 @@ public class ControllerService extends Service implements Observer {
         //collect and write data to emphasize that a picture of the session is missing
         else {
             Log.v(TAG, "CapturePicService will not be started, because another picture is currently taken");
-            startDataCollectionService("collect", getApplicationContext(), currentForegroundApp, capturingEvent, "no Picture was taken", NASTRING, NASTRING, NASTRING);
+            startDataCollectionService("collect", getApplicationContext(), currentForegroundApp, capturingEvent, "no Picture was taken", NASTRING, NASTRING, NASTRING, NASTRING, NASTRING, NASTRING, NASTRING);
         }
     }
 
@@ -415,7 +482,7 @@ public class ControllerService extends Service implements Observer {
     private Runnable runnableAppDetector = new Runnable() {
         @Override
         public void run() {
-            while (true) {
+            while (isScreenActive) {
                 detectApps();
             }
         }
@@ -427,7 +494,7 @@ public class ControllerService extends Service implements Observer {
      */
     private void detectApps() {
         //get the latest package name from the usage stats
-        String currentAppName = null;
+        String currentAppName = HDYHYPPACKAGENAME;
                     UsageStatsManager usageStatsManager = (UsageStatsManager) this.getSystemService(Context.USAGE_STATS_SERVICE);
                     long time = System.currentTimeMillis();
                     List<UsageStats> apps = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time);
@@ -443,38 +510,37 @@ public class ControllerService extends Service implements Observer {
 
             }
 
-        //TODO: Push seperat speichern und checken ob neu (nicht mehrfach selbe push hinereinander)
-        //check if the usagestats is a foregeround application or a status bar notification
-        try { if (lastAsNewDetectedApp != null && !lastAsNewDetectedApp.equals(currentAppName)) {
-            currentForegroundApp = currentAppName;
-            if (currentAppName != null) {
-                if (!currentAppName.contains("com.android.") && !currentAppName.contains("com.google.android.googlequicksearchbox")
-                        && !currentAppName.equals("com.example.anita.hdyhyp")){
-                    if (!pictureReviewAndUpload){
-                    Log.v(TAG, "pictureReviewAndUpload: " + pictureReviewAndUpload);
-                    Log.v(TAG, "new app detected on foreground: " + currentAppName);
-                    Log.v(TAG, "current notification name " + currentNotification);
-                    lastAsNewDetectedApp = currentAppName;
 
-                    if (!(currentAppName == null) && currentNotification.equals(currentAppName)){
-                        capturingEvent = CapturingEvent.NOTIFICATION;
-                        currentNotification = "";
-                        Log.v(TAG, "new on foreground detected app was a notification " + currentNotification);
+        if (currentAppName != null && !(currentAppName.equals(HDYHYPPACKAGENAME)) && !(currentAppName.equals(currentForegroundApp))){
+            //cancel future alarms if home launcher is displayed (-> after unlocking the phone or after leaving an application)
+            if (currentAppName.equals(homeScreenName) || currentAppName.equals("com.android.systemui")){
+                if (!(currentAppName.equals(currentForegroundApp))){
+                    capturingEvent = STOP;
+                    currentForegroundApp = currentAppName;
+                    cancelFutureAlarms();
+                    Log.v(TAG, "cancelFutureAlarms: " + currentAppName);
+                }
+                }
 
-                    } else {
-                        capturingEvent = CapturingEvent.APPLICATION;
-                        currentNotification = "";
-                        Log.v(TAG, "new on foreground detected app was an application " + currentAppName);
-
-                    }
+            //check if the usagestats is a foregeround application or a status bar notification
+            else if (currentAppName.equals(currentNotification) && !(lastAsNewDetectedNotification.equals(currentNotification))){
+                //detected package name was a notification & notification was new
+                if (isScreenActive){
+                    capturingEvent = CapturingEvent.NOTIFICATION;
+                    lastAsNewDetectedNotification = currentAppName;
+                    Log.v(TAG, "new on foreground detected app was a notification " + currentNotification);
                     initPictureTakingSession(capturingEvent);
                 }
-                }
             }
-        } } catch (Exception e){
-            Log.d(TAG, "detecting app failed: " + e.toString());
+            else if (!(currentAppName.equals(lastAsNewDetectedApp))){
+                //detected package name was an application & application is new
+                capturingEvent = CapturingEvent.APPLICATION;
+                lastAsNewDetectedApp = currentAppName;
+                currentForegroundApp = currentAppName;
+                Log.v(TAG, "new on foreground detected app was an application " + currentAppName);
+                initPictureTakingSession(capturingEvent);
+            }
         }
-
     }
 
 }

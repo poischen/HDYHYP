@@ -48,16 +48,19 @@ public class SurveyActivity extends FragmentActivity {
 
     RadioGroup surveyQuestionUserPositionRadioGroup;
     RadioButton surveyQuestionUserPositionRadioButtonTransit;
+    RadioButton surveyQuestionUsersPositionRadioButtonCar;
     RadioButton surveyQuestionUserPositionRadioButtonHome;
     RadioButton surveyQuestionUserPositionRadioButtonWork;
     RadioButton surveyQuestionUserPositionRadioButtonOther;
     EditText surveyQuestionUserPositionEditTextOther;
 
     RadioGroup surveyQuestionDoingSomethingRadioGroup;
-    RadioButton surveyQuestionDoingSomethingRadioButtonTV;
-    RadioButton surveyQuestionDoingSomethingRadioButtonEating;
-    RadioButton surveyQuestionDoingSomethingRadioButtonWork;
-    RadioButton surveyQuestionDoingSomethingRadioButtonOther;
+    //RadioButton surveyQuestionDoingSomethingRadioButtonTV;
+    //RadioButton surveyQuestionDoingSomethingRadioButtonEating;
+    //RadioButton surveyQuestionDoingSomethingRadioButtonWork;
+    //RadioButton surveyQuestionDoingSomethingRadioButtonOther;
+    RadioButton surveyQuestionDoingSomethingRadioButtonYes;
+    RadioButton surveyQuestionDoingSomethingRadioButtonNo;
     EditText surveyQuestionDoingSomethingEditTextOther;
 
     Button surveySubmitButton;
@@ -102,7 +105,7 @@ public class SurveyActivity extends FragmentActivity {
                         transaction =
                         getSupportFragmentManager().beginTransaction();
                 transaction.replace(R.id.frameLayoutSurveyTapLong, pictureFragment);
-                transaction.addToBackStack(null);
+                //transaction.addToBackStack(null); //TODO ?
                 transaction.commit();
             }
 
@@ -126,16 +129,19 @@ public class SurveyActivity extends FragmentActivity {
 
         surveyQuestionUserPositionRadioGroup = (RadioGroup) findViewById(R.id.surveyQuestionUsersPositionRadioGroup);
         surveyQuestionUserPositionRadioButtonTransit = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonTransit);
+        surveyQuestionUsersPositionRadioButtonCar = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonCar);
         surveyQuestionUserPositionRadioButtonHome = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonHome);
         surveyQuestionUserPositionRadioButtonWork = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonWork);
         surveyQuestionUserPositionRadioButtonOther = (RadioButton) findViewById(R.id.surveyQuestionUsersPositionRadioButtonOther);
         surveyQuestionUserPositionEditTextOther = (EditText) findViewById(R.id.surveyQuestionUsersPositionEditTextOther);
 
         surveyQuestionDoingSomethingRadioGroup  = (RadioGroup) findViewById(R.id.surveyQuestionDoingSomethingRadioGroup);
-        surveyQuestionDoingSomethingRadioButtonTV  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonTV);
-        surveyQuestionDoingSomethingRadioButtonEating  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonEating);
-        surveyQuestionDoingSomethingRadioButtonWork  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonWork);
-        surveyQuestionDoingSomethingRadioButtonOther = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonOther);
+        //surveyQuestionDoingSomethingRadioButtonTV  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonTV);
+        //surveyQuestionDoingSomethingRadioButtonEating  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonEating);
+        //surveyQuestionDoingSomethingRadioButtonWork  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonWork);
+        //surveyQuestionDoingSomethingRadioButtonOther = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonOther);
+        surveyQuestionDoingSomethingRadioButtonYes = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonYes);
+        surveyQuestionDoingSomethingRadioButtonNo = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonNo);
         surveyQuestionDoingSomethingEditTextOther  = (EditText) findViewById(R.id.surveyQuestionDoingSomethingEditTextOther);
 
         surveySubmitButton = (Button) findViewById(R.id.surveySubmitButton);
@@ -203,16 +209,17 @@ public class SurveyActivity extends FragmentActivity {
                 cv.put(Storage.COLUMN_USERPOSTURE, surveyQuestionUserPostureValue);
                 cv.put(Storage.COLUMN_USERPOSITION, surveyQuestionUserPositionValue);
                 cv.put(Storage.COLUMN_USERPOSITIONOTEHRANSWERR, surveyQuestionUserPositionOtherAnswerValue);
-                cv.put(Storage.COLUMN_DOINGSTH, surveyQuestionDoingSomethingValue);
+                cv.put(Storage.COLUMN_USERDOINGSTH, surveyQuestionDoingSomethingValue);
                 cv.put(Storage.COLUMN_DOINGSTHOTHERANSWER, surveyQuestionDoingSomethingOtherAnswerValue);
 
                 SQLiteDatabase database = ControllerService.storage.getWritableDatabase();
                 long insertId = database.insert(Storage.DB_TABLESURVEY, null, cv);
                 Log.v(TAG, "survey data stored to db");
                 database.close();
-                finish();
+
 
                 saved = true;
+                finish();
             }
         });
 
@@ -228,7 +235,8 @@ public class SurveyActivity extends FragmentActivity {
             }
         });
 
-        surveyQuestionDoingSomethingRadioButtonOther.setOnClickListener(new View.OnClickListener() {
+        //surveyQuestionDoingSomethingRadioButtonOther.setOnClickListener(new View.OnClickListener() {
+        surveyQuestionDoingSomethingRadioButtonYes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (((RadioButton) v).isChecked()) {
