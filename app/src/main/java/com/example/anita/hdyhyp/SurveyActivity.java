@@ -22,6 +22,10 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import static java.lang.System.currentTimeMillis;
 
 public class SurveyActivity extends FragmentActivity {
@@ -55,10 +59,6 @@ public class SurveyActivity extends FragmentActivity {
     EditText surveyQuestionUserPositionEditTextOther;
 
     RadioGroup surveyQuestionDoingSomethingRadioGroup;
-    //RadioButton surveyQuestionDoingSomethingRadioButtonTV;
-    //RadioButton surveyQuestionDoingSomethingRadioButtonEating;
-    //RadioButton surveyQuestionDoingSomethingRadioButtonWork;
-    //RadioButton surveyQuestionDoingSomethingRadioButtonOther;
     RadioButton surveyQuestionDoingSomethingRadioButtonYes;
     RadioButton surveyQuestionDoingSomethingRadioButtonNo;
     EditText surveyQuestionDoingSomethingEditTextOther;
@@ -105,7 +105,6 @@ public class SurveyActivity extends FragmentActivity {
                         transaction =
                         getSupportFragmentManager().beginTransaction();
                 transaction.replace(R.id.frameLayoutSurveyTapLong, pictureFragment);
-                //transaction.addToBackStack(null); //TODO ?
                 transaction.commit();
             }
 
@@ -136,10 +135,6 @@ public class SurveyActivity extends FragmentActivity {
         surveyQuestionUserPositionEditTextOther = (EditText) findViewById(R.id.surveyQuestionUsersPositionEditTextOther);
 
         surveyQuestionDoingSomethingRadioGroup  = (RadioGroup) findViewById(R.id.surveyQuestionDoingSomethingRadioGroup);
-        //surveyQuestionDoingSomethingRadioButtonTV  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonTV);
-        //surveyQuestionDoingSomethingRadioButtonEating  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonEating);
-        //surveyQuestionDoingSomethingRadioButtonWork  = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonWork);
-        //surveyQuestionDoingSomethingRadioButtonOther = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonOther);
         surveyQuestionDoingSomethingRadioButtonYes = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonYes);
         surveyQuestionDoingSomethingRadioButtonNo = (RadioButton) findViewById(R.id.surveyQuestionDoingSomethingRadioButtonNo);
         surveyQuestionDoingSomethingEditTextOther  = (EditText) findViewById(R.id.surveyQuestionDoingSomethingEditTextOther);
@@ -200,6 +195,11 @@ public class SurveyActivity extends FragmentActivity {
                 Log.v(TAG, "userDoingSomething: " + surveyQuestionDoingSomethingValue);
                 String surveyQuestionDoingSomethingOtherAnswerValue = surveyQuestionDoingSomethingEditTextOther.getText().toString();
 
+                DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
+                String timeString = dateFormat.format(new Date());
+
+                SQLiteDatabase database = ControllerService.storage.getWritableDatabase();
+
                 SurveyActivity.this.pictureName = (String) getIntent().getExtras().get("pictureName");
                 Log.v(TAG, "survey was for picture : " + SurveyActivity.this.pictureName);
                 ContentValues cv = new ContentValues();
@@ -211,8 +211,9 @@ public class SurveyActivity extends FragmentActivity {
                 cv.put(Storage.COLUMN_USERPOSITIONOTEHRANSWERR, surveyQuestionUserPositionOtherAnswerValue);
                 cv.put(Storage.COLUMN_USERDOINGSTH, surveyQuestionDoingSomethingValue);
                 cv.put(Storage.COLUMN_DOINGSTHOTHERANSWER, surveyQuestionDoingSomethingOtherAnswerValue);
+                cv.put(Storage.COLUMN_SURVEYTIME, timeString);
 
-                SQLiteDatabase database = ControllerService.storage.getWritableDatabase();
+
                 long insertId = database.insert(Storage.DB_TABLESURVEY, null, cv);
                 Log.v(TAG, "survey data stored to db");
                 database.close();

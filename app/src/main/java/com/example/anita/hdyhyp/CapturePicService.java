@@ -75,9 +75,8 @@ public class CapturePicService extends Service {
         } catch (Exception e) {
             Log.d(TAG, "intent extras were empty");
         }
+
         try {
-            camera = getCameraInstance();
-            surfaceTexture = new SurfaceTexture(0);
 
             if (!(faceDetector == null)){
                 faceDetector.release();
@@ -89,13 +88,20 @@ public class CapturePicService extends Service {
                     .setTrackingEnabled(false)
                     .build();
 
+        } catch (Exception e){
+            Log.d(TAG, "facedetector could nto be build " + e);
+        }
+
+        try {
+            camera = getCameraInstance();
+            surfaceTexture = new SurfaceTexture(0);
             camera.setPreviewTexture(surfaceTexture);
             capturePhoto();
 
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, " could not be handled. " + e);
-         }
+            Log.d(TAG, "camera instance not found" + e);
+        }
 
         return START_STICKY;
     }
@@ -359,7 +365,6 @@ public class CapturePicService extends Service {
             DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
             String timeString = dateFormat.format(new Date());
             pictureName = userName + "_" + timeString + ".jpg";
-            Toast.makeText(getApplicationContext(), filePath.getPath() + File.separator + pictureName, Toast.LENGTH_SHORT).show();
             return new File(filePath.getPath() + File.separator + pictureName);
         }
 

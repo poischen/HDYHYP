@@ -31,15 +31,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.graphics.Bitmap.createBitmap;
 import static com.example.anita.hdyhyp.R.color.colorAccent;
+import static com.example.anita.hdyhyp.Storage.STORAGEPATHIMG;
 
 public class PictureReviewActivity extends AppCompatActivity {
 
@@ -163,9 +166,8 @@ public class PictureReviewActivity extends AppCompatActivity {
                 File databaseFile = new File (getDatabase());
                 Uri u = Uri.fromFile(logfile);
                 uris.add(u);
-                //u = Uri.fromFile(databaseFile);
-                //uris.add(u);
-//TODO: add database
+                u = Uri.fromFile(databaseFile);
+                uris.add(u);
 
                 mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
                 Intent shareIntent = Intent.createChooser(mailIntent, "Share via");
@@ -301,15 +303,12 @@ public class PictureReviewActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        return ("storage/emulated/0/HDYHYP/debug" + path);
+        return (storage.STORAGEPATHLOG + path);
     }
 
     private String getDatabase(){
         String sqlPath = storage.getWritableDatabase().getPath();
             Log.v(TAG, "SqlPath: " + sqlPath);
-            //File sqlFile = new File(sqlPath);
-            //FileInputStream inputStreamSQL = new FileInputStream(sqlFile);
-
             return sqlPath;
     }
 
@@ -381,6 +380,8 @@ public class PictureReviewActivity extends AppCompatActivity {
             int scaledWidthInt = (int) scaledWidth;
             int scaledHeightInt = (int) scaledHeight;
 
+            int storagepathlength = STORAGEPATHIMG.length() + 2;
+
             //get pictures
             pictureItems = new ArrayList<PictureItem>();
             for (int i = 0; i < listOfFiles.length; i++) {
@@ -391,7 +392,9 @@ public class PictureReviewActivity extends AppCompatActivity {
 
                 Bitmap scaledPicture = Bitmap.createScaledBitmap(currentPicture, scaledWidthInt, scaledHeightInt, false);
 
-                PictureItem pictureItem = new PictureItem(scaledPicture, currentPath);
+                String picName = currentPath.substring(storagepathlength);
+
+                PictureItem pictureItem = new PictureItem(scaledPicture, currentPath, picName);
                 pictureItems.add(pictureItem);
                 gridAdapter.addData(pictureItem);
             }
@@ -449,35 +452,51 @@ public class PictureReviewActivity extends AppCompatActivity {
                 con = new FTPClient();
                 con.connect(HOST, PORT);
 
+                DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
+                String time = dateFormat.format(new Date());
+
                 if (con.login(USER, PASSWORD)) {
                     con.enterLocalPassiveMode();
                     con.setFileType(FTP.BINARY_FILE_TYPE);
 
-
-                    for (int i = 0; i < pictureItems.size(); i++) {
-                        FileInputStream in = new FileInputStream(new File(pictureItems.get(i).getAbsolutePath()));
-                        boolean result = con.storeFile(pictureItems.get(i).getAbsolutePath(), in);
-                        in.close();
-                        if (result) Log.v("upload result", "succeeded");
-                        uploadProgressDialog.incrementProgressBy(1);
-                        //delete file
-                    }
-
-                    /*String log = createLogcat();
-                    File logfile = new File(log);
-                    FileInputStream inLog = new FileInputStream(logfile);
-                    boolean resultLog = con.storeFile(log, inLog);
-                    inLog.close();
-                    if (resultLog) Log.v("upload result", "succeeded");
-                    uploadProgressDialog.incrementProgressBy(1);*/
-
+                    //upload database
                     String dataBase = getDatabase();
                     File databaseFile = new File(dataBase);
-                    FileInputStream inDB = new FileInputStream(databaseFile);
-                    boolean resultDB = con.storeFile(dataBase, inDB);
-                    inDB.close();
-                    if (resultDB) Log.v("upload result", "succeeded");
-                    uploadProgressDialog.incrementProgressBy(1);
+                    FileInputStream inputDB = new FileInputStream(databaseFile);
+                    String remoteDB = "HDYHYPDataBase_" + time + ".db";
+                    boolean doneDB = con.storeFile(remoteDB, inputDB);
+                    inputDB.close();
+                    if (doneDB){
+                        Log.v(TAG, "upload db successful");
+                        uploadProgressDialog.incrementProgressBy(1);
+                        //db leeren
+                    }
+
+                    //upload pictures
+                    for (int i = 0; i < pictureItems.size(); i++) {
+                        File file = new File(pictureItems.get(i).getAbsolutePath());
+                        String remote = pictureItems.get(i).getPictureName();
+                        InputStream inputStream = new FileInputStream(file);
+                        boolean done = con.storeFile(remote, inputStream);
+                        inputStream.close();
+                        if (done) {
+                            Log.v(TAG, "upload " + i + " successful");
+                            uploadProgressDialog.incrementProgressBy(1);
+                            file.delete();
+                        }
+                    }
+
+                    //upload log
+                    String log = createLogcat();
+                    File logfile = new File(log);
+                    FileInputStream inLog = new FileInputStream(logfile);
+                    boolean doneLog = con.storeFile("log_" + time + ".txt", inLog);
+                    inLog.close();
+                    if (doneLog) {
+                        Log.v(TAG, "upload log successful");
+                        uploadProgressDialog.incrementProgressBy(1);
+                        logfile.delete();
+                    }
 
                     con.logout();
                     con.disconnect();
@@ -507,7 +526,7 @@ public class PictureReviewActivity extends AppCompatActivity {
     }
 
 
-    //dropbox unused
+    /*//dropbox unused
     class ListUploadDropboxFiles extends AsyncTask<Void, Void, ArrayList<String>> {
 
         private DropboxAPI<?> dropbox;
@@ -635,5 +654,5 @@ public class PictureReviewActivity extends AppCompatActivity {
                 Log.v(TAG, "Failed to upload files");
             }
         }
-    }
+    }*/
 }

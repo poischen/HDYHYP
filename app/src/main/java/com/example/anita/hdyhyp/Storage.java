@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
@@ -21,6 +22,8 @@ import static android.database.sqlite.SQLiteDatabase.openOrCreateDatabase;
 public class Storage extends SQLiteOpenHelper {
 
     private static final String TAG = Storage.class.getSimpleName();
+
+    public static final int DB_VERSION = 4;
 
     public static final String DB_NAME = "HDYHYPDataBase.db";
     public static final String DB_TABLE = "HDYHYPDataCollection";
@@ -54,6 +57,7 @@ public class Storage extends SQLiteOpenHelper {
 
     public static final String DB_TABLESURVEY = "HDYHYPSurveyData";
     public static final String COLUMN_SURVEY_ID = "_id";
+    public static final String COLUMN_SURVEYTIME = "surveySubmitTime";
     public static final String COLUMN_DEVICEPOSITION = "devicePosition";
     public static final String COLUMN_HAND = "holdingHand";
     public static final String COLUMN_USERPOSTURE = "userPosture";
@@ -96,6 +100,7 @@ public class Storage extends SQLiteOpenHelper {
     public static final String SQL_CREATESURVEY =
             "CREATE TABLE " + DB_TABLESURVEY +
                     "(" + COLUMN_SURVEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    COLUMN_SURVEYTIME + " TEXT, " +
                     COLUMN_PHOTO + " TEXT, " +
                     COLUMN_DEVICEPOSITION + " TEXT, " +
                     COLUMN_HAND + " TEXT, " +
@@ -107,6 +112,8 @@ public class Storage extends SQLiteOpenHelper {
                     + " FOREIGN KEY ("+COLUMN_PHOTO+") REFERENCES "+DB_TABLE+"("+COLUMN_PHOTO+"));";
 
 
+    //public static final String STORAGEPATHIMG = Environment.getDataDirectory() + File.separator + "HDYHYP" + File.separator + "images";
+    //public static final String STORAGEPATHLOG = Environment.getDataDirectory() + File.separator + "HDYHYP" + File.separator + "debug";
     public static final String STORAGEPATHIMG = "storage/emulated/0/HDYHYP/images";
     public static final String STORAGEPATHLOG = "storage/emulated/0/HDYHYP/debug";
     //private UserNameStorage userNameStorage;
@@ -117,12 +124,12 @@ public class Storage extends SQLiteOpenHelper {
 
 
     public Storage(Context context) {
-        super(context, DB_NAME, null, 2);
+        super(context, DB_NAME, null, DB_VERSION);
         Log.v(TAG, "Database created " + getDatabaseName());
         //userNameStorage = new UserNameStorage(context);
         //storagePath = (context.getFilesDir().toString());
-        new File(STORAGEPATHIMG).mkdir();
-        new File(STORAGEPATHLOG).mkdir();
+        new File(STORAGEPATHIMG).mkdirs();
+        new File(STORAGEPATHLOG).mkdirs();
         userNameStorage = context.getSharedPreferences("User Name Storage", 0);
         userNameEditor = userNameStorage.edit();
     }
@@ -167,7 +174,14 @@ public class Storage extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        Log.v(TAG, "onUpgrade called");
+        if (newVersion == 4){
+            db.execSQL("ALTER TABLE " + DB_TABLESURVEY + " ADD " + COLUMN_SURVEYTIME + " TEXT");
+            db.execSQL("ALTER TABLE " + DB_TABLE + " ADD " + COLUMN_LEFTOPEN + " TEXT");
+            db.execSQL("ALTER TABLE " + DB_TABLE + " ADD " + COLUMN_RIGHTOPEN + " TEXT");
+            db.execSQL("ALTER TABLE " + DB_TABLE + " ADD " + COLUMN_EULERY + " TEXT");
+            db.execSQL("ALTER TABLE " + DB_TABLE + " ADD " + COLUMN_EULERZ + " TEXT");
+        }
     }
 
     public static boolean isServiceRunning(Context context, String serviceName){

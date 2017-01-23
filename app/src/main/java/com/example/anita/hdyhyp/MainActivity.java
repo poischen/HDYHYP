@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         settingsButton3 = (Button) findViewById(R.id.buttonSettings3);
         reviewButton = (Button) findViewById(R.id.reviewButton);
 
+
         settingsButton1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //get permission for usage stats

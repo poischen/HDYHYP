@@ -10,27 +10,28 @@ import android.widget.ImageView;
 
 public class PictureItem {
 
-    private Bitmap picture;
-    private Bitmap sourcePicture;
+    private Bitmap scaledPicture;
+    //private Bitmap sourcePicture;
     private String absolutePath;
     private ImageView imageView;
     private CheckBox checkbox;
     private boolean taggedToDelete = false;
+    private String pictureName;
 
-    public PictureItem(Bitmap image, String path) {
+    public PictureItem(Bitmap image, String path, String pictureName) {
         super();
-        this.picture = image;
+        this.scaledPicture = image;
         this.absolutePath = path;
+        this.pictureName = pictureName;
         //this.taggedToDelete = false;
-
     }
 
     public Bitmap getPicture() {
-        return picture;
+        return scaledPicture;
     }
 
     public void setPicture(Bitmap image) {
-        this.picture = image;
+        this.scaledPicture = image;
     }
 
     public String getAbsolutePath(){
@@ -65,11 +66,15 @@ public class PictureItem {
         this.checkbox = checkbox;
     }
 
-    public Bitmap getSourcePicture() {
+    public String getPictureName() {
+        return pictureName;
+    }
+
+    /*public Bitmap getSourcePicture() {
         return sourcePicture;
     }
 
     public void setSourcePicture(Bitmap sourcePicture) {
         this.sourcePicture = sourcePicture;
-    }
+    }*/
 }

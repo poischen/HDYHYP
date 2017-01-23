@@ -77,6 +77,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     public static final String LANDSCAPE = "landscape";
     public static final String REQUESTID = "requestID";
     public static final String PATH = "path";
+    public static final String SUBMITTIME = "submitTime";
 
     private SQLiteDatabase database;
     private Storage storage = ControllerService.storage;
@@ -318,7 +319,6 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                             locationListener = new LocationListener() {
                                 public void onLocationChanged(Location location) {
                                     latestLocation = location;
-                                    Log.v(TAG, "latest location from listener: " + location);
                                 }
 
                                 @Override
@@ -338,7 +338,6 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         locationListener = new LocationListener() {
                             public void onLocationChanged(Location location) {
                                 latestLocation = location;
-                                Log.v(TAG, "latest location from listener: " + location);
                             }
 
                             @Override
