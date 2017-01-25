@@ -38,51 +38,38 @@ android:layout_height="wrap_content"
 </GridView>
 
     <Button
-        android:text="delete"
+        android:text=" delete tagged "
         android:id="@+id/picturesDeleteButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/textColorPrimary"
         android:background="@color/colorPrimary"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp"
+        android:layout_marginLeft="15dp"
         android:elevation="0dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true" />
 
 
     <Button
-        android:text="upload"
+        android:text=" send log  "
+        android:id="@+id/logSendMailButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textColorPrimary"
+        android:background="@color/colorPrimary"
+        android:layout_marginRight="15dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+
+        android:text=" upload all "
         android:id="@+id/picturesUploadButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/textColorPrimary"
         android:background="@color/colorPrimary"
-        android:layout_marginRight="5dp"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true" />
-
-    <Button
-        android:text="mail"
-        android:id="@+id/picturesSendMailButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColorPrimary"
-        android:background="@color/colorPrimary"
-        android:layout_marginRight="5dp"
-
-        android:layout_alignParentBottom="true"
-        android:layout_toStartOf="@+id/picturesUploadButton" />
-
-    <Button
-        android:text="Log"
-        android:id="@+id/logcatButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColorPrimary"
-        android:background="@color/colorPrimary"
-        android:layout_marginRight="5dp"
-        android:layout_alignParentBottom="true"
-        android:layout_toEndOf="@+id/picturesDeleteButton" />
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

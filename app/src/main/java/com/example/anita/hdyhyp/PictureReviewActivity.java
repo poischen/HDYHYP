@@ -3,14 +3,17 @@ package com.example.anita.hdyhyp;
 import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,9 +23,14 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
-import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.exception.DropboxException;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -32,25 +40,27 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.Properties;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.graphics.Bitmap.createBitmap;
-import static com.example.anita.hdyhyp.R.color.colorAccent;
 import static com.example.anita.hdyhyp.Storage.STORAGEPATHIMG;
 
 public class PictureReviewActivity extends AppCompatActivity {
 
     private static final String TAG = PictureReviewActivity.class.getSimpleName();
-    private static final String HOST = "ftp.mkhamis.com";
-    private static final int PORT = 21;
-    private static final String USER = "anita@mkhamis.com";
-    private static final String PASSWORD = "dd)WN~AfiPtF";
+    private static final String FTPHOST = "ftp.mkhamis.com";
+    private static final String SFTPHOST = "phoneholder.medien.ifi.lmu.de";
+    private static final int FTPPORT = 21;
+    private static final int SFTPPORT = 22022;
+    private static final String FTPUSER = "anita@mkhamis.com";
+    private static final String SFTPUSER = "phoneholder.app";
+    private static final String FTPPASSWORD = "dd)WN~AfiPtF";
+    private static final String SFTPPASSWORD = "gN4j+rt7s=6cRA";
 
     private GridView gridView;
     private PictureReviewGridViewAdapter gridAdapter;
@@ -59,9 +69,10 @@ public class PictureReviewActivity extends AppCompatActivity {
     private Button deleteButton;
     private Button sendMailButton;
     private Button uploadFTPButton;
-    private Button logcatButton;
+    //private Button logcatButton;
     private ProgressBar progressBar;
     private ProgressDialog uploadProgressDialog;
+    private ProgressDialog connectProgressDialog;
 
     /*private DropboxAPI<AndroidAuthSession> dropboxAPI;
     private final static String ACCESS_KEY = "8d7mhculhyjk8yf";
@@ -137,43 +148,39 @@ public class PictureReviewActivity extends AppCompatActivity {
             }
         });
 
-        sendMailButton = (Button) findViewById(R.id.picturesSendMailButton);
+
+        //send logfile via mail
+        sendMailButton = (Button) findViewById(R.id.logSendMailButton);
         sendMailButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
                 //ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, gridAdapter.getData(), handler);
                 //list.execute();
-
-                sendMailButton.setHighlightColor(getResources().getColor(colorAccent));
-
                 Intent mailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
                 mailIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
                 mailIntent.setType("text/plain");
                 mailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
-                        new String[]{"anita.baier@gmx.de"});
-                mailIntent.putExtra(Intent.EXTRA_SUBJECT, storage.getUserName() + "'s photos");
-                mailIntent.putExtra(Intent.EXTRA_TEXT, "Please find attached todays photos.");
+                        new String[]{"anita.baier@campus.lmu.de"});
+                mailIntent.putExtra(Intent.EXTRA_SUBJECT, storage.getUserName() + "'s logfile");
+                mailIntent.putExtra(Intent.EXTRA_TEXT, "Please find attached the latest logfile.");
                 ArrayList<Uri> uris = new ArrayList<Uri>();
-                //convert from paths to Android friendly Parcelable Uri's
-
-                for (int i=0; i< pictureItems.size(); i++){
+                /*for (int i=0; i< pictureItems.size(); i++){
                    File picturefile = new File(pictureItems.get(i).getAbsolutePath());
                     Uri u = Uri.fromFile(picturefile);
                     uris.add(u);
-                }
+                }*/
                 File logfile = new File(createLogcat());
-                File databaseFile = new File (getDatabase());
+                //File databaseFile = new File (getDatabase());
                 Uri u = Uri.fromFile(logfile);
                 uris.add(u);
-                u = Uri.fromFile(databaseFile);
-                uris.add(u);
+                //u = Uri.fromFile(databaseFile);
+                //uris.add(u);
 
                 mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-                Intent shareIntent = Intent.createChooser(mailIntent, "Share via");
+                Intent shareIntent = Intent.createChooser(mailIntent, "Send mail...");
                 shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 getApplicationContext().startActivity(shareIntent);
-
             }
         });
 
@@ -183,20 +190,39 @@ public class PictureReviewActivity extends AppCompatActivity {
             public void onClick(View v){
                 if (!(pictureItems == null)) {
                     Log.v(TAG, "upload via ftp");
-                    AsyncTaskConnectAndUploadToFTP ftpTask = new AsyncTaskConnectAndUploadToFTP();
-                    ftpTask.execute();
+                    //AsyncTaskConnectAndUploadToFTP ftpTask = new AsyncTaskConnectAndUploadToFTP();
+                    //ftpTask.execute();
+
+                    //Feedback for connecting
+                    connectProgressDialog = new ProgressDialog(PictureReviewActivity.this);
+                    connectProgressDialog.setIndeterminate(false);
+                    connectProgressDialog.setMessage("Connecting... ");
+                    connectProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    connectProgressDialog.setCancelable(true);
+
+                    //feedback for upload
+                    uploadProgressDialog = new ProgressDialog(PictureReviewActivity.this);
+                    uploadProgressDialog.setTitle("Uploading images");
+                    uploadProgressDialog.setMessage("Upload in progress... ");
+                    uploadProgressDialog.setProgressStyle(uploadProgressDialog.STYLE_HORIZONTAL);
+                    uploadProgressDialog.setProgress(0);
+                    uploadProgressDialog.setMax(pictureItems.size() + 1);
+
+                    AsyncTaskConnectAndUploadToSFTP sftpTask = new AsyncTaskConnectAndUploadToSFTP(PictureReviewActivity.this);
+                    sftpTask.execute();
+                    connectProgressDialog.show();
                 }
             }
         });
 
-        logcatButton = (Button) findViewById(R.id.logcatButton);
+        /*logcatButton = (Button) findViewById(R.id.logcatButton);
         logcatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
-                ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, null,
-                        handler);
-                list.execute();*/
+                //Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
+                //ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, null,
+                //        handler);
+                //list.execute();
 
                 Intent mailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
                 mailIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
@@ -215,7 +241,7 @@ public class PictureReviewActivity extends AppCompatActivity {
                 shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 getApplicationContext().startActivity(shareIntent);
             }
-        });
+        });*/
 
         AsyncTaskBuildGrid stbg = new AsyncTaskBuildGrid();
         stbg.execute();
@@ -285,15 +311,16 @@ public class PictureReviewActivity extends AppCompatActivity {
         File logFile = null;
         String path =null;
         try {
-            logFile = new File("storage/emulated/0/HDYHYP/debug");
+            logFile = new File(storage.STORAGEPATHLOG);
             if (!logFile.exists()) {
-                logFile.mkdir();
+                logFile.mkdirs();
             }
 
-            DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
+            DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH-mm-ss");
             String timeString = dateFormat.format(new Date());
             path = File.separator
-                    + "logcat_"
+                    + storage.getUserName()
+                    + "_logcat_"
                     + timeString
                     + ".txt";
             Runtime.getRuntime().exec(
@@ -432,6 +459,162 @@ public class PictureReviewActivity extends AppCompatActivity {
     }
 
 
+    class AsyncTaskConnectAndUploadToSFTP extends AsyncTask<String, String, String> {
+
+        private PictureReviewActivity pictureReviewActivity;
+
+        public AsyncTaskConnectAndUploadToSFTP(PictureReviewActivity pictureReviewActivity) {
+            this.pictureReviewActivity = pictureReviewActivity;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH-mm-ss");
+            String time = dateFormat.format(new Date());
+
+            try {
+                JSch jsch = new JSch();
+                Session session = jsch.getSession(SFTPUSER, SFTPHOST, SFTPPORT);
+                Properties config = new Properties();
+                config.put("StrictHostKeyChecking", "no");
+                config.put("PreferredAuthentications", "password");
+                session.setConfig(config);
+                session.setPassword(SFTPPASSWORD);
+                session.connect(3000);
+                Channel channel = session.openChannel("sftp");
+                ChannelSftp sftp = (ChannelSftp) channel;
+                sftp.connect(3000);
+
+                sftp.cd(File.separator + "upload" + File.separator + storage.getUserName());
+
+                //feedback for upload
+                showUploadFeedback();
+
+                //upload database
+                String dataBase = getDatabase();
+                File databaseFile = new File(dataBase);
+                FileInputStream inputDB = new FileInputStream(databaseFile);
+                String remoteDB = "HDYHYPDataBase_" + time + ".db";
+                sftp.put(inputDB, remoteDB, null);
+                inputDB.close();
+                Log.v(TAG, "upload db successful");
+                uploadProgressDialog.incrementProgressBy(1);
+                //TODO: clear db
+
+                //upload log //TODO: reimplement, but in the moment it doe snot find the file
+                /*File logfile = new File(createLogcat());
+                FileInputStream inLog = new FileInputStream(logfile);
+                String remoteLog = "log_" + time + ".txt";
+                sftp.put(inLog, remoteLog, null);
+                inLog.close();
+                Log.v(TAG, "upload log successful");
+                uploadProgressDialog.incrementProgressBy(1);
+                logfile.delete();*/
+
+                ArrayList<PictureItem> uploadedItems = new ArrayList<PictureItem>();
+
+                //upload pictures
+                for (int i = 0; i < pictureItems.size(); i++) {
+                    File file = new File(pictureItems.get(i).getAbsolutePath());
+                    String remote = pictureItems.get(i).getPictureName();
+                    InputStream inputStream = new FileInputStream(file);
+                    sftp.put(inputStream, remote, null);
+                    inputStream.close();
+                    Log.v(TAG, "upload " + i + " successful");
+                    uploadedItems.add(pictureItems.get(i));
+                    file.delete();
+                    uploadProgressDialog.incrementProgressBy(1);
+                }
+
+                channel.disconnect();
+                session.disconnect();
+                uploadProgressDialog.dismiss();
+                notifyGrid(uploadedItems);
+
+
+            } catch (JSchException e){
+                Log.d(TAG, "jsch exception while connecting " + e);
+                showFailFeedback();
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                showFailFeedback();
+            } catch (IOException e) {
+                e.printStackTrace();
+                showFailFeedback();
+            } catch (SftpException e) {
+                e.printStackTrace();
+                showFailFeedback();
+            } /*catch (Exception e) {
+                Log.d(TAG, "exception while uploading " + e);
+                showFailFeedback();
+            }*/
+
+            return null;
+
+        }
+
+        //workaround: feedback for connecting or uploading not successfull
+        protected void showFailFeedback(){
+
+            pictureReviewActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    connectProgressDialog.dismiss();
+                    if (!(uploadProgressDialog== null)) {
+                        uploadProgressDialog.dismiss();
+                    }
+                    connectProgressDialog.cancel();
+
+                    Toast.makeText(pictureReviewActivity.getBaseContext(), "Something went wrong. Please try again later.", Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+
+        //workaround: show upload feedback
+        protected void showUploadFeedback(){
+            pictureReviewActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    connectProgressDialog.cancel();
+                    uploadProgressDialog.show();
+                }
+            });
+        }
+
+        //workaround: reload grid
+        protected void notifyGrid(final ArrayList<PictureItem> piUploaded){
+            pictureReviewActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        for (int i=0;i<piUploaded.size();i++){
+                            gridAdapter.remove(piUploaded.get(i));
+                        }
+                        gridAdapter.notifyDataSetChanged();
+                        Toast.makeText(pictureReviewActivity.getBaseContext(), "Thanks for uploading!", Toast.LENGTH_LONG).show();
+                    } catch (Exception e){
+                        Log.d(TAG, "notify grid dataset changed failed");
+                    }
+                }
+            });
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            //gridAdapter.notifyDataSetChanged();
+            progressBar.setVisibility(View.GONE);
+        }
+
+        @Override
+        protected void onPreExecute() {
+
+        }
+
+        @Override
+        protected void onProgressUpdate(String... text) {
+
+        }
+    }
+
+    //unused -- ftp server while testing
     class AsyncTaskConnectAndUploadToFTP extends AsyncTask<String, String, String> {
 
         public AsyncTaskConnectAndUploadToFTP() {
@@ -450,12 +633,12 @@ public class PictureReviewActivity extends AppCompatActivity {
 
             try {
                 con = new FTPClient();
-                con.connect(HOST, PORT);
+                con.connect(FTPHOST, FTPPORT);
 
-                DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
+                DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH-mm-ss");
                 String time = dateFormat.format(new Date());
 
-                if (con.login(USER, PASSWORD)) {
+                if (con.login(FTPUSER, FTPPASSWORD)) {
                     con.enterLocalPassiveMode();
                     con.setFileType(FTP.BINARY_FILE_TYPE);
 

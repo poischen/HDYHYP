@@ -494,7 +494,7 @@ public class ControllerService extends Service implements Observer {
      */
     private void detectApps() {
         //get the latest package name from the usage stats
-        String currentAppName = HDYHYPPACKAGENAME;
+        String currentAppName = "";
                     UsageStatsManager usageStatsManager = (UsageStatsManager) this.getSystemService(Context.USAGE_STATS_SERVICE);
                     long time = System.currentTimeMillis();
                     List<UsageStats> apps = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time);
@@ -523,11 +523,13 @@ public class ControllerService extends Service implements Observer {
                 }
 
             //check if the usagestats is a foregeround application or a status bar notification
+
             else if (currentAppName.equals(currentNotification) && !(lastAsNewDetectedNotification.equals(currentNotification))){
+
                 //detected package name was a notification & notification was new
                 if (isScreenActive){
                     capturingEvent = CapturingEvent.NOTIFICATION;
-                    lastAsNewDetectedNotification = currentAppName;
+                    lastAsNewDetectedNotification = currentNotification;
                     Log.v(TAG, "new on foreground detected app was a notification " + currentNotification);
                     initPictureTakingSession(capturingEvent);
                 }

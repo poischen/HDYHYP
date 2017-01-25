@@ -159,12 +159,14 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
     public void registerListener() {
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_FASTEST);
         //sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY), SensorManager.SENSOR_DELAY_FASTEST);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT), SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     public void unregisterListener() {
         sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION));
+        sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE));
         //sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY));
         sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT));
     }
@@ -556,10 +558,16 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                 accelerometerY = String.valueOf(event.values[1]);
                 accelerometerZ = String.valueOf(event.values[2]);
                 break;
+            case (Sensor.TYPE_GYROSCOPE):
+                gyroscopeX = String.valueOf(event.values[0]);
+                gyroscopeY = String.valueOf(event.values[1]);
+                gyroscopeZ = String.valueOf(event.values[2]);
+                break;
             case (Sensor.TYPE_ORIENTATION):
                 gyroscopeX = String.valueOf(event.values[0]);
                 gyroscopeY = String.valueOf(event.values[1]);
                 gyroscopeZ = String.valueOf(event.values[2]);
+                break;
         }
     }
 
