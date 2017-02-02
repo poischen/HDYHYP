@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,7 @@ public class SurveyPictureFragment extends Fragment {
     public static final String BUNDLEPATH = "path";
     public static final String BUNDLEPICTURENAME = "pictureName";
     public static final String BUNDLEDISPLAYWITH = "displayWidth";
+    public static final String NOPICTAKEN = "no Picture was taken";
 
     ImageView imageViewUsersPhoto;
     TextView textViewDate;
@@ -47,27 +49,53 @@ public class SurveyPictureFragment extends Fragment {
         imageViewUsersPhoto = (ImageView) myView.findViewById(R.id.imageViewUsersPhotoFragment);
         textViewDate = (TextView) myView.findViewById(R.id.textViewDate);
 
-            File file = new File(path + File.separator + pictureName);
-            Log.v(TAG, "file: " + path + File.separator + pictureName);
+        if (pictureName.contains(NOPICTAKEN)){
+            textViewDate.setText("Picture could not be displayed. Nevertheless - please fill the survey :)");
+        } else {
+            try {
+                File file = new File(path + File.separator + pictureName);
+                Log.v(TAG, "file: " + path + File.separator + pictureName);
 
-            Bitmap picture = BitmapFactory.decodeFile(file.getAbsolutePath());
-        if (!(picture.equals(null))){
-            int width = picture.getWidth();
+                Bitmap picture = BitmapFactory.decodeFile(file.getAbsolutePath());
+
+                int widthScaled = displayWidth;
+
+                int width = picture.getWidth();
+                int height = picture.getHeight();
+
+                double scalefactor = ((double) height) / ((double) width);
+
+                int scaleHeight = (int) (widthScaled * scalefactor);
+
+                float scaleWidth = ((float) widthScaled) / width;
+
+                float scaledHeight = ((float) scaleHeight) / height;
+
+                Matrix matrix = new Matrix();
+                matrix.postScale(scaleWidth, scaledHeight);
+
+
+                Bitmap scaledPicture = Bitmap.createBitmap(picture, 0, 0, width, height, matrix, false);
+
+            /*int width = picture.getWidth();
             int height = picture.getHeight();
 
             double scalefactor = (displayWidth/(width));
             double scaleHeight = height / scalefactor;
             Matrix matrix = new Matrix();
             float scaledWidth = ((float) displayWidth) / width;
-            float scaledHeight = ((float) scaleHeight) / height;
+            float scaledHeight = ((float) scaleHeight) /height;
             matrix.postScale(scaledWidth, scaledHeight);
-            Bitmap scaledPicture = Bitmap.createBitmap(picture, 0, 0, width, height, matrix, false);
-            imageViewUsersPhoto.setImageBitmap(scaledPicture);
+            Bitmap scaledPicture = Bitmap.createBitmap(picture, 0, 0, width, height, matrix, false);*/
+                imageViewUsersPhoto.setImageBitmap(scaledPicture);
 
-            textViewDate.setText(pictureName.substring((pictureName.length()-12), (pictureName.length()-4)));
-        } else {
-            textViewDate.setText("Image not found.");
+                textViewDate.setText(pictureName.substring((pictureName.length() - 12), (pictureName.length() - 4)));
+            } catch (Exception e){
+                Log.d(TAG, "Error while loading picture");
+                textViewDate.setText("Picture could not be displayed. Nevertheless - please fill the survey :)");
+            }
         }
+
 
         return myView;
     }

@@ -27,8 +27,19 @@ public class RandomAlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.v(TAG, "Alarm received");
         int requestID = (int) intent.getExtras().get("requestID");
+
+        Log.v(TAG, "random Alarm received: " + requestID);
+
+        Storage storage = new Storage(context);
+        boolean wasAlreadyTaken = storage.getRandomWasTakenInCurrentPeriod(requestID);
+        if (!wasAlreadyTaken){
+            ObservableObject.getInstance().setRememberPeriod(requestID);
+            ObservableObject.getInstance().updateValue(intent);
+        }
+
+        // not necessary since new algorithm
+        /*int requestID = (int) intent.getExtras().get("requestID");
 
         if (startTime[requestID] == 0L){
             long time = (long) intent.getExtras().get("time");
@@ -86,7 +97,7 @@ public class RandomAlarmReceiver extends BroadcastReceiver {
                 wasRescheduled[requestID] = true;
                 rescheduleTime = 0;
             }
-        }
+        }*/
 
     }
 }

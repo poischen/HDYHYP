@@ -17,6 +17,16 @@
         <item>Brandstifter</item>
         <item>Granit</item>
         <item>Beefeater</item>
+        <item>Ferdinand</item>
+        <item>Sul</item>
+        <item>Saffron</item>
+        <item>Horestown</item>
+        <item>AdlerBerlin</item>
+        <item>Elephant</item>
+        <item>Siegfried</item>
+        <item>Mombasa</item>
+        <item>London</item>
+        <item>Bulldog</item>
     </string-array>
 
     <string name="dbName">HDYHYPDataBase.db</string>

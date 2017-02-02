@@ -37,6 +37,7 @@ import java.util.List;
 
 import static com.example.anita.hdyhyp.DataCollectorService.NAINT;
 import static com.example.anita.hdyhyp.DataCollectorService.NASTRING;
+import static com.google.android.gms.vision.face.FaceDetector.ALL_CLASSIFICATIONS;
 import static com.google.android.gms.vision.face.FaceDetector.FAST_MODE;
 
 
@@ -84,6 +85,7 @@ public class CapturePicService extends Service {
             }
             faceDetector = new FaceDetector.Builder(getApplicationContext())
                     .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                    .setClassificationType(ALL_CLASSIFICATIONS)
                     .setMode(FAST_MODE)
                     .setTrackingEnabled(false)
                     .build();
@@ -177,7 +179,11 @@ public class CapturePicService extends Service {
         }*/
 
         //taking the picture
-        camera.takePicture(null, null, pictureCallBack);
+        try {
+            camera.takePicture(null, null, pictureCallBack);
+        } catch (Exception e) {
+            Log.d(TAG, "camera.takePicture failed");
+        }
         ControllerService.pictureIsCurrentlyTaken = false;
     }
 

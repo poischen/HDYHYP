@@ -67,7 +67,6 @@ public class PictureReviewActivity extends AppCompatActivity {
     private ArrayList<PictureItem> pictureItems;
     private ArrayList<PictureItem> taggedToDeleteItems = new ArrayList<>();
     private Button deleteButton;
-    private Button sendMailButton;
     private Button uploadFTPButton;
     //private Button logcatButton;
     private ProgressBar progressBar;
@@ -129,58 +128,32 @@ public class PictureReviewActivity extends AppCompatActivity {
                 int s = gridAdapter.getDataSize();
                 for (int i=0; i < s; i++){
                     PictureItem currentItem = (PictureItem) gridAdapter.getItem(i);
-                    if (currentItem.getCheckbox().isChecked()){
-                        taggedToDeleteItems.add(currentItem);
+                    try {
+                        if (currentItem.getCheckbox().isChecked()){
+                            taggedToDeleteItems.add(currentItem);
+                        }
+                    } catch (Exception e){
+
                     }
                 }
 
-                for (int i=0; i < taggedToDeleteItems.size(); i++){
-                    PictureItem currentItem = taggedToDeleteItems.get(i);
-                    gridAdapter.remove(currentItem);
-                    File file = new File(taggedToDeleteItems.get(i).getAbsolutePath());
-                    file.delete();
-                    pictureItems.remove(currentItem); //TODO: test
-                    Log.v(TAG, "File deleted: " + file);
+                for (int i=0; i < taggedToDeleteItems.size(); i++)
+                {
+                    try {
+                        PictureItem currentItem = taggedToDeleteItems.get(i);
+                        gridAdapter.remove(currentItem);
+                        File file = new File(taggedToDeleteItems.get(i).getAbsolutePath());
+                        file.delete();
+                        pictureItems.remove(currentItem);
+                        Log.v(TAG, "File deleted: " + file);
+                        }
+                        catch (Exception e) {
+                        Log.d(TAG, "file could not be deleted");
+                    }
                 }
 
                 gridAdapter.notifyDataSetChanged();
                 taggedToDeleteItems.clear();
-            }
-        });
-
-
-        //send logfile via mail
-        sendMailButton = (Button) findViewById(R.id.logSendMailButton);
-        sendMailButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
-                //ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, gridAdapter.getData(), handler);
-                //list.execute();
-                Intent mailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
-                mailIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-                mailIntent.setType("text/plain");
-                mailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
-                        new String[]{"anita.baier@campus.lmu.de"});
-                mailIntent.putExtra(Intent.EXTRA_SUBJECT, storage.getUserName() + "'s logfile");
-                mailIntent.putExtra(Intent.EXTRA_TEXT, "Please find attached the latest logfile.");
-                ArrayList<Uri> uris = new ArrayList<Uri>();
-                /*for (int i=0; i< pictureItems.size(); i++){
-                   File picturefile = new File(pictureItems.get(i).getAbsolutePath());
-                    Uri u = Uri.fromFile(picturefile);
-                    uris.add(u);
-                }*/
-                File logfile = new File(createLogcat());
-                //File databaseFile = new File (getDatabase());
-                Uri u = Uri.fromFile(logfile);
-                uris.add(u);
-                //u = Uri.fromFile(databaseFile);
-                //uris.add(u);
-
-                mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-                Intent shareIntent = Intent.createChooser(mailIntent, "Send mail...");
-                shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                getApplicationContext().startActivity(shareIntent);
             }
         });
 
@@ -307,32 +280,6 @@ public class PictureReviewActivity extends AppCompatActivity {
         }
     };
 
-    private String createLogcat(){
-        File logFile = null;
-        String path =null;
-        try {
-            logFile = new File(storage.STORAGEPATHLOG);
-            if (!logFile.exists()) {
-                logFile.mkdirs();
-            }
-
-            DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH-mm-ss");
-            String timeString = dateFormat.format(new Date());
-            path = File.separator
-                    + storage.getUserName()
-                    + "_logcat_"
-                    + timeString
-                    + ".txt";
-            Runtime.getRuntime().exec(
-                    "logcat  -d -f " + logFile + path);
-            Log.e(TAG, "logfile written");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return (storage.STORAGEPATHLOG + path);
-    }
-
     private String getDatabase(){
         String sqlPath = storage.getWritableDatabase().getPath();
             Log.v(TAG, "SqlPath: " + sqlPath);
@@ -415,7 +362,12 @@ public class PictureReviewActivity extends AppCompatActivity {
 
                 Log.v(TAG, "Image: " + i + ": path: " + listOfFiles[i].getAbsolutePath());
                 String currentPath = listOfFiles[i].getAbsolutePath();
-                Bitmap currentPicture = BitmapFactory.decodeFile(listOfFiles[i].getAbsolutePath());
+
+                //Bitmap currentPicture = BitmapFactory.decodeFile(listOfFiles[i].getAbsolutePath());
+
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inSampleSize = 7;
+                Bitmap currentPicture = BitmapFactory.decodeFile(listOfFiles[i].getAbsolutePath(),options);
 
                 Bitmap scaledPicture = Bitmap.createScaledBitmap(currentPicture, scaledWidthInt, scaledHeightInt, false);
 
@@ -670,7 +622,7 @@ public class PictureReviewActivity extends AppCompatActivity {
                     }
 
                     //upload log
-                    String log = createLogcat();
+                    /*String log = createLogcat();
                     File logfile = new File(log);
                     FileInputStream inLog = new FileInputStream(logfile);
                     boolean doneLog = con.storeFile("log_" + time + ".txt", inLog);
@@ -679,7 +631,7 @@ public class PictureReviewActivity extends AppCompatActivity {
                         Log.v(TAG, "upload log successful");
                         uploadProgressDialog.incrementProgressBy(1);
                         logfile.delete();
-                    }
+                    }*/
 
                     con.logout();
                     con.disconnect();

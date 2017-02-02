@@ -1,7 +1,7 @@
 package com.example.anita.hdyhyp;
 
 import android.content.Context;
-import android.util.Log;
+//import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +10,6 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by anita on 19.11.2016.
@@ -18,7 +17,7 @@ import java.util.HashMap;
 
 public class PictureReviewGridViewAdapter extends ArrayAdapter {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = PictureReviewGridViewAdapter.class.getSimpleName();
 
     private Context context;
     private int layoutResourceId;
@@ -67,7 +66,7 @@ public class PictureReviewGridViewAdapter extends ArrayAdapter {
        row.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View v) {
-               Log.v(TAG, "Picture tagged.");
+               //Log.v(TAG, "Picture tagged.");
                if (deleteCheckbox.isChecked())
                {
                    deleteCheckbox.setChecked(false);

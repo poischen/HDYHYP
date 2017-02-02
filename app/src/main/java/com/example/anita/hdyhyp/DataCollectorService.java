@@ -1,5 +1,6 @@
 package com.example.anita.hdyhyp;
 
+import android.Manifest;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -7,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -28,32 +30,24 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.INIT;
 import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.RANDOM;
-import static java.lang.System.currentTimeMillis;
+
 
 /*
 *@class collects all data and write them into database
  */
 
-public class DataCollectorService extends Service implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener, SensorEventListener {
+public class DataCollectorService extends Service implements LocationListener, SensorEventListener {
 
     private static final String TAG = DataCollectorService.class.getSimpleName();
     public static final String NASTRING = "n./a.";
@@ -101,9 +95,12 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     int locationLongitude = NAINT; //DataColletorService - locationManager
     String locationRoad = NASTRING; //DataColletorService - locationManager
     String locationPLZ = NASTRING; //DataColletorService - locationManager
-    String accelerometerX = NASTRING; //DataColletorService - SensorListener
-    String accelerometerY = NASTRING; //DataColletorService - SensorListener
-    String accelerometerZ = NASTRING; //DataColletorService - SensorListener
+    //String accelerometerX = NASTRING; //DataColletorService - SensorListener
+    //String accelerometerY = NASTRING; //DataColletorService - SensorListener
+    //String accelerometerZ = NASTRING; //DataColletorService - SensorListener
+    LinkedList<String> accelerometerX = new LinkedList<>();
+    LinkedList<String> accelerometerY = new LinkedList<>();
+    LinkedList<String> accelerometerZ = new LinkedList<>();
     String gyroscopeX = NASTRING; //DataColletorService - Sensor
     String gyroscopeY = NASTRING; //DataColletorService - Sensor
     String gyroscopeZ = NASTRING; //DataColletorService - Sensor
@@ -121,10 +118,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     String faceDetectionEulerZ = NASTRING; //CapturePictureService
     ControllerService.CapturingEvent capturingEvent = INIT; //ControllerService
 
-    private int requestID = 999;
-
-    private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequest;
+    private int requestID = 790;
 
     public DataCollectorService() {
         super();
@@ -143,16 +137,8 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
         //register necessary listener---------------------------------------------------------------
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        //locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         registerListener();
-
-        //------------------------------------------------------------------------------------------
-        mLocationRequest = LocationRequest.create();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        mLocationRequest.setInterval(1);
-        mLocationRequest.setFastestInterval(1);
-
-        buildGoogleApiClient();
 
         Log.v(TAG, "listener registered.");
     }
@@ -162,6 +148,8 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_FASTEST);
         //sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY), SensorManager.SENSOR_DELAY_FASTEST);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT), SensorManager.SENSOR_DELAY_FASTEST);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
     }
 
     public void unregisterListener() {
@@ -169,6 +157,10 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
         sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE));
         //sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY));
         sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT));
+        accelerometerX.clear();
+        accelerometerY.clear();
+        accelerometerZ.clear();
+
     }
 
     @Override
@@ -178,10 +170,10 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
             Log.v(TAG, "intent " + intent);
             Log.v(TAG, "intent extras " + intent.getExtras());
             command = (String) intent.getExtras().get(DataCollectorService.DCSCOMMAND);
-            if (command.equals(DCSCOMMANDCOLLECT)){
+            if (command.equals(DCSCOMMANDCOLLECT)) {
                 capturingEvent = (ControllerService.CapturingEvent) intent.getExtras().get(CAPTURINGEVENT);
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.v(TAG, "onStartCommand intent null");
         }
 
@@ -194,7 +186,7 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                 break;
             case DCSCOMMANDCOLLECT:
                 ContentValues cv = new ContentValues();
-                if (capturingEvent != null){
+                if (capturingEvent != null) {
                     if (capturingEvent.equals(INIT)) {
                         //read general sensor information and store to db---------------------------------------
                         try {
@@ -221,9 +213,10 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         } catch (Exception e) {
                             Log.d(TAG, "no accelerometerSensor found");
                         }
+
                         cv.put(Storage.COLUMN_ACCELEROMETERX, accelerometerSensor);
-                        cv.put(Storage.COLUMN_ACCELEROMETERY, accelerometerY);
-                        cv.put(Storage.COLUMN_ACCELEROMETERZ, accelerometerZ);
+                        cv.put(Storage.COLUMN_ACCELEROMETERY, NASTRING);
+                        cv.put(Storage.COLUMN_ACCELEROMETERZ, NASTRING);
                         Log.v(TAG, "accelerometer Sensor:" + accelerometerSensor);
 
                         try {
@@ -244,8 +237,32 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         cv.put(Storage.COLUMN_LIGHT, lightSensor);
                         Log.v(TAG, "light Sensor:" + lightSensor);
 
+
+                        int minScreenBrightness = 0;
+                        int maxScreenBrightness = 255;
+                        final Resources resources = Resources.getSystem();
+
+                        int idMin = resources.getIdentifier("config_screenBrightnessSettingMinimum", "integer", "android");
+                        if (idMin != 0) {
+                            try {
+                                minScreenBrightness = resources.getInteger(idMin);
+                            } catch (Resources.NotFoundException e) {
+                            }
+                        }
+
+                        int idMax = resources.getIdentifier("config_screenBrightnessSettingMaximum", "integer", "android");
+                        if (idMax != 0) {
+                            try {
+                                maxScreenBrightness = resources.getInteger(idMax);
+                            } catch (Resources.NotFoundException e) {
+                            }
+                        }
+
+                        String screenBrightnessString = minScreenBrightness + "0" + maxScreenBrightness;
+                        screenBrightness = Integer.parseInt(screenBrightnessString);
+
                         cv.put(Storage.COLUMN_BRIGHTNESS, screenBrightness);
-                        Log.v(TAG, "foregroundApp: " + screenBrightness);
+                        Log.v(TAG, "screenBrightness: " + screenBrightness);
 
                         try {
                             orientationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION).toString();
@@ -303,83 +320,40 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         Log.v(TAG, "captureEvent: " + capturingEvent);
 
                         //foreground App------------------------------------------------------------------------
+                        try {
+                            foregroundApp = (String) intent.getExtras().get(FOREGROUNDAPP);
+                        } catch (NullPointerException e) {
+                        }
                         cv.put(Storage.COLUMN_FOREGROUNDAPP, foregroundApp);
                         Log.v(TAG, "foregroundApp: " + foregroundApp);
 
                         //location------------------------------------------------------------------------------
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-                            buildGoogleApiClient();
-                            mGoogleApiClient.connect();
-                            latestLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-                            Intent pendingIntent = new Intent(getApplicationContext(), DataCollectorService.class);
-                            //latestLocation = LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, (com.google.android.gms.location.LocationListener) pendingIntent);
-                            Log.v(TAG, "google location api, latest location: " + latestLocation);
+                        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            // TODO: Consider calling
+                            //    ActivityCompat#requestPermissions
+                            // here to request the missing permissions, and then overriding
+                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                            //                                          int[] grantResults)
+                            // to handle the case where the user grants the permission. See the documentation
+                            // for ActivityCompat#requestPermissions for more details.
                         }
 
-                        if (googleApiClientConnectionFailed) {
-                            Log.v(TAG, "failed to connect google play services location api.");
-                            locationListener = new LocationListener() {
-                                public void onLocationChanged(Location location) {
-                                    latestLocation = location;
-                                }
+                        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                                2000, 1, this);
 
-                                @Override
-                                public void onStatusChanged(String provider, int status, Bundle extras) {
-                                }
-
-                                @Override
-                                public void onProviderEnabled(String provider) {
-                                }
-
-                                @Override
-                                public void onProviderDisabled(String provider) {
-                                }
-                            };
-                        }
-
-                        locationListener = new LocationListener() {
-                            public void onLocationChanged(Location location) {
-                                latestLocation = location;
-                            }
-
-                            @Override
-                            public void onStatusChanged(String provider, int status, Bundle extras) {
-                            }
-
-                            @Override
-                            public void onProviderEnabled(String provider) {
-                            }
-
-                            @Override
-                            public void onProviderDisabled(String provider) {
-                            }
-                        };
-
-                        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-                        }
-                        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-                            latestLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                            Log.v(TAG, "gps enabled.");
-
-                        } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-                            latestLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                            Log.v(TAG, "network enabled.");
-                        } else {
-                            Log.v(TAG, "neither gps or network enabled.");
-                        }
-                        //locationManager.removeUpdates(locationListener);
+                        latestLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
                         if (latestLocation != null) {
                             Log.v(TAG, "latest location: " + latestLocation);
                             Geocoder geocoder = new Geocoder(this);
-                            locationLatitude = (int) latestLocation.getLatitude();
-                            locationLongitude = (int) latestLocation.getLongitude();
+                            double locaLat = latestLocation.getLatitude();
+                            double locLong = latestLocation.getLongitude();
+
+                            locationLatitude = (int) (locaLat*1000000);
+                            locationLongitude = (int) (locLong*10000000);
                             try {
                                 List<Address> addressList = null;
-                                addressList = geocoder.getFromLocation(locationLatitude, locationLongitude, 1);
+                                addressList = geocoder.getFromLocation(locaLat, locLong, 1);
                                 Address address = addressList.get(0);
                                 locationRoad = address.getThoroughfare();
                                 locationPLZ = address.getPostalCode();
@@ -388,6 +362,9 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                             }
                             latestLocation = null;
                         }
+
+                        locationManager.removeUpdates(this);
+
                         cv.put(Storage.COLUMN_LOCATIONLATITUDE, locationLatitude);
                         cv.put(Storage.COLUMN_LOCATIONLONGITUDE, locationLongitude);
                         cv.put(Storage.COLUMN_LOCATIONROAD, locationRoad);
@@ -395,9 +372,9 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                         Log.v(TAG, "location: latitude: " + locationLatitude + ", longitude: " + locationLongitude + ", road: " + locationRoad + ", postalcode: " + locationPLZ);
 
                         //accelerometer-------------------------------------------------------------------------
-                        cv.put(Storage.COLUMN_ACCELEROMETERX, accelerometerX);
-                        cv.put(Storage.COLUMN_ACCELEROMETERY, accelerometerY);
-                        cv.put(Storage.COLUMN_ACCELEROMETERZ, accelerometerZ);
+                        cv.put(Storage.COLUMN_ACCELEROMETERX, accelerometerX.toString());
+                        cv.put(Storage.COLUMN_ACCELEROMETERY, accelerometerY.toString());
+                        cv.put(Storage.COLUMN_ACCELEROMETERZ, accelerometerZ.toString());
                         Log.v(TAG, "accelerometer: " + accelerometerX + " " + accelerometerY + " " + accelerometerZ);
 
                         //rotation------------------------------------------------------------------------------
@@ -554,9 +531,20 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
                 ambientLight = String.valueOf(event.values[0]);
                 break;
             case (Sensor.TYPE_LINEAR_ACCELERATION):
-                accelerometerX = String.valueOf(event.values[0]);
-                accelerometerY = String.valueOf(event.values[1]);
-                accelerometerZ = String.valueOf(event.values[2]);
+                if (accelerometerX.size() > 0){
+                    accelerometerX.removeLast();
+                }
+                accelerometerX.addFirst(String.valueOf(event.values[0]));
+
+                if (accelerometerY.size() > 0){
+                    accelerometerY.removeLast();
+                }
+                accelerometerY.addFirst(String.valueOf(event.values[1]));
+
+                if (accelerometerZ.size() > 0){
+                    accelerometerZ.removeLast();
+                }
+                accelerometerZ.addFirst(String.valueOf(event.values[2]));
                 break;
             case (Sensor.TYPE_GYROSCOPE):
                 gyroscopeX = String.valueOf(event.values[0]);
@@ -576,59 +564,9 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
 
     }
 
-    protected synchronized void buildGoogleApiClient() {
-        this.mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        googleApiClientConnectionFailed = false;
-    }
-
-    public void setProximity(String proximity) {
-        this.proximity = proximity;
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        latestLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        googleApiClientConnectionFailed = false;
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        mGoogleApiClient = null;
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        //TODO: in activity auslagern
-        if (connectionResult.hasResolution()) {
-            //connectionResult.startResolutionForResult(this, 1000);
-        } else {
-            googleApiClientConnectionFailed = true;
-        }
-
-    }
 
     @Override
     public void onLocationChanged(Location location) {
-        latestLocation = location;
-        Log.v(TAG, "latest location from listener: " + location);
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
 
     }
 
@@ -638,13 +576,18 @@ public class DataCollectorService extends Service implements GoogleApiClient.Con
     }
 
     @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        // TODO Auto-generated method stub
+
+    }
+
+
     public void onDestroy() {
-        if (this.mGoogleApiClient != null) {
-            this.mGoogleApiClient.unregisterConnectionCallbacks(this);
-            this.mGoogleApiClient.unregisterConnectionFailedListener(this);
-            this.mGoogleApiClient.disconnect();
-            this.mGoogleApiClient = null;
-        }
         unregisterListener();
     }
 

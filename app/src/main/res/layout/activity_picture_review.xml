@@ -44,22 +44,10 @@ android:layout_height="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/textColorPrimary"
         android:background="@color/colorPrimary"
-        android:layout_marginLeft="15dp"
+        android:layout_marginLeft="30dp"
         android:elevation="0dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true" />
-
-
-    <Button
-        android:text=" send log  "
-        android:id="@+id/logSendMailButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColorPrimary"
-        android:background="@color/colorPrimary"
-        android:layout_marginRight="15dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true" />
 
     <Button
 
@@ -69,7 +57,8 @@ android:layout_height="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/textColorPrimary"
         android:background="@color/colorPrimary"
+        android:layout_marginRight="30dp"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentEnd="true" />
 
 </RelativeLayout>

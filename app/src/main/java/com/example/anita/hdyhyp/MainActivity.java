@@ -11,6 +11,15 @@ import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private Button reviewButton;
     private Button deleteButton;
 
+    private Button sendMailButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         settingsButton2 = (Button) findViewById(R.id.buttonSettings2);
         settingsButton3 = (Button) findViewById(R.id.buttonSettings3);
         reviewButton = (Button) findViewById(R.id.reviewButton);
+        sendMailButton = (Button) findViewById(R.id.logSendMailButton);
 
 
         settingsButton1.setOnClickListener(new View.OnClickListener() {
@@ -80,6 +92,41 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        //send logfile via mail
+        sendMailButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Log.v(TAG, "dropboxAPI for fetching data to upload: " + dropboxAPI);
+                //ListUploadDropboxFiles list = new ListUploadDropboxFiles(dropboxAPI, gridAdapter.getData(), handler);
+                //list.execute();
+                Intent mailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                mailIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+                mailIntent.setType("text/plain");
+                mailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
+                        new String[]{"anita.baier@campus.lmu.de"});
+                mailIntent.putExtra(Intent.EXTRA_SUBJECT, storage.getUserName() + "'s logfile");
+                ArrayList<CharSequence> text = new ArrayList<CharSequence>();
+                text.add("Please find attached the latest logfile.");
+                mailIntent.putExtra(Intent.EXTRA_TEXT, text);
+                ArrayList<Uri> uris = new ArrayList<Uri>();
+                /*for (int i=0; i< pictureItems.size(); i++){
+                   File picturefile = new File(pictureItems.get(i).getAbsolutePath());
+                    Uri u = Uri.fromFile(picturefile);
+                    uris.add(u);
+                }*/
+                File logfile = new File(createLogcat());
+                //File databaseFile = new File (getDatabase());
+                Uri u = Uri.fromFile(logfile);
+                uris.add(u);
+                //u = Uri.fromFile(databaseFile);
+                //uris.add(u);
+
+                mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+                Intent shareIntent = Intent.createChooser(mailIntent, "Send mail...");
+                shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getApplicationContext().startActivity(shareIntent);
+            }
+        });
 
         /**Asks for and inizilizes the users pseudonym to identify him during the study if it is not already set
          visual feedback / input not possible if the name is already set
@@ -118,8 +165,11 @@ public class MainActivity extends AppCompatActivity {
 
                 //cancel Service if running
                 //if (storage.isServiceRunning(getApplicationContext(), ControllerService.class.getName())){
-                    Intent intent = new Intent(getApplicationContext(), ControllerService.class);
-                    stopService(intent);
+                Intent controllerIntent = new Intent(getApplicationContext(), ControllerService.class);
+                stopService(controllerIntent);
+                Intent dataIntent = new Intent(getApplicationContext(), DataCollectorService.class);
+                stopService(dataIntent);
+
                 //}
 
             }
@@ -174,6 +224,32 @@ public class MainActivity extends AppCompatActivity {
         readyTextView.setText(R.string.ready);
         namesSpinner.setEnabled(false);
         tellMeYourNameView.setEnabled(false);
+    }
+
+    private String createLogcat(){
+        File logFile = null;
+        String path =null;
+        try {
+            logFile = new File(storage.STORAGEPATHLOG);
+            if (!logFile.exists()) {
+                logFile.mkdirs();
+            }
+
+            DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH-mm-ss");
+            String timeString = dateFormat.format(new Date());
+            path = File.separator
+                    + storage.getUserName()
+                    + "_logcat_"
+                    + timeString
+                    + ".txt";
+            Runtime.getRuntime().exec(
+                    "logcat  -d -f " + logFile + path);
+            Log.e(TAG, "logfile written");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return (storage.STORAGEPATHLOG + path);
     }
 
     @Override

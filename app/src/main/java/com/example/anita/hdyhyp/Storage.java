@@ -122,6 +122,9 @@ public class Storage extends SQLiteOpenHelper {
     private SharedPreferences userNameStorage;
     private SharedPreferences.Editor userNameEditor;
 
+    private SharedPreferences ranomAlarmsStorage;
+    private SharedPreferences.Editor ranomAlarmsEditor;
+
 
     public Storage(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -132,6 +135,9 @@ public class Storage extends SQLiteOpenHelper {
         new File(STORAGEPATHLOG).mkdirs();
         userNameStorage = context.getSharedPreferences("User Name Storage", 0);
         userNameEditor = userNameStorage.edit();
+
+        ranomAlarmsStorage = context.getSharedPreferences("Random Alarm Storage", 1);
+        ranomAlarmsEditor = ranomAlarmsStorage.edit();
     }
 
     public String getUserName(){
@@ -153,6 +159,34 @@ public class Storage extends SQLiteOpenHelper {
         userNameEditor.putString("User Name", null);
         //userNameEditor.putInt("User Name Index", 0);
         userNameEditor.commit();
+    }
+
+    public void setRandomWasTakenInCurrentPeriod(int period, boolean wasTaken){
+        String p = period + "";
+        Log.d(TAG, "setRandomWasTakenInCurrentPeriod, period: " + p + ", boolean wasTaken: "+ wasTaken);
+        ranomAlarmsEditor.putBoolean(p, wasTaken);
+        ranomAlarmsEditor.commit();
+    }
+
+    public boolean getRandomWasTakenInCurrentPeriod(int period) {
+        String p = period + "";
+        Log.v(TAG, "getRandomWasTakenInCurrentPeriod "  + period);
+
+        boolean getRandomWasTakenInCurrentPeriod = ranomAlarmsStorage.getBoolean(p, false);
+
+        Log.v(TAG, "getRandomWasTakenInCurrentPeriod "  + getRandomWasTakenInCurrentPeriod);
+
+        return getRandomWasTakenInCurrentPeriod;
+    }
+
+    public void setAllRandomWasTakenInCurrentPeriod(boolean wasTaken){
+        ranomAlarmsEditor.putBoolean("10", wasTaken);
+        ranomAlarmsEditor.putBoolean("12", wasTaken);
+        ranomAlarmsEditor.putBoolean("14", wasTaken);
+        ranomAlarmsEditor.putBoolean("16", wasTaken);
+        ranomAlarmsEditor.putBoolean("18", wasTaken);
+        ranomAlarmsEditor.putBoolean("20", wasTaken);
+        ranomAlarmsEditor.commit();
     }
 
     protected String getStoragePath(){

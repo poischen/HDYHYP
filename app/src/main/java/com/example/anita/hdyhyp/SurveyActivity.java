@@ -65,6 +65,8 @@ public class SurveyActivity extends FragmentActivity {
 
     Button surveySubmitButton;
 
+    Storage storage;
+
     String pictureName;
     String path;
     int displayWidth;
@@ -77,8 +79,10 @@ public class SurveyActivity extends FragmentActivity {
 
         setContentView(R.layout.activity_survey);
 
+        storage = new Storage(getApplicationContext());
+
         Intent intent = getIntent();
-        int requestID = (int) intent.getExtras().get(DataCollectorService.REQUESTID);
+        requestID = (int) intent.getExtras().get(DataCollectorService.REQUESTID);
         pictureName = (String) intent.getExtras().get(DataCollectorService.PICTURENAME);
         path = (String) intent.getExtras().get(DataCollectorService.PATH);
 
@@ -104,6 +108,7 @@ public class SurveyActivity extends FragmentActivity {
                 FragmentTransaction
                         transaction =
                         getSupportFragmentManager().beginTransaction();
+                transaction.addToBackStack(null);
                 transaction.replace(R.id.frameLayoutSurveyTapLong, pictureFragment);
                 transaction.commit();
             }
@@ -198,7 +203,7 @@ public class SurveyActivity extends FragmentActivity {
                 DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
                 String timeString = dateFormat.format(new Date());
 
-                SQLiteDatabase database = ControllerService.storage.getWritableDatabase();
+                SQLiteDatabase database = storage.getWritableDatabase();
 
                 SurveyActivity.this.pictureName = (String) getIntent().getExtras().get("pictureName");
                 Log.v(TAG, "survey was for picture : " + SurveyActivity.this.pictureName);
@@ -213,11 +218,9 @@ public class SurveyActivity extends FragmentActivity {
                 cv.put(Storage.COLUMN_DOINGSTHOTHERANSWER, surveyQuestionDoingSomethingOtherAnswerValue);
                 cv.put(Storage.COLUMN_SURVEYTIME, timeString);
 
-
                 long insertId = database.insert(Storage.DB_TABLESURVEY, null, cv);
                 Log.v(TAG, "survey data stored to db");
                 database.close();
-
 
                 saved = true;
                 finish();
@@ -227,11 +230,15 @@ public class SurveyActivity extends FragmentActivity {
         surveyQuestionDevicePositionRadioButtonSurface.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (((RadioButton) v).isChecked()) {
-                    surveyQuestionHandRadioButtonNone.setChecked(true);
-                }
-                else {
-                    surveyQuestionHandRadioButtonNone.setChecked(false);
+                try {
+                    if (((RadioButton) v).isChecked()) {
+                        surveyQuestionHandRadioButtonNone.setChecked(true);
+                    }
+                    else {
+                        surveyQuestionHandRadioButtonNone.setChecked(false);
+                    }
+                } catch (Exception e){
+                    //ignore
                 }
             }
         });
@@ -240,11 +247,15 @@ public class SurveyActivity extends FragmentActivity {
         surveyQuestionDoingSomethingRadioButtonYes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (((RadioButton) v).isChecked()) {
-                    surveyQuestionDoingSomethingEditTextOther.setEnabled(true);
-                }
-                else {
-                    surveyQuestionDoingSomethingEditTextOther.setEnabled(false);
+                try {
+                    if (((RadioButton) v).isChecked()) {
+                        surveyQuestionDoingSomethingEditTextOther.setEnabled(true);
+                    }
+                    else {
+                        surveyQuestionDoingSomethingEditTextOther.setEnabled(false);
+                    }
+                } catch (Exception e){
+                    //ignore
                 }
             }
         });
@@ -252,11 +263,15 @@ public class SurveyActivity extends FragmentActivity {
         surveyQuestionUserPositionRadioButtonOther.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (((RadioButton) v).isChecked()) {
-                    surveyQuestionUserPositionEditTextOther.setEnabled(true);
-                }
-                else {
-                    surveyQuestionUserPositionEditTextOther.setEnabled(false);
+                try {
+                    if (((RadioButton) v).isChecked()) {
+                        surveyQuestionUserPositionEditTextOther.setEnabled(true);
+                    }
+                    else {
+                        surveyQuestionUserPositionEditTextOther.setEnabled(false);
+                    }
+                } catch (Exception e) {
+                    //ignore
                 }
             }
         });
@@ -266,10 +281,27 @@ public class SurveyActivity extends FragmentActivity {
     @Override
     protected void onStart(){
         super.onStart();
+        try {
         NotificationManager notificationManager =
                 (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(requestID);
+        notificationManager.cancel(requestID);}
+        catch (NullPointerException e){
+            Log.d(TAG, "no notification found");
+        }
     }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        try {
+            NotificationManager notificationManager =
+                    (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(requestID);}
+        catch (NullPointerException e){
+            Log.d(TAG, "no notification found");
+        }
+    }
+
 
     @Override
     protected void onPause() {
@@ -279,9 +311,7 @@ public class SurveyActivity extends FragmentActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (!saved){
-            doSurveyLater();
-        }
+        doSurveyLater();
     }
 
     @Override
@@ -303,7 +333,7 @@ public class SurveyActivity extends FragmentActivity {
 
             Intent resultIntent = new Intent(getApplicationContext(), SurveyActivity.class);
             resultIntent.putExtra(DataCollectorService.REQUESTID, requestID);
-            Log.v(TAG, "request id: " + requestID);
+            Log.v(TAG, " request id put on result: " + requestID);
             resultIntent.putExtra(DataCollectorService.PICTURENAME, pictureName);
             resultIntent.putExtra(DataCollectorService.PATH, path);
 
