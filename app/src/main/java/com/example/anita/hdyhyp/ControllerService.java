@@ -63,7 +63,7 @@ public class ControllerService extends Service implements Observer {
     private String lastAsNewDetectedNotification = HDYHYPPACKAGENAME;
     private String homeScreenName;
 
-    public static boolean pictureIsCurrentlyTaken = false;
+    //public static boolean pictureIsCurrentlyTaken = false;
     private ArrayList<PendingIntent> eventPendingIntentArray = new ArrayList<PendingIntent>();
     private ArrayList<PendingIntent> randomPendingIntentArray = new ArrayList<PendingIntent>();
     private PendingIntent currentRandomPendingIntent;
@@ -566,7 +566,7 @@ return period;
         //start taking the picture, if there is not already being taken one. the CapurePicService will run the DataCollection when it
         // is finnished taking the pic
 
-        if (!pictureIsCurrentlyTaken){
+       //if (!pictureIsCurrentlyTaken){
             Intent capturePicServiceIntent = new Intent(this, CapturePicService.class);
             capturePicServiceIntent.putExtra("storagePath", storagePath);
             capturePicServiceIntent.putExtra("userName", userName);
@@ -575,9 +575,10 @@ return period;
             getApplicationContext().startService(capturePicServiceIntent);
             Log.v(TAG, "CapturePicService will be started now");
             return true;
-        }
+        //}
         //collect and write data to emphasize that a picture of the session is missing
-        else {
+        //TODO: RANDOM FALL Abfangen
+        /* else {
             Log.v(TAG, "CapturePicService will not be started, because another picture is currently taken");
             if (!capturingEvent.equals(RANDOM)){
                 DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH:mm:ss");
@@ -586,7 +587,7 @@ return period;
                 startDataCollectionService("collect", getApplicationContext(), currentForegroundApp, capturingEvent, s, NASTRING, NASTRING, NASTRING, NASTRING, NASTRING, NASTRING, NASTRING);
             }
             return false;
-        }
+        }*/
     }
 
 

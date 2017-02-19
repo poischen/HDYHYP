@@ -20,7 +20,7 @@ public class SurveyPictureFragment extends Fragment {
     public static final String BUNDLEPATH = "path";
     public static final String BUNDLEPICTURENAME = "pictureName";
     public static final String BUNDLEDISPLAYWITH = "displayWidth";
-    public static final String NOPICTAKEN = "no Picture was taken";
+    public static final String NOPICAVAILABLE = "Picture could not be displayed. Nevertheless - please fill the survey :)";
 
     ImageView imageViewUsersPhoto;
     TextView textViewDate;
@@ -49,11 +49,11 @@ public class SurveyPictureFragment extends Fragment {
         imageViewUsersPhoto = (ImageView) myView.findViewById(R.id.imageViewUsersPhotoFragment);
         textViewDate = (TextView) myView.findViewById(R.id.textViewDate);
 
-        if (pictureName.contains(NOPICTAKEN)){
-            textViewDate.setText("Picture could not be displayed. Nevertheless - please fill the survey :)");
-        } else {
-            try {
+
                 File file = new File(path + File.separator + pictureName);
+
+        if (file.exists()){
+            try {
                 Log.v(TAG, "file: " + path + File.separator + pictureName);
 
                 Bitmap picture = BitmapFactory.decodeFile(file.getAbsolutePath());
@@ -88,12 +88,16 @@ public class SurveyPictureFragment extends Fragment {
             matrix.postScale(scaledWidth, scaledHeight);
             Bitmap scaledPicture = Bitmap.createBitmap(picture, 0, 0, width, height, matrix, false);*/
                 imageViewUsersPhoto.setImageBitmap(scaledPicture);
-
                 textViewDate.setText(pictureName.substring((pictureName.length() - 12), (pictureName.length() - 4)));
-            } catch (Exception e){
-                Log.d(TAG, "Error while loading picture");
-                textViewDate.setText("Picture could not be displayed. Nevertheless - please fill the survey :)");
             }
+            catch (Exception e){
+                Log.d(TAG, "Error while loading picture");
+                textViewDate.setText(NOPICAVAILABLE);
+            }
+        }
+
+        else {
+            textViewDate.setText(NOPICAVAILABLE);
         }
 
 

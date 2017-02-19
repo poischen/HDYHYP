@@ -35,7 +35,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.example.anita.hdyhyp.DataCollectorService.NAINT;
+//import static com.example.anita.hdyhyp.ControllerService.pictureIsCurrentlyTaken;
+//import static com.example.anita.hdyhyp.DataCollectorService.NAINT;
 import static com.example.anita.hdyhyp.DataCollectorService.NASTRING;
 import static com.google.android.gms.vision.face.FaceDetector.ALL_CLASSIFICATIONS;
 import static com.google.android.gms.vision.face.FaceDetector.FAST_MODE;
@@ -69,7 +70,7 @@ public class CapturePicService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        ControllerService.pictureIsCurrentlyTaken = true;
+        //ControllerService.pictureIsCurrentlyTaken = true;
         try {
             capturingEvent = (ControllerService.CapturingEvent) intent.getExtras().get(DataCollectorService.CAPTURINGEVENT);
             foregroundApp = (String) intent.getExtras().get("foregroundApp");
@@ -91,7 +92,7 @@ public class CapturePicService extends Service {
                     .build();
 
         } catch (Exception e){
-            Log.d(TAG, "facedetector could nto be build " + e);
+            Log.d(TAG, "facedetector could not be build " + e);
         }
 
         try {
@@ -184,7 +185,7 @@ public class CapturePicService extends Service {
         } catch (Exception e) {
             Log.d(TAG, "camera.takePicture failed");
         }
-        ControllerService.pictureIsCurrentlyTaken = false;
+        //pictureIsCurrentlyTaken = false;
     }
 
     /* after picture was taken, the method detects face landmarks in the detected faces, which should be stored in the surveys database,
@@ -291,7 +292,7 @@ public class CapturePicService extends Service {
             Log.d(TAG, "FaceDetector could not be released: " + e);
         }
 
-        ControllerService.pictureIsCurrentlyTaken = false;
+        //pictureIsCurrentlyTaken = false;
         ControllerService.startDataCollectionService("collect", getApplicationContext(), foregroundApp, capturingEvent, pictureName, leftEyePoints, rightEyePoints, mouthPoints, eulerY, eulerZ, rightEyeOpen, leftEyeOpen);
         camera = null;
         faceDetector = null;
@@ -315,7 +316,7 @@ public class CapturePicService extends Service {
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-            ControllerService.pictureIsCurrentlyTaken = true;
+            //pictureIsCurrentlyTaken = true;
             File capturedPhotoFile = getOutputMediaFile();
             if (capturedPhotoFile == null) {
                 Log.e(TAG, "Could not create file");
