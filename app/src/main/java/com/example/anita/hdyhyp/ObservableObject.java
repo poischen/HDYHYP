@@ -10,7 +10,7 @@ public class ObservableObject extends Observable {
     private static ObservableObject instance = new ObservableObject();
 
     private boolean isOrientationPortrait = true;
-    private int rememberPeriod = 0;
+    private int reminderPeriod = 0;
 
     //private int pendingIntentRequestID;
 
@@ -37,11 +37,11 @@ public class ObservableObject extends Observable {
         isOrientationPortrait = orientationPortrait;
     }
 
-    public void setRememberPeriod(int rememberPeriod) {
-        this.rememberPeriod = rememberPeriod;
+    public void setReminderPeriod(int reminderPeriod) {
+        this.reminderPeriod = reminderPeriod;
     }
-    public int getRememberPeriod() {
-        return rememberPeriod;
+    public int getReminderPeriod() {
+        return reminderPeriod;
     }
 
 

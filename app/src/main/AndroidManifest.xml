@@ -93,7 +93,7 @@
             android:name=".EventAlarmReceiver" />
 
         <receiver
-            android:name=".RememberAlarmReceiver" />
+            android:name=".ReminderAlarmReceiver" />
 
         <receiver
             android:name=".RebootReceiver"

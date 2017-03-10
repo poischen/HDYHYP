@@ -12,7 +12,7 @@ import android.support.v4.app.TaskStackBuilder;
 import static java.lang.System.currentTimeMillis;
 
 
-public class RememberAlarmReceiver extends BroadcastReceiver {
+public class ReminderAlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         NotificationCompat.Builder reviewNotificationBuilder =

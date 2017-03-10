@@ -26,7 +26,6 @@ import java.util.Observer;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.RANDOM;
 import static com.example.anita.hdyhyp.ControllerService.CapturingEvent.STOP;
 import static com.example.anita.hdyhyp.DataCollectorService.REQUESTID;
 
@@ -69,7 +68,7 @@ public class ControllerService extends Service implements Observer {
     private PendingIntent currentRandomPendingIntent;
     private AlarmManager alarmManager;
 
-    private RememberAlarmReceiver rememberAlarmReceiver;
+    private ReminderAlarmReceiver reminderAlarmReceiver;
     private EventAlarmReceiver eventAlarmReceiver;
     private RandomAlarmReceiver randomAlarmReceiver;
     private BroadcastReceiver broadcastReceiver;
@@ -185,7 +184,7 @@ public class ControllerService extends Service implements Observer {
 
     /*
     sets 6 random daily alarms between 10 am and 22 pm, where pictures should be taken
-    sets a daily alarm to remember transfering data
+    sets a daily alarm to remind transfering data
      */
     private void setRandomPictureAndDatatransferAlarms() {
 
@@ -227,9 +226,9 @@ public class ControllerService extends Service implements Observer {
         }*/
 
         //set data transfer alarm
-        IntentFilter rememberFilter = new IntentFilter("com.example.anita.hdyhyp.RememberAlarmReceiver");
-        rememberAlarmReceiver = new RememberAlarmReceiver();
-        registerReceiver(rememberAlarmReceiver, rememberFilter);
+        IntentFilter reminderFilter = new IntentFilter("com.example.anita.hdyhyp.ReminderAlarmReceiver");
+        reminderAlarmReceiver = new ReminderAlarmReceiver();
+        registerReceiver(reminderAlarmReceiver, reminderFilter);
 
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(System.currentTimeMillis());
@@ -237,7 +236,7 @@ public class ControllerService extends Service implements Observer {
         c.set(Calendar.MINUTE, 1);
         c.set(Calendar.SECOND, 0);
 
-        Intent intent = new Intent(this, RememberAlarmReceiver.class);
+        Intent intent = new Intent(this, ReminderAlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 70, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         alarmManager.setInexactRepeating(AlarmManager.RTC, c.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
     }
@@ -258,13 +257,13 @@ public class ControllerService extends Service implements Observer {
             }
 
         }
-        if (rememberAlarmReceiver != null) {
+        if (reminderAlarmReceiver != null) {
             try {
-                unregisterReceiver(rememberAlarmReceiver);
-                rememberAlarmReceiver = null;
-                Log.v(TAG, "rememberAlarmReceiver unregistered");
+                unregisterReceiver(reminderAlarmReceiver);
+                reminderAlarmReceiver = null;
+                Log.v(TAG, "reminderAlarmReceiver unregistered");
         } catch (Exception e){
-                Log.d(TAG, "rememberAlarmReceiver could not be unregistered");
+                Log.d(TAG, "reminderAlarmReceiver could not be unregistered");
             }
 
         }
@@ -365,11 +364,11 @@ public class ControllerService extends Service implements Observer {
                 cancelFutureAlarms();
 
                 if (startCapturePictureService(capturingEvent)){
-                    int period = (ObservableObject.getInstance().getRememberPeriod());
+                    int period = (ObservableObject.getInstance().getReminderPeriod());
 
                     if (period > 0){
                         storage.setRandomWasTakenInCurrentPeriod(period, true);
-                        ObservableObject.getInstance().setRememberPeriod(0);
+                        ObservableObject.getInstance().setReminderPeriod(0);
                     }
                 }
 

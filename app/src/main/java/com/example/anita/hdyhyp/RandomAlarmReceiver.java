@@ -34,7 +34,7 @@ public class RandomAlarmReceiver extends BroadcastReceiver {
         Storage storage = new Storage(context);
         boolean wasAlreadyTaken = storage.getRandomWasTakenInCurrentPeriod(requestID);
         if (!wasAlreadyTaken){
-            ObservableObject.getInstance().setRememberPeriod(requestID);
+            ObservableObject.getInstance().setReminderPeriod(requestID);
             ObservableObject.getInstance().updateValue(intent);
         }
 
