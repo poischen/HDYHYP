@@ -8,7 +8,7 @@ import android.content.Intent;
 restarts ControllerService after System Reboot (which also sets new Random Alarms)
  */
 
-public class RebootReceiver extends BroadcastReceiver {
+/*public class RebootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -17,4 +17,4 @@ public class RebootReceiver extends BroadcastReceiver {
             context.startService(controllerIntent);
         }
     }
-}
+}*/

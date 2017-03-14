@@ -86,7 +86,6 @@ public class RandomAlarmReceiver extends BroadcastReceiver {
                 Log.v(TAG, "screen off, reschedule alarm " + requestID);
 
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                //TODO: bleibt durch FLAG_UPDATE_CURRENT das PendingIntent immernoch ein FLAG_ONE_SHOOT?
                 AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
                 Log.v(TAG, "rescheduleCounter" + rescheduleCounter[requestID]);
                 ++ rescheduleCounter[requestID];

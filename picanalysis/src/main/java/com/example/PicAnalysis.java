@@ -23,7 +23,7 @@ public class PicAnalysis {
     public static void main(String args[]) throws ClassNotFoundException, SQLException {
 
         //String faceValue = args[0];
-        String faceValue;
+        String faceValue = args[4];
         String command = args[0];
         String path = args[1];
         String db = args[2];
@@ -39,14 +39,15 @@ public class PicAnalysis {
                 String userDoingSomething = "userDoingSomething";
                 String userDoingSomethingOtherAnswer = "userDoingSomethingOtherAnswer";
 
-        switch (command){
-            case ("add"):{
-                //get datbase and add columns if necessary
-                Class.forName(driverName);
-                String dbUrl = "jdbc:sqlite:" + path + File.separator + db;
-                int iTimeout = 5;
 
-                Connection connection = DriverManager.getConnection(dbUrl);
+        String dbUrl = "jdbc:sqlite:" + path + File.separator + db;
+        int iTimeout = 5;
+        Connection connection;
+
+        switch (command){
+            case ("add"):
+                //get datbase and add columns if necessary
+                connection = DriverManager.getConnection(dbUrl);
                 try {
                     Statement statement = connection.createStatement();
                     statement.setQueryTimeout(iTimeout);
@@ -83,14 +84,9 @@ public class PicAnalysis {
                         System.out.println("done adding");} catch (Exception ignore) {}
                 }
 
-
-
-
-
                 break;
-            }
             case ("face"):
-                System.out.println("Write face values");
+                /*System.out.println("Write face values");
                 String writecolumn = "faceValue";
                 String readcolumn = "photoName";
                 ArrayList<String> faceValues = new ArrayList<>();
@@ -108,7 +104,7 @@ public class PicAnalysis {
                     faceValue = faceValues.get(i);
                     System.out.println(faceValue);
 
-                    //geting all pictures
+                    //getting all pictures
                     File folder = new File(path + File.separator + faceValue + File.separator);
                     File[] listOfFiles = folder.listFiles();
                     for (File file : listOfFiles) {
@@ -120,21 +116,17 @@ public class PicAnalysis {
 
 
                     //get datbase and write faceValue
-                    Class.forName(driverName);
-                    String dbUrl = "jdbc:sqlite:" + path + File.separator + db;
-                    int iTimeout = 5;
-
-                    Connection connection = DriverManager.getConnection(dbUrl);
+                   connection = DriverManager.getConnection(dbUrl);
                     try {
                         Statement statement = connection.createStatement();
                         statement.setQueryTimeout(iTimeout);
                         try {
                             for (int j=0; j<listOfFiles.length; j++){
                                 String updateDataString = "UPDATE HDYHYPDataCollection SET " + writecolumn +"='" + faceValue + "' WHERE " + readcolumn + "='" + listOfFiles[i].getName() +"'";
-                                //String updateSurveyString = "UPDATE HDYHYPSurveyData SET " + writecolumn +"='" + faceValue + "' WHERE " + readcolumn + "='" + listOfFiles[i].getName() +"'";
+                                String updateSurveyString = "UPDATE HDYHYPSurveyData SET " + writecolumn +"='" + faceValue + "' WHERE " + readcolumn + "='" + listOfFiles[i].getName() +"'";
                                     try {
                                         statement.executeUpdate(updateDataString);
-                                        //statement.executeUpdate(updateSurveyString);
+                                        statement.executeUpdate(updateSurveyString);
                                 } catch (SQLException e) {
                                     e.printStackTrace();
                                     System.out.print("Failed writing into db" + e);
@@ -149,6 +141,51 @@ public class PicAnalysis {
                             System.out.println("done, faceValue: " + faceValue);} catch (Exception ignore) {}
                     }
 
+                }*/
+
+
+
+                String writecolumn = "faceValue";
+                String readcolumn = "photoName";
+
+                File folder = new File(path + File.separator + faceValue + File.separator);
+                File[] listOfFiles = folder.listFiles();
+                for (File file : listOfFiles) {
+                if (file.isFile() && !(file.getAbsolutePath().contains("DataBase"))) {
+                //System.out.println(file.getName());
+                }
+                }
+                System.out.println("getting files done, " + faceValue);
+
+
+                //get datbase and write faceValue
+                Class.forName(driverName);
+                connection = DriverManager.getConnection(dbUrl);
+                try {
+                Statement statement = connection.createStatement();
+                statement.setQueryTimeout(iTimeout);
+                try {
+                for (int i=0; i<listOfFiles.length; i++){
+                String updateDataString = "UPDATE HDYHYPDataCollection SET " + writecolumn +"='" + faceValue + "' WHERE " + readcolumn + "='" + listOfFiles[i].getName() +"'";
+                String updateSurveyString = "UPDATE HDYHYPSurveyData SET " + writecolumn +"='" + faceValue + "' WHERE " + readcolumn + "='" + listOfFiles[i].getName() +"'";
+
+                    try {
+                        statement.executeUpdate(updateDataString);
+                        statement.executeUpdate(updateSurveyString);
+                        } catch (SQLException e) {
+                        e.printStackTrace();
+                        System.out.print("Failed writing into db" + e);
+
+
+                    }
+
+                }
+                } finally {
+                try { statement.close(); } catch (Exception ignore) {}
+                }
+                } finally {
+                try { connection.close();
+                System.out.println("done, face value: " + faceValue);} catch (Exception ignore) {}
                 }
 
                 break;
@@ -158,14 +195,12 @@ public class PicAnalysis {
                 //String joincolumn = "photoName";
                 //get database and join data
                 Class.forName(driverName);
-                String dbUrl = "jdbc:sqlite:" + path + File.separator + db;
-                int iTimeout = 5;
-                Connection connection = DriverManager.getConnection(dbUrl);
+
 
                 //for (int i = 0; i <= dbsizeint; i++) {
                    // System.out.println("Dataset " + i);
 
-
+                connection = DriverManager.getConnection(dbUrl);
                         Statement statement = connection.createStatement();
                         statement.setQueryTimeout(iTimeout);
                         try {

@@ -451,17 +451,6 @@ public class PictureReviewActivity extends AppCompatActivity {
                 inputDB.close();
                 Log.v(TAG, "upload db successful");
                 uploadProgressDialog.incrementProgressBy(1);
-                //TODO: clear db
-
-                //upload log //TODO: reimplement, but in the moment it doe snot find the file
-                /*File logfile = new File(createLogcat());
-                FileInputStream inLog = new FileInputStream(logfile);
-                String remoteLog = "log_" + time + ".txt";
-                sftp.put(inLog, remoteLog, null);
-                inLog.close();
-                Log.v(TAG, "upload log successful");
-                uploadProgressDialog.incrementProgressBy(1);
-                logfile.delete();*/
 
                 ArrayList<PictureItem> uploadedItems = new ArrayList<PictureItem>();
 

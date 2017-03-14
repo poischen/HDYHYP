@@ -292,7 +292,6 @@ public class ControllerService extends Service implements Observer {
         Log.v(TAG, "future capture session alarms canceled");
 
         //cancel random alarms
-        //TODO: cancel alarms not necessary? >> reboot: will be deleted, >> onDestroy -> after restart will be set new with flag "FLAG_CANCEL_CURRENT" -> yes because of possibility to delete user name and stop service with that
         // not necessary since new algorithm
         /*int a = randomPendingIntentArray.size();
         if (a != 0){
@@ -576,7 +575,6 @@ return period;
             return true;
         //}
         //collect and write data to emphasize that a picture of the session is missing
-        //TODO: RANDOM FALL Abfangen
         /* else {
             Log.v(TAG, "CapturePicService will not be started, because another picture is currently taken");
             if (!capturingEvent.equals(RANDOM)){
