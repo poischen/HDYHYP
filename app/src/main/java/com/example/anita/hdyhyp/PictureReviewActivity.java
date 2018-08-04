@@ -57,10 +57,10 @@ public class PictureReviewActivity extends AppCompatActivity {
     private static final String SFTPHOST = "phoneholder.medien.ifi.lmu.de";
     private static final int FTPPORT = 21;
     private static final int SFTPPORT = 22022;
-    private static final String FTPUSER = "anita@mkhamis.com";
-    private static final String SFTPUSER = "phoneholder.app";
-    private static final String FTPPASSWORD = "dd)WN~AfiPtF";
-    private static final String SFTPPASSWORD = "gN4j+rt7s=6cRA";
+    private static final String FTPUSER = *************;
+    private static final String SFTPUSER = *************;
+    private static final String FTPPASSWORD = *************;
+    private static final String SFTPPASSWORD = *************;
 
     private GridView gridView;
     private PictureReviewGridViewAdapter gridAdapter;
@@ -74,8 +74,8 @@ public class PictureReviewActivity extends AppCompatActivity {
     private ProgressDialog connectProgressDialog;
 
     /*private DropboxAPI<AndroidAuthSession> dropboxAPI;
-    private final static String ACCESS_KEY = "8d7mhculhyjk8yf";
-    private final static String ACCESS_SECRET = "4s5digo1cwmxmqe";
+    private final static String ACCESS_KEY = *************;
+    private final static String ACCESS_SECRET = *************;
     private final static String DROPBOX_NAME = "dropbox_prefs";
     final static public Session.AccessType ACCESS_TYPE = Session.AccessType.DROPBOX;*/
 
